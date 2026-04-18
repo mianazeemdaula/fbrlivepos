@@ -30,6 +30,7 @@ declare module '@auth/core/jwt' {
 
 export const authConfig = {
     providers: [],
+    trustHost: true,
     callbacks: {
         jwt({ token, user, trigger, session }) {
             if (user) {
