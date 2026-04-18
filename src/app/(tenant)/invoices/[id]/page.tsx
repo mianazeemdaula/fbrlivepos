@@ -216,7 +216,7 @@ export default function InvoiceDetailPage() {
                         </pre>
                     </div>
 
-                    {invoice.latestSubmissionLog?.responseBody && (
+                    {invoice.latestSubmissionLog?.responseBody != null && (
                         <div>
                             <p className="text-xs text-slate-400 mb-2">
                                 Latest PRAL Response
