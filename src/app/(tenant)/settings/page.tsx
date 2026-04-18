@@ -79,6 +79,7 @@ export default function SettingsPage() {
     const [verifying, setVerifying] = useState(false)
     const [showScenariosModal, setShowScenariosModal] = useState(false)
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+    const [step, setStep] = useState(1) // Wizard step: 1=Business Info, 2=Token, 3=Verify, 4=Sandbox, 5=Production
 
     useEffect(() => {
         async function loadConfig() {
@@ -88,6 +89,18 @@ export default function SettingsPage() {
                     const config: DIConfig = await res.json()
                     setDiConfig(config)
                     setForm(createFormStateFromConfig(config))
+                    // Auto-detect wizard step
+                    if (!config.configured) {
+                        setStep(1)
+                    } else if (!config.hasSandboxToken && !config.hasProductionToken) {
+                        setStep(2)
+                    } else if (!config.sandboxScenarios || config.sandboxScenarios.length === 0 || config.sandboxScenarios.some(s => s.status !== 'PASSED')) {
+                        setStep(config.environment === 'SANDBOX' ? 4 : 5)
+                    } else if (config.isProductionReady) {
+                        setStep(5)
+                    } else {
+                        setStep(3)
+                    }
                 }
             } catch {
                 // Ignore
@@ -175,6 +188,36 @@ export default function SettingsPage() {
     return (
         <div className="p-6 max-w-2xl">
             <h1 className="text-2xl font-bold text-white mb-6">Settings</h1>
+
+            {/* Integration Progress Steps */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6">
+                <h2 className="text-sm font-semibold text-slate-400 mb-3">PRAL DI Integration Progress</h2>
+                <div className="flex items-center gap-1">
+                    {[
+                        { n: 1, label: 'Business Info' },
+                        { n: 2, label: 'Token Setup' },
+                        { n: 3, label: 'Verify Token' },
+                        { n: 4, label: 'Sandbox Tests' },
+                        { n: 5, label: 'Production' },
+                    ].map((s, i) => (
+                        <div key={s.n} className="flex items-center flex-1">
+                            <button
+                                onClick={() => setStep(s.n)}
+                                className={`flex-1 text-center py-2 rounded-lg text-xs font-medium transition-colors ${step === s.n
+                                    ? 'bg-blue-600 text-white'
+                                    : step > s.n || (s.n === 1 && diConfig?.configured)
+                                        ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
+                                        : 'bg-slate-800 text-slate-500 hover:bg-slate-700'
+                                    }`}
+                            >
+                                {step > s.n || (s.n === 1 && diConfig?.configured && step !== s.n) ? '✓ ' : `${s.n}. `}
+                                {s.label}
+                            </button>
+                            {i < 4 && <div className="w-2 h-px bg-slate-700 mx-0.5" />}
+                        </div>
+                    ))}
+                </div>
+            </div>
 
             {/* PRAL DI Credentials */}
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6">

@@ -12,23 +12,44 @@ interface Product {
     unit: string
 }
 
+interface CustomerResult {
+    id: string
+    name: string
+    ntnCnic: string | null
+    phone: string | null
+    province: string | null
+    address: string | null
+    registrationType: string | null
+    fbrVerified: boolean
+}
+
 export default function POSPage() {
     const [products, setProducts] = useState<Product[]>([])
     const [search, setSearch] = useState('')
     const [submitting, setSubmitting] = useState(false)
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
+    // Customer search
+    const [customerSearch, setCustomerSearch] = useState('')
+    const [customerResults, setCustomerResults] = useState<CustomerResult[]>([])
+    const [showCustomerDropdown, setShowCustomerDropdown] = useState(false)
+
     const {
         items,
         buyerName,
         buyerNTN,
         buyerPhone,
+        buyerProvince,
+        buyerAddress,
+        buyerRegistrationType,
+        customerId,
         paymentMethod,
         addItem,
         removeItem,
         updateQuantity,
         updateDiscount,
         setBuyerInfo,
+        setCustomer,
         setPaymentMethod,
         subtotal,
         discountTotal,
@@ -60,6 +81,25 @@ export default function POSPage() {
         return () => clearTimeout(timer)
     }, [search, searchProducts])
 
+    // Customer search
+    useEffect(() => {
+        if (!customerSearch || customerSearch.length < 2) {
+            setCustomerResults([])
+            return
+        }
+        const timer = setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/customers?q=${encodeURIComponent(customerSearch)}&limit=5`)
+                if (res.ok) {
+                    const data = await res.json()
+                    setCustomerResults(data.data || [])
+                    setShowCustomerDropdown(true)
+                }
+            } catch { /* ignore */ }
+        }, 300)
+        return () => clearTimeout(timer)
+    }, [customerSearch])
+
     function handleAddProduct(product: Product) {
         addItem({
             productId: product.id,
@@ -85,6 +125,10 @@ export default function POSPage() {
                     buyerName: buyerName || undefined,
                     buyerNTN: buyerNTN || undefined,
                     buyerPhone: buyerPhone || undefined,
+                    buyerProvince: buyerProvince || undefined,
+                    buyerAddress: buyerAddress || undefined,
+                    buyerRegistrationType: buyerRegistrationType || undefined,
+                    customerId: customerId || undefined,
                     paymentMethod,
                     items: items.map((item) => ({
                         productId: item.productId,
@@ -237,9 +281,57 @@ export default function POSPage() {
 
                 {/* Buyer Info */}
                 <div className="p-4 border-t border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs text-slate-400 font-medium">Buyer / Customer</label>
+                        {customerId && (
+                            <button
+                                onClick={() => { setCustomer(null); setCustomerSearch('') }}
+                                className="text-xs text-red-400 hover:text-red-300"
+                            >
+                                Clear
+                            </button>
+                        )}
+                    </div>
+                    <div className="relative">
+                        <input
+                            type="text"
+                            placeholder="Search customer by name or NTN..."
+                            value={customerSearch}
+                            onChange={(e) => setCustomerSearch(e.target.value)}
+                            onFocus={() => customerResults.length > 0 && setShowCustomerDropdown(true)}
+                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
+                        />
+                        {showCustomerDropdown && customerResults.length > 0 && (
+                            <div className="absolute bottom-full left-0 right-0 mb-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-10 max-h-40 overflow-auto">
+                                {customerResults.map((c) => (
+                                    <button
+                                        key={c.id}
+                                        onClick={() => {
+                                            setCustomer(c)
+                                            setCustomerSearch(c.name)
+                                            setShowCustomerDropdown(false)
+                                        }}
+                                        className="w-full text-left px-3 py-2 hover:bg-slate-700 text-sm border-b border-slate-700/50 last:border-0"
+                                    >
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-white">{c.name}</span>
+                                            {c.fbrVerified && (
+                                                <span className="text-xs bg-green-500/10 text-green-400 px-1.5 py-0.5 rounded">
+                                                    {c.registrationType}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {c.ntnCnic && (
+                                            <span className="text-xs text-slate-400 font-mono">{c.ntnCnic}</span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                     <input
                         type="text"
-                        placeholder="Buyer Name (optional)"
+                        placeholder="Buyer Name"
                         value={buyerName}
                         onChange={(e) => setBuyerInfo({ buyerName: e.target.value })}
                         className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
@@ -247,7 +339,7 @@ export default function POSPage() {
                     <div className="flex gap-2">
                         <input
                             type="text"
-                            placeholder="NTN"
+                            placeholder="NTN/CNIC"
                             value={buyerNTN}
                             onChange={(e) => setBuyerInfo({ buyerNTN: e.target.value })}
                             className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
@@ -260,6 +352,36 @@ export default function POSPage() {
                             className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
                         />
                     </div>
+                    <div className="flex gap-2">
+                        <select
+                            value={buyerProvince}
+                            onChange={(e) => setBuyerInfo({ buyerProvince: e.target.value })}
+                            className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white"
+                        >
+                            <option value="">Province</option>
+                            <option value="Punjab">Punjab</option>
+                            <option value="Sindh">Sindh</option>
+                            <option value="Khyber Pakhtunkhwa">KPK</option>
+                            <option value="Balochistan">Balochistan</option>
+                            <option value="Islamabad">Islamabad</option>
+                        </select>
+                        <select
+                            value={buyerRegistrationType}
+                            onChange={(e) => setBuyerInfo({ buyerRegistrationType: e.target.value as 'Registered' | 'Unregistered' | '' })}
+                            className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white"
+                        >
+                            <option value="">Reg Type</option>
+                            <option value="Registered">Registered</option>
+                            <option value="Unregistered">Unregistered</option>
+                        </select>
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Buyer Address"
+                        value={buyerAddress}
+                        onChange={(e) => setBuyerInfo({ buyerAddress: e.target.value })}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
+                    />
                     <select
                         value={paymentMethod}
                         onChange={(e) => setPaymentMethod(e.target.value as 'CASH' | 'CARD' | 'BANK_TRANSFER')}

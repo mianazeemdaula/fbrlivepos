@@ -10,6 +10,10 @@ const CreateInvoiceSchema = z.object({
     buyerNTN: z.string().optional(),
     buyerName: z.string().optional(),
     buyerPhone: z.string().optional(),
+    buyerProvince: z.string().optional(),
+    buyerAddress: z.string().optional(),
+    buyerRegistrationType: z.enum(['Registered', 'Unregistered']).optional(),
+    customerId: z.string().optional(),
     paymentMethod: z.enum(['CASH', 'CARD', 'BANK_TRANSFER']),
     items: z.array(
         z.object({
@@ -97,6 +101,10 @@ export async function POST(req: NextRequest) {
             buyerNTN: body.buyerNTN,
             buyerName: body.buyerName,
             buyerPhone: body.buyerPhone,
+            buyerProvince: body.buyerProvince,
+            buyerAddress: body.buyerAddress,
+            buyerRegistrationType: body.buyerRegistrationType,
+            customerId: body.customerId,
             subtotal,
             taxAmount,
             discountAmount,

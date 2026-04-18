@@ -109,6 +109,7 @@ model Tenant {
   invoices         Invoice[]
   submissionLogs   FBRSubmissionLog[]
   featureFlags     TenantFeatureFlag[]
+  customers        Customer[]
 }
 
 model POSTerminal {
@@ -176,6 +177,8 @@ model Invoice {
   terminalId      String?
   user            User          @relation(fields: [userId], references: [id])
   userId          String
+  customer        Customer?     @relation(fields: [customerId], references: [id])
+  customerId      String?
   invoiceNumber   String
   invoiceDate     DateTime      @default(now())
   buyerNTN        String?
@@ -545,4 +548,57 @@ model DIHSCodeUOM {
 
   @@unique([hsCode, uomId, annexureId])
   @@index([hsCode])
+}
+
+// Transaction Types from PRAL Reference API 3.5
+model DITransactionType {
+  id          Int    @id // transactioN_TYPE_ID
+  description String // transactioN_DESC (e.g. "DTRE goods")
+}
+
+// SRO Schedule from PRAL Reference API 3.7
+model DISROSchedule {
+  id          Int    @id // srO_ID
+  description String // srO_DESC (e.g. "Zero Rated Gas")
+}
+
+// SRO Item Details from PRAL Reference API 3.10
+model DISROItem {
+  id          Int    @id // srO_ITEM_ID
+  description String // srO_ITEM_DESC
+}
+
+// HS Code master from PRAL Reference API 3.3
+model DIItemDescription {
+  id          String @id @default(cuid())
+  hsCode      String @unique // hS_CODE
+  description String // description
+}
+
+// ─── CUSTOMERS (BUYERS) ─────────────────────────────────────────────────────
+
+model Customer {
+  id                  String   @id @default(cuid())
+  tenant              Tenant   @relation(fields: [tenantId], references: [id])
+  tenantId            String
+  name                String
+  ntnCnic             String?  // 7-digit NTN or 13-digit CNIC
+  phone               String?
+  email               String?
+  province            String?
+  address             String?
+  registrationType    String?  // "Registered" or "Unregistered" — from FBR verification
+  atlStatus           String?  // "Active" or "In-Active" — from FBR ATL check
+  fbrVerified         Boolean  @default(false)
+  fbrVerifiedAt       DateTime?
+  fbrRegistrationNo   String?  // REGISTRATION_NO from FBR response
+  fbrRegistrationType String?  // REGISTRATION_TYPE from FBR response
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  invoices            Invoice[]
+
+  @@unique([tenantId, ntnCnic])
+  @@index([tenantId])
+  @@index([tenantId, name])
 }

@@ -16,6 +16,10 @@ interface CartStore {
     buyerName: string
     buyerNTN: string
     buyerPhone: string
+    buyerProvince: string
+    buyerAddress: string
+    buyerRegistrationType: 'Registered' | 'Unregistered' | ''
+    customerId: string | null
     paymentMethod: 'CASH' | 'CARD' | 'BANK_TRANSFER'
     terminalId: string | null
 
@@ -23,7 +27,8 @@ interface CartStore {
     removeItem: (productId: string) => void
     updateQuantity: (productId: string, quantity: number) => void
     updateDiscount: (productId: string, discount: number) => void
-    setBuyerInfo: (info: { buyerName?: string; buyerNTN?: string; buyerPhone?: string }) => void
+    setBuyerInfo: (info: { buyerName?: string; buyerNTN?: string; buyerPhone?: string; buyerProvince?: string; buyerAddress?: string; buyerRegistrationType?: 'Registered' | 'Unregistered' | '' }) => void
+    setCustomer: (customer: { id: string; name: string; ntnCnic?: string | null; phone?: string | null; province?: string | null; address?: string | null; registrationType?: string | null } | null) => void
     setPaymentMethod: (method: 'CASH' | 'CARD' | 'BANK_TRANSFER') => void
     setTerminalId: (id: string | null) => void
     clearCart: () => void
@@ -41,6 +46,10 @@ export const useCartStore = create<CartStore>((set, get) => ({
     buyerName: '',
     buyerNTN: '',
     buyerPhone: '',
+    buyerProvince: '',
+    buyerAddress: '',
+    buyerRegistrationType: '',
+    customerId: null,
     paymentMethod: 'CASH',
     terminalId: null,
 
@@ -78,6 +87,21 @@ export const useCartStore = create<CartStore>((set, get) => ({
         })),
 
     setBuyerInfo: (info) => set(info),
+    setCustomer: (customer) => {
+        if (!customer) {
+            set({ customerId: null, buyerName: '', buyerNTN: '', buyerPhone: '', buyerProvince: '', buyerAddress: '', buyerRegistrationType: '' })
+        } else {
+            set({
+                customerId: customer.id,
+                buyerName: customer.name,
+                buyerNTN: customer.ntnCnic || '',
+                buyerPhone: customer.phone || '',
+                buyerProvince: customer.province || '',
+                buyerAddress: customer.address || '',
+                buyerRegistrationType: (customer.registrationType as 'Registered' | 'Unregistered') || '',
+            })
+        }
+    },
     setPaymentMethod: (paymentMethod) => set({ paymentMethod }),
     setTerminalId: (terminalId) => set({ terminalId }),
     clearCart: () =>
@@ -86,6 +110,10 @@ export const useCartStore = create<CartStore>((set, get) => ({
             buyerName: '',
             buyerNTN: '',
             buyerPhone: '',
+            buyerProvince: '',
+            buyerAddress: '',
+            buyerRegistrationType: '',
+            customerId: null,
             paymentMethod: 'CASH',
         }),
 

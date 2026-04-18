@@ -9,6 +9,8 @@ const navItems = [
     { href: '/pos', label: 'POS Terminal', icon: '🖥️' },
     { href: '/invoices', label: 'Invoices', icon: '📄' },
     { href: '/products', label: 'Products', icon: '📦' },
+    { href: '/customers', label: 'Customers', icon: '👥' },
+    { href: '/hs-codes', label: 'HS Codes', icon: '🏷️' },
     { href: '/settings', label: 'Settings', icon: '⚙️' },
 ]
 
