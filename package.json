@@ -1,0 +1,56 @@
+{
+  "name": "fbrlivepos",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "worker:fbr": "tsx workers/fbr-worker.ts",
+    "worker:di-sync": "tsx workers/di-reference-sync.worker.ts"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@node-rs/argon2": "^2.0.2",
+    "@prisma/adapter-pg": "^7.4.2",
+    "@prisma/client": "^7.4.2",
+    "@react-pdf/renderer": "^4.3.2",
+    "bullmq": "^5.70.4",
+    "ioredis": "^5.10.0",
+    "jose": "^6.2.0",
+    "next": "16.1.6",
+    "next-auth": "^5.0.0-beta.30",
+    "pg": "^8.20.0",
+    "prisma": "^7.4.2",
+    "qrcode": "^1.5.4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-hook-form": "^7.71.2",
+    "resend": "^6.9.3",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.11"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv": "^17.3.1",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "tsx": "^4.21.0",
+    "typescript": "^5",
+    "vitest": "^4.0.18"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}

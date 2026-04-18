@@ -1,0 +1,82 @@
+type State = 'CLOSED' | 'OPEN' | 'HALF_OPEN'
+
+class TenantCircuitBreaker {
+    private state: State = 'CLOSED'
+    private failureCount = 0
+    private successCount = 0
+    private nextAttempt = 0
+    private readonly FAILURE_THRESHOLD = 3
+    private readonly SUCCESS_THRESHOLD = 2
+    private readonly OPEN_TIMEOUT_MS = 30_000
+
+    async execute<T>(fn: () => Promise<T>): Promise<T> {
+        if (this.state === 'OPEN') {
+            if (Date.now() < this.nextAttempt) {
+                throw new Error('FBR_CIRCUIT_OPEN')
+            }
+            this.state = 'HALF_OPEN'
+            this.successCount = 0
+        }
+        try {
+            const result = await fn()
+            this.onSuccess()
+            return result
+        } catch (err) {
+            this.onFailure()
+            throw err
+        }
+    }
+
+    private onSuccess() {
+        this.failureCount = 0
+        if (this.state === 'HALF_OPEN') {
+            if (++this.successCount >= this.SUCCESS_THRESHOLD) this.state = 'CLOSED'
+        }
+    }
+
+    private onFailure() {
+        if (++this.failureCount >= this.FAILURE_THRESHOLD || this.state === 'HALF_OPEN') {
+            this.state = 'OPEN'
+            this.nextAttempt = Date.now() + this.OPEN_TIMEOUT_MS
+        }
+    }
+
+    getState() {
+        return {
+            state: this.state,
+            failureCount: this.failureCount,
+            nextAttemptAt: this.state === 'OPEN' ? new Date(this.nextAttempt) : null,
+        }
+    }
+
+    reset() {
+        this.state = 'CLOSED'
+        this.failureCount = 0
+    }
+}
+
+// Singleton registry — one breaker per tenant per server process
+export class FBRCircuitBreakerRegistry {
+    private static instance: FBRCircuitBreakerRegistry
+    private breakers = new Map<string, TenantCircuitBreaker>()
+
+    static getInstance() {
+        if (!this.instance) this.instance = new FBRCircuitBreakerRegistry()
+        return this.instance
+    }
+
+    get(tenantId: string): TenantCircuitBreaker {
+        if (!this.breakers.has(tenantId)) {
+            this.breakers.set(tenantId, new TenantCircuitBreaker())
+        }
+        return this.breakers.get(tenantId)!
+    }
+
+    getAllStates() {
+        const result: Record<string, ReturnType<TenantCircuitBreaker['getState']>> = {}
+        this.breakers.forEach((b, id) => {
+            result[id] = b.getState()
+        })
+        return result
+    }
+}

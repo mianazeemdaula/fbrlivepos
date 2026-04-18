@@ -1,0 +1,140 @@
+import { decryptCredential } from '@/lib/crypto/credentials'
+import { prisma } from '@/lib/db/prisma'
+import { DICircuitBreakerRegistry } from './circuit-breaker'
+import type { DIInvoicePayload, DIResponse, DIValidationResponse } from './types'
+
+const DI_POST_URL = 'https://gw.fbr.gov.pk/di_data/v1/di/postinvoicedata'
+const DI_POST_URL_SB = 'https://gw.fbr.gov.pk/di_data/v1/di/postinvoicedata_sb'
+const DI_VAL_URL = 'https://gw.fbr.gov.pk/di_data/v1/di/validateinvoicedata'
+const DI_VAL_URL_SB = 'https://gw.fbr.gov.pk/di_data/v1/di/validateinvoicedata_sb'
+
+const circuitRegistry = DICircuitBreakerRegistry.getInstance()
+
+export async function getDIClientForTenant(tenantId: string) {
+    const creds = await prisma.dICredentials.findUniqueOrThrow({
+        where: { tenantId },
+    })
+
+    const isSandbox = creds.environment === 'SANDBOX'
+    const encryptedToken = isSandbox
+        ? creds.encryptedSandboxToken
+        : creds.encryptedProductionToken
+
+    if (!encryptedToken) {
+        throw new DIConfigError(
+            tenantId,
+            isSandbox
+                ? 'No sandbox token configured. Complete IRIS registration and paste your sandbox token.'
+                : 'No production token configured. Complete sandbox testing first, then paste your production token from IRIS.',
+        )
+    }
+
+    // Decrypt at runtime — never stored in memory
+    const token = decryptCredential(encryptedToken)
+    const breaker = circuitRegistry.get(tenantId)
+
+    const postUrl = isSandbox ? DI_POST_URL_SB : DI_POST_URL
+    const validateUrl = isSandbox ? DI_VAL_URL_SB : DI_VAL_URL
+
+    return {
+        tenantId,
+        isSandbox,
+        sellerNTN: creds.sellerNTN,
+        sellerBusinessName: creds.sellerBusinessName,
+        sellerProvince: creds.sellerProvince,
+        sellerAddress: creds.sellerAddress,
+
+        // Submit invoice to FBR (creates it)
+        postInvoice: async (payload: DIInvoicePayload): Promise<DIResponse> => {
+            return breaker.execute(async () => {
+                const controller = new AbortController()
+                const timer = setTimeout(() => controller.abort(), 15_000)
+                try {
+                    const res = await fetch(postUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(payload),
+                        signal: controller.signal,
+                    })
+                    clearTimeout(timer)
+                    if (res.status === 401) throw new DIAuthError(tenantId)
+                    if (res.status >= 500) throw new DIServerError(tenantId)
+
+                    if (!res.ok) {
+                        throw new Error(`PRAL DI post failed with status ${res.status}: ${await res.text()}`)
+                    }
+
+                    return res.json() as Promise<DIResponse>
+                } catch (err) {
+                    clearTimeout(timer)
+                    throw err
+                }
+            })
+        },
+
+        // Validate invoice WITHOUT submitting (useful for pre-flight check)
+        validateInvoice: async (payload: DIInvoicePayload): Promise<DIValidationResponse> => {
+            const controller = new AbortController()
+            const timer = setTimeout(() => controller.abort(), 10_000)
+            try {
+                const res = await fetch(validateUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(payload),
+                    signal: controller.signal,
+                })
+                clearTimeout(timer)
+
+                if (res.status === 401) throw new DIAuthError(tenantId)
+                if (res.status >= 500) throw new DIServerError(tenantId)
+
+                if (!res.ok) {
+                    throw new Error(`PRAL DI validation failed with status ${res.status}: ${await res.text()}`)
+                }
+
+                return res.json() as Promise<DIValidationResponse>
+            } catch (err) {
+                clearTimeout(timer)
+                throw err
+            }
+        },
+
+        getCircuitState: () => breaker.getState(),
+    }
+}
+
+export class DIAuthError extends Error {
+    constructor(public tenantId: string) {
+        super(`PRAL DI token unauthorized for tenant ${tenantId}. Token may be expired or not yet whitelisted.`)
+        this.name = 'DIAuthError'
+    }
+}
+
+export class DIServerError extends Error {
+    constructor(public tenantId: string) {
+        super(`PRAL DI server error for tenant ${tenantId}. Contact PRAL support via dicrm.pral.com.pk`)
+        this.name = 'DIServerError'
+    }
+}
+
+/** Non-retryable: tenant credentials are missing or misconfigured */
+export class DIConfigError extends Error {
+    constructor(public tenantId: string, detail: string) {
+        super(`PRAL DI config error for tenant ${tenantId}: ${detail}`)
+        this.name = 'DIConfigError'
+    }
+}
+
+/** Returns true if the error is permanent and should NOT be retried by the queue */
+export function isDIPermanentError(error: unknown): boolean {
+    return (
+        error instanceof DIAuthError ||
+        error instanceof DIConfigError
+    )
+}
