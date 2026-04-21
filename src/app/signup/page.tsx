@@ -128,43 +128,43 @@ export default function SignupPage() {
                                 </div>
 
                                 <div>
-                                    <label className="mb-1 block text-sm font-medium text-[var(--primary)]">Phone</label>
+                                    <label className="mb-1 block text-sm font-medium text-primary">Phone</label>
                                     <input
                                         name="phone"
                                         type="tel"
-                                        className="w-full rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
+                                        className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                                         placeholder="+92 300 1234567"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-[var(--primary)]">Password</label>
+                                <label className="mb-1 block text-sm font-medium text-primary">Password</label>
                                 <input
                                     name="password"
                                     type="password"
                                     required
                                     minLength={8}
-                                    className="w-full rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
+                                    className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                                     placeholder="Min 8 characters"
                                 />
                             </div>
 
-                            <div className="rounded-2xl bg-[var(--primary-soft)] px-4 py-3 text-sm text-[var(--primary)]">
+                            <div className="rounded-2xl bg-primary-soft px-4 py-3 text-sm text-primary">
                                 The system will create your tenant and, if available, automatically attach the active free plan from the existing subscription table.
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full rounded-full bg-[var(--primary)] py-3 font-medium text-white transition hover:bg-[var(--primary-strong)] disabled:cursor-not-allowed disabled:opacity-70"
+                                className="w-full rounded-full bg-primary py-3 font-medium text-white transition hover:bg-primary-strong disabled:cursor-not-allowed disabled:opacity-70"
                             >
                                 {loading ? 'Creating account...' : 'Create Account'}
                             </button>
 
-                            <p className="text-center text-sm text-[var(--muted)]">
+                            <p className="text-center text-sm text-muted">
                                 Already have an account?{' '}
-                                <Link href="/login" className="font-semibold text-[var(--primary)] hover:text-[var(--primary-strong)]">
+                                <Link href="/login" className="font-semibold text-primary hover:text-primary-strong">
                                     Sign in
                                 </Link>
                             </p>

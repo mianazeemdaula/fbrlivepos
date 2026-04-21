@@ -87,7 +87,7 @@ export default function FeatureFlagsPage() {
                 </div>
                 <button
                     onClick={() => setShowForm(!showForm)}
-                    className="flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)]"
+                    className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)]"
                 >
                     {showForm ? 'Cancel' : '+ New Flag'}
                 </button>

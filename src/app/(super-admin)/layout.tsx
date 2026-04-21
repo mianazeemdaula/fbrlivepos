@@ -96,7 +96,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                 {/* Brand */}
                 <div className="border-b border-white/10 px-5 py-5">
                     <div className="flex items-center gap-2.5 mb-0.5">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[var(--accent)] text-[var(--primary)]">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-primary">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" />
                                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />

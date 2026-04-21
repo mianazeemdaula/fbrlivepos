@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
     const start = Date.now()
     const attempt = await getNextSubmissionAttempt(tenant.id, invoiceId)
     let payload: ReturnType<typeof buildDIPayload> | null = null
+    let resolvedScenarioId: string | undefined
 
     try {
         const [invoice, creds] = await Promise.all([
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        const resolvedScenarioId = creds.environment === 'SANDBOX'
+        resolvedScenarioId = creds.environment === 'SANDBOX'
             ? (scenarioId ?? invoice.diScenarioId ?? inferSandboxScenario({
                 buyerRegistrationType: invoice.buyerRegistrationType,
                 items: invoice.items,
