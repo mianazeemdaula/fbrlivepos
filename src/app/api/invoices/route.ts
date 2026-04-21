@@ -4,12 +4,19 @@ import { getTenantFromSession } from '@/lib/tenant/context'
 import { prisma } from '@/lib/db/prisma'
 import { getNextInvoiceNumber } from '@/lib/invoices/numbering'
 import { checkPlanLimit } from '@/lib/features/flags'
+import { isValidMobile, isValidNtnCnic, normalizeMobile, normalizeNtnCnic } from '@/lib/validation/pakistan'
 
 const CreateInvoiceSchema = z.object({
     terminalId: z.string().optional(),
-    buyerNTN: z.string().optional(),
+    buyerNTN: z.string().optional().transform((value) => {
+        const normalized = normalizeNtnCnic(value)
+        return normalized || undefined
+    }).refine((value) => value === undefined || isValidNtnCnic(value), 'Buyer NTN/CNIC must be 7 or 13 digits'),
     buyerName: z.string().optional(),
-    buyerPhone: z.string().optional(),
+    buyerPhone: z.string().optional().transform((value) => {
+        const normalized = normalizeMobile(value)
+        return normalized || undefined
+    }).refine((value) => value === undefined || isValidMobile(value), 'Buyer phone must be a valid Pakistani mobile number'),
     buyerProvince: z.string().optional(),
     buyerAddress: z.string().optional(),
     buyerRegistrationType: z.enum(['Registered', 'Unregistered']).optional(),
@@ -84,6 +91,20 @@ export async function POST(req: NextRequest) {
             unitPrice,
             taxRate: Number(product.taxRate),
             taxAmount: lineTax,
+            diRate: product.diRate,
+            diUOM: product.diUOM ?? product.unit,
+            diSaleType: product.diSaleType,
+            diFixedNotifiedValueOrRetailPrice: product.diFixedNotifiedValueOrRetailPrice != null
+                ? Number(product.diFixedNotifiedValueOrRetailPrice)
+                : null,
+            diSalesTaxWithheldAtSource: product.diSalesTaxWithheldAtSource != null
+                ? Number(product.diSalesTaxWithheldAtSource)
+                : null,
+            extraTax: product.extraTax != null ? Number(product.extraTax) : null,
+            furtherTax: product.furtherTax != null ? Number(product.furtherTax) : null,
+            fedPayable: product.fedPayable != null ? Number(product.fedPayable) : null,
+            sroScheduleNo: product.sroScheduleNo,
+            sroItemSerialNo: product.sroItemSerialNo,
             discount: itemDiscount,
             lineTotal,
         }

@@ -1,0 +1,11 @@
+{
+  "dated": "2026-04-21 15:07:51",
+  "sourceInvoiceNo": "",
+  "validationResponse": {
+    "statusCode": "01",
+    "status": "Invalid",
+    "errorCode": "0203",
+    "error": "Provided scenario does not exists",
+    "invoiceStatuses": null
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "status": 200,
+  "statusText": "",
+  "headers": {
+    "access-control-allow-headers": "authorization,Access-Control-Allow-Origin,Content-Type,SOAPAction",
+    "access-control-allow-methods": "POST",
+    "access-control-allow-origin": "*",
+    "connection": "keep-alive",
+    "content-encoding": "gzip",
+    "content-length": "202",
+    "content-type": "application/json; charset=UTF-8",
+    "date": "Tue, 21 Apr 2026 10:07:41 GMT",
+    "server": "nginx/1.20.1",
+    "set-cookie": "cookiesession1=678B2AFCDABF408D18CA1DD31BF4C06B;Expires=Wed, 21 Apr 2027 10:09:29 GMT;Path=/;HttpOnly",
+    "vary": "origin,access-control-request-method,access-control-request-headers,accept-encoding"
+  },
+  "body": "{\n\t\t\t\t\t\t\t\t\t\t\"dated\": \"2026-04-21 15:07:51\" ,\n\t\t\t\t\t\t\t\t\t\t\"sourceInvoiceNo\":\"\",\n\t\t\t\t\t\t\t\t\t\t\"validationResponse\": {\"statusCode\":\"01\",\"status\":\"Invalid\",\"errorCode\":\"0203\",\"error\":\"Provided scenario does not exists\",\"invoiceStatuses\":null}\n\t\t\t\t\t\t\t\t\t\t}"
+}

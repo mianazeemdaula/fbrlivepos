@@ -11,6 +11,7 @@ const navItems = [
     { href: '/products', label: 'Products', icon: '📦' },
     { href: '/customers', label: 'Customers', icon: '👥' },
     { href: '/hs-codes', label: 'HS Codes', icon: '🏷️' },
+    { href: '/sandbox-scenarios', label: 'Sandbox Scenarios', icon: '🧪' },
     { href: '/settings', label: 'Settings', icon: '⚙️' },
 ]
 

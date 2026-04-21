@@ -1,0 +1,20 @@
+{
+  "invoiceNumber": "3530118686639DI868RS0271001",
+  "sourceInvoiceNo": "",
+  "dated": "2026-04-21 10:15:29",
+  "validationResponse": {
+    "statusCode": "00",
+    "status": "Valid",
+    "error": "",
+    "invoiceStatuses": [
+      {
+        "itemSNo": "1",
+        "statusCode": "00",
+        "status": "Valid",
+        "invoiceNo": "3530118686639DI868RS0271001-1",
+        "errorCode": "",
+        "error": ""
+      }
+    ]
+  }
+}

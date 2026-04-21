@@ -1,0 +1,36 @@
+{
+  "invoiceType": "Sale Invoice",
+  "invoiceDate": "2026-04-21",
+  "sellerNTNCNIC": "3530118686639",
+  "sellerBusinessName": "ALI PROTEIN FARM",
+  "sellerProvince": "Punjab",
+  "sellerAddress": "VILLAGE DHARMAIWALA 5-KM BASIRPUR ROAD",
+  "buyerNTNCNIC": "3710505701479",
+  "buyerBusinessName": "FERTILIZER MANUFAC IRS NEW",
+  "buyerProvince": "Sindh",
+  "buyerAddress": "Karachi",
+  "buyerRegistrationType": "Unregistered",
+  "invoiceRefNo": "SI-20250421-001",
+  "scenarioId": "SN004",
+  "items": [
+    {
+      "hsCode": "7204.4910",
+      "productDescription": "",
+      "rate": "18%",
+      "uoM": "MT",
+      "quantity": 1,
+      "totalValues": 0,
+      "valueSalesExcludingST": 175000,
+      "fixedNotifiedValueOrRetailPrice": 0,
+      "salesTaxApplicable": 31500,
+      "salesTaxWithheldAtSource": 0,
+      "extraTax": 0,
+      "furtherTax": 0,
+      "sroScheduleNo": "",
+      "fedPayable": 0,
+      "discount": 0,
+      "saleType": "Ship breaking",
+      "sroItemSerialNo": ""
+    }
+  ]
+}

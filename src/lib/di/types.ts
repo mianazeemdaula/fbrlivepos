@@ -30,7 +30,7 @@ export interface DIInvoiceItem {
     fixedNotifiedValueOrRetailPrice: number // 0.00 unless fixed price item
     salesTaxApplicable: number // GST amount (NOT including further/extra tax)
     salesTaxWithheldAtSource: number // Usually 0.00
-    extraTax: number // 0.00 if not applicable
+    extraTax: number | '' // Some PRAL reduced-rate scenarios require empty string instead of 0.00
     furtherTax: number // 0.00 if not applicable
     sroScheduleNo?: string // Required if saleType uses SRO
     fedPayable: number // 0.00 if no FED

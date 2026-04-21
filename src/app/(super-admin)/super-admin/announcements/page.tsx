@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { PaginationControls } from '@/components/pagination-controls'
 
 type AnnouncementType = 'INFO' | 'WARNING' | 'MAINTENANCE' | 'FEATURE'
 
@@ -26,6 +27,9 @@ const TYPE_STYLES: Record<AnnouncementType, { label: string; color: string; dot:
 export default function AnnouncementsPage() {
     const [announcements, setAnnouncements] = useState<Announcement[]>([])
     const [loading, setLoading] = useState(true)
+    const [page, setPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(1)
+    const [total, setTotal] = useState(0)
     const [showForm, setShowForm] = useState(false)
     const [formLoading, setFormLoading] = useState(false)
     const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -34,10 +38,12 @@ export default function AnnouncementsPage() {
     async function loadAnnouncements() {
         setLoading(true)
         try {
-            const res = await fetch('/api/admin/announcements')
+            const res = await fetch(`/api/admin/announcements?page=${page}`)
             if (res.ok) {
                 const data = await res.json()
                 setAnnouncements(data.announcements || [])
+                setTotal(data.meta?.total ?? 0)
+                setTotalPages(data.meta?.totalPages ?? 1)
             }
         } catch {
             // Ignore
@@ -48,7 +54,7 @@ export default function AnnouncementsPage() {
 
     useEffect(() => {
         loadAnnouncements()
-    }, [])
+    }, [page])
 
     async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -79,6 +85,7 @@ export default function AnnouncementsPage() {
             }
 
             setShowForm(false)
+            setPage(1)
             loadAnnouncements()
         } catch {
             setError('Network error')
@@ -91,7 +98,11 @@ export default function AnnouncementsPage() {
         setDeleteId(id)
         try {
             await fetch(`/api/admin/announcements?id=${id}`, { method: 'DELETE' })
-            setAnnouncements((prev) => prev.filter((a) => a.id !== id))
+            if (announcements.length === 1 && page > 1) {
+                setPage(page - 1)
+            } else {
+                loadAnnouncements()
+            }
         } catch {
             // Ignore
         } finally {
@@ -105,6 +116,9 @@ export default function AnnouncementsPage() {
         const ends = a.endsAt ? new Date(a.endsAt) : null
         return starts <= now && (!ends || ends >= now)
     }
+
+    const from = total === 0 ? 0 : (page - 1) * 20 + 1
+    const to = Math.min(page * 20, total)
 
     return (
         <div className="p-8">
@@ -294,6 +308,15 @@ export default function AnnouncementsPage() {
                         )
                     })}
                 </div>
+            )}
+
+            {!loading && total > 0 && (
+                <PaginationControls
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    summary={`Showing ${from}-${to} of ${total.toLocaleString()} announcements`}
+                />
             )}
         </div>
     )

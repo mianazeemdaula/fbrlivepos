@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { PaginationControls } from '@/components/pagination-controls'
 
 interface BillingRecord {
     id: string
@@ -14,21 +15,50 @@ interface BillingRecord {
     plan: { name: string }
 }
 
+const LIMIT = 25
+
 export default function BillingPage() {
     const [records, setRecords] = useState<BillingRecord[]>([])
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState('all')
+    const [page, setPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(1)
+    const [total, setTotal] = useState(0)
 
     useEffect(() => {
         async function load() {
             setLoading(true)
             try {
-                const params = new URLSearchParams()
+                const params = new URLSearchParams({ page: String(page) })
                 if (filter !== 'all') params.set('status', filter)
                 const res = await fetch(`/api/admin/billing?${params.toString()}`)
                 if (res.ok) {
                     const data = await res.json()
-                    setRecords(data.records || [])
+                    setRecords((data.data || []).map((record: {
+                        id: string
+                        amount: number
+                        status: string
+                        billingCycle: string
+                        periodStart: string
+                        periodEnd: string
+                        paidAt: string | null
+                        subscription?: {
+                            tenant?: { name?: string }
+                            plan?: { name?: string }
+                        }
+                    }) => ({
+                        id: record.id,
+                        amount: record.amount,
+                        status: record.status,
+                        billingCycle: record.billingCycle,
+                        periodStart: record.periodStart,
+                        periodEnd: record.periodEnd,
+                        paidAt: record.paidAt,
+                        tenant: { businessName: record.subscription?.tenant?.name || 'Unknown tenant' },
+                        plan: { name: record.subscription?.plan?.name || 'Unknown plan' },
+                    })))
+                    setTotal(data.total ?? 0)
+                    setTotalPages(data.pages ?? 1)
                 }
             } catch {
                 // Ignore
@@ -37,7 +67,7 @@ export default function BillingPage() {
             }
         }
         load()
-    }, [filter])
+    }, [filter, page])
 
     async function handleMarkPaid(recordId: string) {
         try {
@@ -56,6 +86,9 @@ export default function BillingPage() {
         }
     }
 
+    const from = total === 0 ? 0 : (page - 1) * LIMIT + 1
+    const to = Math.min(page * LIMIT, total)
+
     return (
         <div className="p-8">
             <div className="flex items-start justify-between mb-8">
@@ -65,7 +98,10 @@ export default function BillingPage() {
                 </div>
                 <select
                     value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
+                    onChange={(e) => {
+                        setFilter(e.target.value)
+                        setPage(1)
+                    }}
                     className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                 >
                     <option value="all">All records</option>
@@ -141,6 +177,15 @@ export default function BillingPage() {
                     </tbody>
                 </table>
             </div>
+
+            {!loading && total > 0 && (
+                <PaginationControls
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    summary={`Showing ${from}-${to} of ${total.toLocaleString()} billing records`}
+                />
+            )}
         </div>
     )
 }

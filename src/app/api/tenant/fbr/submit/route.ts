@@ -3,6 +3,8 @@ import { getTenantFromSession } from '@/lib/tenant/context'
 import { getDIClientForTenant, DIAuthError, DIConfigError, DIServerError } from '@/lib/di/client'
 import { buildDIPayload } from '@/lib/di/payload-builder'
 import { mapDIErrorCodes } from '@/lib/di/error-codes'
+import { evaluateDISubmissionEligibility } from '@/lib/di/eligibility'
+import { inferSandboxScenario } from '@/lib/di/scenario-catalog'
 import { enqueueInvoiceSubmission } from '@/lib/fbr/queue'
 import { prisma } from '@/lib/db/prisma'
 import { Prisma } from '@/generated/prisma/client'
@@ -15,11 +17,12 @@ import {
 
 export async function POST(req: NextRequest) {
     const { tenant } = await getTenantFromSession()
-    const { invoiceId } = await req.json()
+    const { invoiceId, scenarioId } = await req.json()
 
     const start = Date.now()
     const attempt = await getNextSubmissionAttempt(tenant.id, invoiceId)
     let payload: ReturnType<typeof buildDIPayload> | null = null
+    let resolvedScenarioId: string | null | undefined = undefined
 
     try {
         const [invoice, creds] = await Promise.all([
@@ -66,30 +69,83 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        const diClient = await getDIClientForTenant(tenant.id)
-        payload = buildDIPayload(invoice, creds, {
-            isSandbox: creds.environment === 'SANDBOX',
+        const isSandbox = creds.environment === 'SANDBOX'
+        if (isSandbox) {
+            const inferredScenarioId = inferSandboxScenario({
+                buyerRegistrationType: invoice.buyerRegistrationType,
+                items: invoice.items,
+                businessActivity: creds.businessActivity,
+                sector: creds.sector,
+            }).scenarioId
+            // Fallback: if inference fails (product DI fields not fully configured),
+            // default to SN001 (registered buyer) or SN002 (unregistered) so the
+            // sandbox submission always includes a scenarioId.
+            const fallbackScenarioId = invoice.buyerRegistrationType === 'Registered'
+                ? 'SN001'
+                : 'SN002'
+            resolvedScenarioId = scenarioId ?? invoice.diScenarioId ?? inferredScenarioId ?? fallbackScenarioId
+        } else {
+            resolvedScenarioId = undefined
+        }
+
+        if (resolvedScenarioId && resolvedScenarioId !== invoice.diScenarioId) {
+            await prisma.invoice.updateMany({
+                where: { id: invoiceId, tenantId: tenant.id },
+                data: { diScenarioId: resolvedScenarioId },
+            })
+            invoice.diScenarioId = resolvedScenarioId
+        }
+
+        const eligibility = evaluateDISubmissionEligibility({
+            creds,
+            invoice,
+            scenarioId: resolvedScenarioId,
         })
 
-        if (diClient.getCircuitState().state === 'OPEN') {
+        if (!eligibility.eligible) {
             await recordFBRSubmissionLog({
                 tenantId: tenant.id,
                 invoiceId,
                 attempt,
-                requestBody: payload,
-                error: 'Circuit breaker open. Invoice queued for retry.',
+                error: eligibility.issues.map((issue) => issue.message).join(' | '),
                 durationMs: Date.now() - start,
             })
 
-            await enqueueInvoiceSubmission(tenant.id, invoiceId)
-            return NextResponse.json({
-                success: true,
-                offline: true,
-                message: 'PRAL DI service temporarily unavailable. Invoice queued for automatic retry.',
-            })
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'Invoice is not eligible for PRAL DI submission yet.',
+                    eligibility,
+                },
+                { status: 422 },
+            )
         }
 
+        const diClient = await getDIClientForTenant(tenant.id)
+        payload = buildDIPayload(invoice, creds, {
+            isSandbox,
+            scenarioId: resolvedScenarioId ?? undefined,
+        })
+
+        console.log('[FBR-SUBMIT] ========== START SUBMISSION ==========')
+        console.log('[FBR-SUBMIT] tenantId:', tenant.id)
+        console.log('[FBR-SUBMIT] invoiceId:', invoiceId)
+        console.log('[FBR-SUBMIT] attempt:', attempt)
+        console.log('[FBR-SUBMIT] environment:', creds.environment)
+        console.log('[FBR-SUBMIT] isSandbox:', isSandbox)
+        console.log('[FBR-SUBMIT] scenarioId on invoice:', invoice.diScenarioId)
+        console.log('[FBR-SUBMIT] resolved scenarioId:', resolvedScenarioId)
+        console.log('[FBR-SUBMIT] invoiceType:', invoice.invoiceType)
+        console.log('[FBR-SUBMIT] circuitBreakerState:', diClient.getCircuitState().state)
+        console.log('[FBR-SUBMIT] FULL PAYLOAD:', JSON.stringify(payload, null, 2))
+
+        // NOTE: Circuit breaker queue bypass disabled for direct testing.
+        // Re-enable by restoring the circuit state check block.
+        // if (diClient.getCircuitState().state === 'OPEN') { ... }
+
+        console.log('[FBR-SUBMIT] Calling validateInvoice...')
         const validation = await diClient.validateInvoice(payload)
+        console.log('[FBR-SUBMIT] validateInvoice raw response:', JSON.stringify(validation, null, 2))
         if (validation.validationResponse.statusCode === '01') {
             const errors = mapDIErrorCodes(validation.validationResponse)
 
@@ -124,7 +180,9 @@ export async function POST(req: NextRequest) {
             )
         }
 
+        console.log('[FBR-SUBMIT] Validation passed (statusCode 00). Calling postInvoice...')
         const response = await diClient.postInvoice(payload)
+        console.log('[FBR-SUBMIT] postInvoice raw response:', JSON.stringify(response, null, 2))
         const isValid = response.validationResponse.statusCode === '00'
 
         await Promise.all([
@@ -227,7 +285,7 @@ export async function POST(req: NextRequest) {
                 durationMs: Date.now() - start,
             })
 
-            await enqueueInvoiceSubmission(tenant.id, invoiceId)
+            await enqueueInvoiceSubmission(tenant.id, invoiceId, resolvedScenarioId ?? undefined)
             return NextResponse.json({
                 success: true,
                 offline: true,

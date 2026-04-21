@@ -1,0 +1,36 @@
+{
+  "invoiceType": "Sale Invoice",
+  "invoiceDate": "2026-04-21",
+  "sellerNTNCNIC": "3530118686639",
+  "sellerBusinessName": "ALI PROTEIN FARM",
+  "sellerProvince": "Punjab",
+  "sellerAddress": "VILLAGE DHARMAIWALA 5-KM BASIRPUR ROAD",
+  "buyerNTNCNIC": "1000000000000",
+  "buyerBusinessName": "FERTILIZER MANUFAC IRS NEW",
+  "buyerProvince": "Sindh",
+  "buyerAddress": "Karachi",
+  "buyerRegistrationType": "Unregistered",
+  "invoiceRefNo": "SI-20250421-001",
+  "scenarioId": "SN021",
+  "items": [
+    {
+      "hsCode": "2523.2900",
+      "productDescription": "TEST",
+      "rate": "rupees 3 per Kg",
+      "uoM": "KG",
+      "quantity": 1000,
+      "totalValues": 0,
+      "valueSalesExcludingST": 100000,
+      "fixedNotifiedValueOrRetailPrice": 3,
+      "salesTaxApplicable": 3000,
+      "salesTaxWithheldAtSource": 0,
+      "extraTax": 0,
+      "furtherTax": 0,
+      "sroScheduleNo": "",
+      "fedPayable": 0,
+      "discount": 0,
+      "saleType": "Cement /Concrete Block",
+      "sroItemSerialNo": ""
+    }
+  ]
+}

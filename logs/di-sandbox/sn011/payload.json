@@ -1,0 +1,36 @@
+{
+  "invoiceType": "Sale Invoice",
+  "invoiceDate": "2026-04-21",
+  "sellerNTNCNIC": "3530118686639",
+  "sellerBusinessName": "ALI PROTEIN FARM",
+  "sellerProvince": "Punjab",
+  "sellerAddress": "VILLAGE DHARMAIWALA 5-KM BASIRPUR ROAD",
+  "buyerNTNCNIC": "3710505701479",
+  "buyerBusinessName": "FERTILIZER MANUFAC IRS NEW",
+  "buyerProvince": "Sindh",
+  "buyerAddress": "Karachi",
+  "buyerRegistrationType": "Unregistered",
+  "invoiceRefNo": "",
+  "scenarioId": "SN011",
+  "items": [
+    {
+      "hsCode": "7214.9990",
+      "productDescription": "",
+      "rate": "18%",
+      "uoM": "KG",
+      "quantity": 1000,
+      "totalValues": 0,
+      "valueSalesExcludingST": 205000,
+      "fixedNotifiedValueOrRetailPrice": 0,
+      "salesTaxApplicable": 36900,
+      "salesTaxWithheldAtSource": 0,
+      "extraTax": 0,
+      "furtherTax": 0,
+      "sroScheduleNo": "",
+      "fedPayable": 0,
+      "discount": 0,
+      "saleType": "Toll Manufacturing",
+      "sroItemSerialNo": ""
+    }
+  ]
+}

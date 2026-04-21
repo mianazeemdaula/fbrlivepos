@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { PaginationControls } from '@/components/pagination-controls'
 
 interface Tenant {
     id: string
@@ -23,6 +24,9 @@ export default function TenantsPage() {
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [filter, setFilter] = useState('all')
+    const [page, setPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(1)
+    const [total, setTotal] = useState(0)
 
     useEffect(() => {
         async function load() {
@@ -31,10 +35,13 @@ export default function TenantsPage() {
                 const params = new URLSearchParams()
                 if (search) params.set('q', search)
                 if (filter !== 'all') params.set('status', filter.toUpperCase())
+                params.set('page', String(page))
                 const res = await fetch(`/api/admin/tenants?${params.toString()}`)
                 if (res.ok) {
                     const data = await res.json()
                     setTenants(data.data || [])
+                    setTotal(data.total ?? 0)
+                    setTotalPages(data.pages ?? 1)
                 }
             } catch {
                 // Ignore
@@ -43,7 +50,10 @@ export default function TenantsPage() {
             }
         }
         load()
-    }, [search, filter])
+    }, [search, filter, page])
+
+    const from = total === 0 ? 0 : (page - 1) * 25 + 1
+    const to = Math.min(page * 25, total)
 
     return (
         <div className="p-8">
@@ -57,12 +67,18 @@ export default function TenantsPage() {
                     type="text"
                     placeholder="Search by name or email..."
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => {
+                        setSearch(e.target.value)
+                        setPage(1)
+                    }}
                     className="flex-1 max-w-sm bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                 />
                 <select
                     value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
+                    onChange={(e) => {
+                        setFilter(e.target.value)
+                        setPage(1)
+                    }}
                     className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                 >
                     <option value="all">All tenants</option>
@@ -124,8 +140,8 @@ export default function TenantsPage() {
                                     <td className="px-4 py-3">
                                         <span
                                             className={`text-xs px-2 py-0.5 rounded-full font-medium ${t.isActive
-                                                    ? 'bg-emerald-500/10 text-emerald-400'
-                                                    : 'bg-red-500/10 text-red-400'
+                                                ? 'bg-emerald-500/10 text-emerald-400'
+                                                : 'bg-red-500/10 text-red-400'
                                                 }`}
                                         >
                                             {t.isActive ? 'Active' : 'Suspended'}
@@ -148,6 +164,15 @@ export default function TenantsPage() {
                     </tbody>
                 </table>
             </div>
+
+            {!loading && total > 0 && (
+                <PaginationControls
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    summary={`Showing ${from}-${to} of ${total.toLocaleString()} tenants`}
+                />
+            )}
         </div>
     )
 }

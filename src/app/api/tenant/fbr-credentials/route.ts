@@ -3,10 +3,14 @@ import { z } from 'zod'
 import { getTenantFromSession } from '@/lib/tenant/context'
 import { encryptCredential } from '@/lib/crypto/credentials'
 import { prisma } from '@/lib/db/prisma'
+import { isValidSellerNtn, normalizeSellerNtn, normalizeNtnCnic } from '@/lib/validation/pakistan'
 
 const DICredentialsSchema = z.object({
-    sellerNTN: z.string().regex(/^\d{7}$/, 'NTN must be 7 digits'),
-    sellerCNIC: z.string().regex(/^\d{13}$/, 'CNIC must be 13 digits').optional(),
+    sellerNTN: z.string().transform((value) => normalizeSellerNtn(value)).refine(isValidSellerNtn, 'NTN/registration must be 7, 8, or 9 digits'),
+    sellerCNIC: z.string().optional().transform((value) => {
+        const normalized = normalizeNtnCnic(value)
+        return normalized || undefined
+    }).refine((value) => value === undefined || value.length === 13, 'CNIC must be 13 digits'),
     sellerBusinessName: z.string().min(2),
     sellerProvince: z.string().min(1),
     sellerAddress: z.string().min(2),
@@ -30,7 +34,7 @@ export async function POST(req: NextRequest) {
         create: {
             tenantId: tenant.id,
             sellerNTN: body.sellerNTN,
-            sellerCNIC: body.sellerCNIC,
+            sellerCNIC: body.sellerCNIC ?? null,
             sellerBusinessName: body.sellerBusinessName,
             sellerProvince: body.sellerProvince,
             sellerAddress: body.sellerAddress,
@@ -43,7 +47,7 @@ export async function POST(req: NextRequest) {
         },
         update: {
             sellerNTN: body.sellerNTN,
-            sellerCNIC: body.sellerCNIC,
+            sellerCNIC: body.sellerCNIC ?? null,
             sellerBusinessName: body.sellerBusinessName,
             sellerProvince: body.sellerProvince,
             sellerAddress: body.sellerAddress,

@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getTenantFromSession } from '@/lib/tenant/context'
 import { prisma } from '@/lib/db/prisma'
+import { isValidMobile, isValidNtnCnic, normalizeMobile, normalizeNtnCnic } from '@/lib/validation/pakistan'
 
 const CreateCustomerSchema = z.object({
     name: z.string().min(1),
-    ntnCnic: z.string().regex(/^(\d{7}|\d{13})$/, 'Must be 7-digit NTN or 13-digit CNIC').optional(),
-    phone: z.string().optional(),
+    ntnCnic: z.string().optional().transform((value) => {
+        const normalized = normalizeNtnCnic(value)
+        return normalized || undefined
+    }).refine((value) => value === undefined || isValidNtnCnic(value), 'Must be 7-digit NTN or 13-digit CNIC'),
+    phone: z.string().optional().transform((value) => {
+        const normalized = normalizeMobile(value)
+        return normalized || undefined
+    }).refine((value) => value === undefined || isValidMobile(value), 'Mobile must be a valid Pakistani number'),
     email: z.string().email().optional().or(z.literal('')),
     province: z.string().optional(),
     address: z.string().optional(),

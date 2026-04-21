@@ -2,28 +2,280 @@
 // Usage: npx tsx workers/di-reference-sync.worker.ts
 
 import { prisma } from '../src/lib/db/prisma'
+import { ALL_SCENARIO_IDS } from '../src/lib/di/scenarios'
+import { getScenarioPreview } from '../src/lib/di/scenario-catalog'
 
 const FBR_BASE = 'https://gw.fbr.gov.pk'
 // Use YOUR platform's sandbox token for reference syncing
 const PLATFORM_TOKEN = process.env.PRAL_PLATFORM_TOKEN!
 
-async function fetchWithToken(url: string) {
+type ProvinceEntry = { stateProvinceCode: number; stateProvinceDesc: string }
+type DocumentTypeEntry = { docTypeId: number; docDescription: string }
+type UOMEntry = { uoM_ID: number; description: string }
+type ItemDescriptionEntry = { hS_CODE: string; description: string }
+type TransactionTypeEntry = { transactioN_TYPE_ID: number; transactioN_DESC: string }
+type SROItemEntry = { srO_ITEM_ID: number; srO_ITEM_DESC: string }
+type RateEntry = { ratE_ID: number; ratE_DESC: string; ratE_VALUE: number }
+type SROScheduleEntry = { srO_ID: number; srO_DESC: string }
+
+async function fetchWithToken<T>(url: string): Promise<T> {
     const res = await fetch(url, {
         headers: { Authorization: `Bearer ${PLATFORM_TOKEN}` },
         signal: AbortSignal.timeout(30_000),
     })
     if (!res.ok) throw new Error(`Reference API ${url} returned ${res.status}`)
-    return res.json()
+    return res.json() as Promise<T>
+}
+
+function formatReferenceDate(date = new Date()) {
+    return date.toISOString().split('T')[0]
+}
+
+function chunked<T>(items: T[], size: number) {
+    const chunks: T[][] = []
+
+    for (let index = 0; index < items.length; index += size) {
+        chunks.push(items.slice(index, index + size))
+    }
+
+    return chunks
+}
+
+async function syncHSCodeUOMReference(hsCode: string, annexureId = 3) {
+    const entries = await fetchWithToken<UOMEntry[]>(
+        `${FBR_BASE}/pdi/v2/HS_UOM?hs_code=${encodeURIComponent(hsCode)}&annexure_id=${annexureId}`,
+    )
+
+    if (!Array.isArray(entries) || entries.length === 0) {
+        return []
+    }
+
+    await prisma.$transaction(async (tx) => {
+        for (const entry of entries) {
+            await tx.dIUnitOfMeasure.upsert({
+                where: { id: entry.uoM_ID },
+                create: { id: entry.uoM_ID, description: entry.description },
+                update: { description: entry.description },
+            })
+
+            await tx.dIHSCodeUOM.upsert({
+                where: {
+                    hsCode_uomId_annexureId: {
+                        hsCode,
+                        uomId: entry.uoM_ID,
+                        annexureId,
+                    },
+                },
+                create: {
+                    hsCode,
+                    uomId: entry.uoM_ID,
+                    uomDesc: entry.description,
+                    annexureId,
+                },
+                update: {
+                    uomDesc: entry.description,
+                },
+            })
+        }
+    })
+
+    if (entries.length === 1) {
+        await prisma.hSCode.updateMany({
+            where: { code: hsCode },
+            data: { unit: entries[0].description },
+        })
+    }
+
+    return entries
+}
+
+async function syncSaleTypeToRateReference(referenceDate: string) {
+    const transactionTypes = await prisma.dITransactionType.findMany({ orderBy: { id: 'asc' } })
+    const rateIds = new Set<number>()
+    let syncedRates = 0
+
+    for (const transactionType of transactionTypes) {
+        await prisma.dISaleType.upsert({
+            where: { code: String(transactionType.id) },
+            create: {
+                code: String(transactionType.id),
+                description: transactionType.description,
+            },
+            update: {
+                description: transactionType.description,
+            },
+        })
+
+        for (const originationSupplier of [false, true]) {
+            try {
+                const rates = await fetchWithToken<RateEntry[]>(
+                    `${FBR_BASE}/pdi/v2/SaleTypeToRate?date=${referenceDate}&transTypeId=${transactionType.id}&originationSupplier=${originationSupplier}`,
+                )
+
+                if (!Array.isArray(rates) || rates.length === 0) {
+                    continue
+                }
+
+                await prisma.$transaction(
+                    rates.map((rate) =>
+                        prisma.dIRate.upsert({
+                            where: { id: rate.ratE_ID },
+                            create: {
+                                id: rate.ratE_ID,
+                                description: rate.ratE_DESC,
+                                value: rate.ratE_VALUE,
+                            },
+                            update: {
+                                description: rate.ratE_DESC,
+                                value: rate.ratE_VALUE,
+                            },
+                        }),
+                    ),
+                )
+
+                for (const rate of rates) {
+                    rateIds.add(rate.ratE_ID)
+                }
+                syncedRates += rates.length
+            } catch (err) {
+                console.warn(
+                    `[DI Sync] SaleTypeToRate skipped for transTypeId=${transactionType.id}, originationSupplier=${originationSupplier}:`,
+                    err,
+                )
+            }
+        }
+    }
+
+    console.log(`[DI Sync] Synced ${syncedRates} sale-type rate rows across ${transactionTypes.length} transaction types`)
+    return [...rateIds]
+}
+
+async function syncSroScheduleReference(referenceDate: string, rateIds: number[]) {
+    const sroIds = new Set<number>()
+    let syncedSchedules = 0
+
+    for (const rateId of rateIds) {
+        for (const originationSupplier of [false, true]) {
+            try {
+                const schedules = await fetchWithToken<SROScheduleEntry[]>(
+                    `${FBR_BASE}/pdi/v1/SroSchedule?rate_id=${rateId}&date=${referenceDate}&origination_supplier_csv=${originationSupplier}`,
+                )
+
+                if (!Array.isArray(schedules) || schedules.length === 0) {
+                    continue
+                }
+
+                await prisma.$transaction(
+                    schedules.map((schedule) =>
+                        prisma.dISROSchedule.upsert({
+                            where: { id: schedule.srO_ID },
+                            create: {
+                                id: schedule.srO_ID,
+                                description: schedule.srO_DESC,
+                            },
+                            update: {
+                                description: schedule.srO_DESC,
+                            },
+                        }),
+                    ),
+                )
+
+                for (const schedule of schedules) {
+                    sroIds.add(schedule.srO_ID)
+                }
+                syncedSchedules += schedules.length
+            } catch (err) {
+                console.warn(
+                    `[DI Sync] SroSchedule skipped for rate_id=${rateId}, origination_supplier_csv=${originationSupplier}:`,
+                    err,
+                )
+            }
+        }
+    }
+
+    console.log(`[DI Sync] Synced ${syncedSchedules} SRO schedule rows from ${rateIds.length} rate ids`)
+    return [...sroIds]
+}
+
+async function syncSroItemDetailsReference(referenceDate: string, sroIds: number[]) {
+    let syncedItems = 0
+
+    for (const sroId of sroIds) {
+        try {
+            const items = await fetchWithToken<SROItemEntry[]>(
+                `${FBR_BASE}/pdi/v2/SROItem?date=${referenceDate}&sro_id=${sroId}`,
+            )
+
+            if (!Array.isArray(items) || items.length === 0) {
+                continue
+            }
+
+            await prisma.$transaction(
+                items.map((item) =>
+                    prisma.dISROItem.upsert({
+                        where: { id: item.srO_ITEM_ID },
+                        create: {
+                            id: item.srO_ITEM_ID,
+                            description: item.srO_ITEM_DESC,
+                        },
+                        update: {
+                            description: item.srO_ITEM_DESC,
+                        },
+                    }),
+                ),
+            )
+
+            syncedItems += items.length
+        } catch (err) {
+            console.warn(`[DI Sync] SROItem skipped for sro_id=${sroId}:`, err)
+        }
+    }
+
+    console.log(`[DI Sync] Synced ${syncedItems} SRO item-detail rows from ${sroIds.length} schedule ids`)
+}
+
+async function syncPriorityHSCodeUOMs() {
+    const hsCodes = new Set<string>()
+
+    for (const scenarioId of ALL_SCENARIO_IDS) {
+        for (const item of getScenarioPreview(scenarioId).items) {
+            hsCodes.add(item.hsCode)
+        }
+    }
+
+    const existingProducts = await prisma.product.findMany({
+        select: { hsCode: true },
+        distinct: ['hsCode'],
+    })
+
+    for (const product of existingProducts) {
+        hsCodes.add(product.hsCode)
+    }
+
+    let syncedHsCodes = 0
+    for (const hsCode of hsCodes) {
+        try {
+            const entries = await syncHSCodeUOMReference(hsCode)
+            if (entries.length > 0) {
+                syncedHsCodes += 1
+            }
+        } catch (err) {
+            console.warn(`[DI Sync] HS_UOM skipped for hs_code=${hsCode}:`, err)
+        }
+    }
+
+    console.log(`[DI Sync] Synced HS_UOM reference data for ${syncedHsCodes} priority HS codes`)
 }
 
 export async function syncAllReferenceData() {
     console.log('[DI Sync] Starting reference data sync...')
+    const referenceDate = formatReferenceDate()
 
     // 1. Provinces
     try {
-        const provinces = await fetchWithToken(`${FBR_BASE}/pdi/v1/provinces`)
+        const provinces = await fetchWithToken<ProvinceEntry[]>(`${FBR_BASE}/pdi/v1/provinces`)
         await prisma.$transaction(
-            provinces.map((p: { stateProvinceCode: number; stateProvinceDesc: string }) =>
+            provinces.map((p) =>
                 prisma.dIProvince.upsert({
                     where: { code: p.stateProvinceCode },
                     create: { code: p.stateProvinceCode, description: p.stateProvinceDesc },
@@ -38,9 +290,9 @@ export async function syncAllReferenceData() {
 
     // 2. Document Types
     try {
-        const docTypes = await fetchWithToken(`${FBR_BASE}/pdi/v1/doctypecode`)
+        const docTypes = await fetchWithToken<DocumentTypeEntry[]>(`${FBR_BASE}/pdi/v1/doctypecode`)
         await prisma.$transaction(
-            docTypes.map((d: { docTypeId: number; docDescription: string }) =>
+            docTypes.map((d) =>
                 prisma.dIDocumentType.upsert({
                     where: { id: d.docTypeId },
                     create: { id: d.docTypeId, description: d.docDescription },
@@ -55,9 +307,9 @@ export async function syncAllReferenceData() {
 
     // 3. Units of Measure
     try {
-        const uoms = await fetchWithToken(`${FBR_BASE}/pdi/v1/uom`)
+        const uoms = await fetchWithToken<UOMEntry[]>(`${FBR_BASE}/pdi/v1/uom`)
         await prisma.$transaction(
-            uoms.map((u: { uoM_ID: number; description: string }) =>
+            uoms.map((u) =>
                 prisma.dIUnitOfMeasure.upsert({
                     where: { id: u.uoM_ID },
                     create: { id: u.uoM_ID, description: u.description },
@@ -72,11 +324,10 @@ export async function syncAllReferenceData() {
 
     // 4. HS Codes / Item Descriptions
     try {
-        const items: Array<{ hS_CODE: string; description: string }> = await fetchWithToken(`${FBR_BASE}/pdi/v1/itemdesccode`)
+        const items = await fetchWithToken<ItemDescriptionEntry[]>(`${FBR_BASE}/pdi/v1/itemdesccode`)
         let synced = 0
         // Batch in chunks of 50 to avoid transaction size limits
-        for (let i = 0; i < items.length; i += 50) {
-            const chunk = items.slice(i, i + 50)
+        for (const chunk of chunked(items, 50)) {
             await prisma.$transaction(
                 chunk.map((item) =>
                     prisma.dIItemDescription.upsert({
@@ -92,8 +343,7 @@ export async function syncAllReferenceData() {
 
         // Also seed into the HSCode master table for tenant product mapping
         let hsSeeded = 0
-        for (let i = 0; i < items.length; i += 50) {
-            const chunk = items.slice(i, i + 50)
+        for (const chunk of chunked(items, 50)) {
             await prisma.$transaction(
                 chunk.map((item) =>
                     prisma.hSCode.upsert({
@@ -102,12 +352,12 @@ export async function syncAllReferenceData() {
                             code: item.hS_CODE,
                             description: item.description,
                             category: categorizeHSCode(item.hS_CODE),
-                            unit: 'PCS',
                             defaultTaxRate: 18,
                             isFBRActive: true,
                         },
                         update: {
                             description: item.description,
+                            category: categorizeHSCode(item.hS_CODE),
                             isFBRActive: true,
                         },
                     }),
@@ -122,7 +372,7 @@ export async function syncAllReferenceData() {
 
     // 5. Transaction Types
     try {
-        const transTypes: Array<{ transactioN_TYPE_ID: number; transactioN_DESC: string }> = await fetchWithToken(`${FBR_BASE}/pdi/v1/transtypecode`)
+        const transTypes = await fetchWithToken<TransactionTypeEntry[]>(`${FBR_BASE}/pdi/v1/transtypecode`)
         await prisma.$transaction(
             transTypes.map((t) =>
                 prisma.dITransactionType.upsert({
@@ -139,7 +389,7 @@ export async function syncAllReferenceData() {
 
     // 6. SRO Item Codes
     try {
-        const sroItems: Array<{ srO_ITEM_ID: number; srO_ITEM_DESC: string }> = await fetchWithToken(`${FBR_BASE}/pdi/v1/sroitemcode`)
+        const sroItems = await fetchWithToken<SROItemEntry[]>(`${FBR_BASE}/pdi/v1/sroitemcode`)
         await prisma.$transaction(
             sroItems.map((s) =>
                 prisma.dISROItem.upsert({
@@ -152,6 +402,36 @@ export async function syncAllReferenceData() {
         console.log(`[DI Sync] Synced ${sroItems.length} SRO item codes`)
     } catch (err) {
         console.error('[DI Sync] Failed to sync SRO item codes:', err)
+    }
+
+    // 7. Sale Type to Rate
+    let rateIds: number[] = []
+    try {
+        rateIds = await syncSaleTypeToRateReference(referenceDate)
+    } catch (err) {
+        console.error('[DI Sync] Failed to sync SaleTypeToRate reference data:', err)
+    }
+
+    // 8. SRO Schedule
+    let sroIds: number[] = []
+    try {
+        sroIds = await syncSroScheduleReference(referenceDate, rateIds)
+    } catch (err) {
+        console.error('[DI Sync] Failed to sync SRO schedule reference data:', err)
+    }
+
+    // 9. SRO Item Details
+    try {
+        await syncSroItemDetailsReference(referenceDate, sroIds)
+    } catch (err) {
+        console.error('[DI Sync] Failed to sync SRO item-detail reference data:', err)
+    }
+
+    // 10. HS Code to UOM for priority HS codes
+    try {
+        await syncPriorityHSCodeUOMs()
+    } catch (err) {
+        console.error('[DI Sync] Failed to sync HS_UOM reference data:', err)
     }
 
     console.log('[DI Sync] Reference data sync complete')

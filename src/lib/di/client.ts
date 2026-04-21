@@ -10,6 +10,24 @@ const DI_VAL_URL_SB = 'https://gw.fbr.gov.pk/di_data/v1/di/validateinvoicedata_s
 
 const circuitRegistry = DICircuitBreakerRegistry.getInstance()
 
+async function readDIResponse<T>(res: Response, operation: 'postInvoice' | 'validateInvoice'): Promise<T> {
+    const rawBody = await res.text()
+
+    if (!rawBody.trim()) {
+        throw new Error(`PRAL DI ${operation} returned an empty response body.`)
+    }
+
+    try {
+        return JSON.parse(rawBody) as T
+    } catch {
+        const preview = rawBody.length > 600
+            ? `${rawBody.slice(0, 600)}...`
+            : rawBody
+
+        throw new Error(`PRAL DI ${operation} returned malformed JSON: ${preview}`)
+    }
+}
+
 export async function getDIClientForTenant(tenantId: string) {
     const creds = await prisma.dICredentials.findUniqueOrThrow({
         where: { tenantId },
@@ -31,6 +49,17 @@ export async function getDIClientForTenant(tenantId: string) {
 
     // Decrypt at runtime — never stored in memory
     const token = decryptCredential(encryptedToken)
+
+    // Debug: log token metadata to help diagnose 401s (never log the full token)
+    console.log(`[DI-CLIENT] Token loaded for tenant ${tenantId}:`, {
+        environment: isSandbox ? 'SANDBOX' : 'PRODUCTION',
+        tokenLength: token.length,
+        tokenPrefix: token.substring(0, 8) + '...',
+        tokenSuffix: '...' + token.substring(token.length - 4),
+        hasWhitespace: token !== token.trim(),
+        postUrl: isSandbox ? DI_POST_URL_SB : DI_POST_URL,
+        validateUrl: isSandbox ? DI_VAL_URL_SB : DI_VAL_URL,
+    })
     const breaker = circuitRegistry.get(tenantId)
 
     const postUrl = isSandbox ? DI_POST_URL_SB : DI_POST_URL
@@ -60,6 +89,7 @@ export async function getDIClientForTenant(tenantId: string) {
                         signal: controller.signal,
                     })
                     clearTimeout(timer)
+                    console.log(`[DI-CLIENT] postInvoice HTTP status: ${res.status} ${res.statusText} | url: ${postUrl}`)
                     if (res.status === 401) throw new DIAuthError(tenantId)
                     if (res.status >= 500) throw new DIServerError(tenantId)
 
@@ -67,7 +97,7 @@ export async function getDIClientForTenant(tenantId: string) {
                         throw new Error(`PRAL DI post failed with status ${res.status}: ${await res.text()}`)
                     }
 
-                    return res.json() as Promise<DIResponse>
+                    return readDIResponse<DIResponse>(res, 'postInvoice')
                 } catch (err) {
                     clearTimeout(timer)
                     throw err
@@ -90,7 +120,7 @@ export async function getDIClientForTenant(tenantId: string) {
                     signal: controller.signal,
                 })
                 clearTimeout(timer)
-
+                console.log(`[DI-CLIENT] validateInvoice HTTP status: ${res.status} ${res.statusText} | url: ${validateUrl}`)
                 if (res.status === 401) throw new DIAuthError(tenantId)
                 if (res.status >= 500) throw new DIServerError(tenantId)
 
@@ -98,7 +128,7 @@ export async function getDIClientForTenant(tenantId: string) {
                     throw new Error(`PRAL DI validation failed with status ${res.status}: ${await res.text()}`)
                 }
 
-                return res.json() as Promise<DIValidationResponse>
+                return readDIResponse<DIValidationResponse>(res, 'validateInvoice')
             } catch (err) {
                 clearTimeout(timer)
                 throw err

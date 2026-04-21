@@ -9,6 +9,20 @@ interface InvoiceDetail {
     buyerName: string | null
     buyerNTN: string | null
     buyerCNIC: string | null
+    buyerPhone: string | null
+    buyerProvince: string | null
+    buyerAddress: string | null
+    buyerRegistrationType: string | null
+    customer: {
+        id: string
+        name: string
+        ntnCnic: string | null
+        phone: string | null
+        email: string | null
+        province: string | null
+        address: string | null
+        registrationType: string | null
+    } | null
     subtotal: number
     totalTax: number
     totalAmount: number
@@ -141,7 +155,7 @@ export default function InvoiceDetailPage() {
                 </div>
 
                 {/* Buyer Info */}
-                <div className="grid grid-cols-3 gap-4 mb-6 text-sm">
+                <div className="grid grid-cols-2 gap-4 mb-6 text-sm md:grid-cols-4">
                     <div>
                         <p className="text-slate-500">Buyer</p>
                         <p className="text-white">{invoice.buyerName || 'Walk-in Customer'}</p>
@@ -153,6 +167,22 @@ export default function InvoiceDetailPage() {
                     <div>
                         <p className="text-slate-500">Payment</p>
                         <p className="text-white">{invoice.paymentMethod}</p>
+                    </div>
+                    <div>
+                        <p className="text-slate-500">Phone</p>
+                        <p className="text-white">{invoice.buyerPhone || invoice.customer?.phone || '—'}</p>
+                    </div>
+                    <div>
+                        <p className="text-slate-500">Province</p>
+                        <p className="text-white">{invoice.buyerProvince || invoice.customer?.province || '—'}</p>
+                    </div>
+                    <div>
+                        <p className="text-slate-500">Registration</p>
+                        <p className="text-white">{invoice.buyerRegistrationType || invoice.customer?.registrationType || '—'}</p>
+                    </div>
+                    <div className="col-span-2 md:col-span-4">
+                        <p className="text-slate-500">Address</p>
+                        <p className="text-white">{invoice.buyerAddress || invoice.customer?.address || '—'}</p>
                     </div>
                 </div>
 

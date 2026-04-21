@@ -138,7 +138,7 @@ export default function HSCodesPage() {
                                         <td className="px-4 py-3 font-mono text-blue-400 whitespace-nowrap">
                                             {hs.code}
                                         </td>
-                                        <td className="px-4 py-3 text-slate-200 max-w-xs truncate">
+                                        <td className="px-4 py-3 text-slate-200 max-w-xs truncate text-xs">
                                             {hs.description}
                                         </td>
                                         <td className="px-4 py-3 text-slate-400">

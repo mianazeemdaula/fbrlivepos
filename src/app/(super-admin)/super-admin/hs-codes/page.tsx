@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { PaginationControls } from '@/components/pagination-controls'
 
 interface HSCode {
     id: string
@@ -14,10 +15,15 @@ interface HSCode {
     isActive?: boolean
 }
 
+const LIMIT = 25
+
 export default function HSCodesPage() {
     const [codes, setCodes] = useState<HSCode[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
+    const [page, setPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(1)
+    const [total, setTotal] = useState(0)
     const [showForm, setShowForm] = useState(false)
     const [formLoading, setFormLoading] = useState(false)
     const [importLoading, setImportLoading] = useState(false)
@@ -27,10 +33,17 @@ export default function HSCodesPage() {
     async function loadCodes() {
         setLoading(true)
         try {
-            const res = await fetch(`/api/admin/hs-codes?q=${encodeURIComponent(search)}&limit=50`)
+            const params = new URLSearchParams({
+                q: search,
+                page: String(page),
+                limit: String(LIMIT),
+            })
+            const res = await fetch(`/api/admin/hs-codes?${params.toString()}`)
             if (res.ok) {
                 const data = await res.json()
                 setCodes(data.data || [])
+                setTotal(data.total ?? 0)
+                setTotalPages(data.pages ?? 1)
             }
         } catch {
             // Ignore
@@ -42,7 +55,7 @@ export default function HSCodesPage() {
     useEffect(() => {
         loadCodes()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [search])
+    }, [search, page])
 
     async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -100,6 +113,7 @@ export default function HSCodesPage() {
             const data = await res.json()
             if (res.ok) {
                 setMessage(`Imported ${data.imported} HS codes successfully.`)
+                setPage(1)
                 loadCodes()
             } else {
                 setError(data.error || 'Import failed')
@@ -111,6 +125,9 @@ export default function HSCodesPage() {
             e.target.value = ''
         }
     }
+
+    const from = total === 0 ? 0 : (page - 1) * LIMIT + 1
+    const to = Math.min(page * LIMIT, total)
 
     return (
         <div className="p-8">
@@ -201,7 +218,10 @@ export default function HSCodesPage() {
                     type="text"
                     placeholder="Search HS codes..."
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => {
+                        setSearch(e.target.value)
+                        setPage(1)
+                    }}
                     className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                 />
             </div>
@@ -257,6 +277,15 @@ export default function HSCodesPage() {
                     </tbody>
                 </table>
             </div>
+
+            {!loading && total > 0 && (
+                <PaginationControls
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    summary={`Showing ${from}-${to} of ${total.toLocaleString()} HS codes`}
+                />
+            )}
         </div>
     )
 }

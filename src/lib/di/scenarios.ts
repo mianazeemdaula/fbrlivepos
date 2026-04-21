@@ -67,6 +67,12 @@ export const SCENARIO_DESCRIPTIONS: Record<string, string> = {
     'SN028': 'Sale to End Consumer by retailers (Reduced Rate)',
 }
 
+function compareScenarioIds(left: string, right: string) {
+    return Number.parseInt(left.replace('SN', ''), 10) - Number.parseInt(right.replace('SN', ''), 10)
+}
+
+export const ALL_SCENARIO_IDS = Object.keys(SCENARIO_DESCRIPTIONS).sort(compareScenarioIds)
+
 export function getRequiredScenarios(businessActivity: string, sector: string): string[] {
     return (
         SCENARIO_MAP[businessActivity]?.[sector] ??

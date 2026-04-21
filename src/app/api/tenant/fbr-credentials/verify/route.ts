@@ -31,8 +31,7 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        const token = decryptCredential(tokenField)
-
+        const token = decryptCredential(tokenField);
         // Test the token by calling the provinces reference API
         const start = Date.now()
         const res = await fetch(`${FBR_BASE}/pdi/v1/provinces`, {

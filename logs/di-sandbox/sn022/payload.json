@@ -1,0 +1,36 @@
+{
+  "invoiceType": "Sale Invoice",
+  "invoiceDate": "2026-04-21",
+  "sellerNTNCNIC": "3530118686639",
+  "sellerBusinessName": "ALI PROTEIN FARM",
+  "sellerProvince": "Punjab",
+  "sellerAddress": "VILLAGE DHARMAIWALA 5-KM BASIRPUR ROAD",
+  "buyerNTNCNIC": "1000000000000",
+  "buyerBusinessName": "FERTILIZER MANUFAC IRS NEW",
+  "buyerProvince": "Sindh",
+  "buyerAddress": "Karachi",
+  "buyerRegistrationType": "Unregistered",
+  "invoiceRefNo": "SI-20250421-001",
+  "scenarioId": "SN022",
+  "items": [
+    {
+      "hsCode": "3104.2000",
+      "productDescription": "TEST",
+      "rate": "18% along with rupees 60 per kilogram",
+      "uoM": "KG",
+      "quantity": 1,
+      "totalValues": 0,
+      "valueSalesExcludingST": 100,
+      "fixedNotifiedValueOrRetailPrice": 60,
+      "salesTaxApplicable": 78,
+      "salesTaxWithheldAtSource": 0,
+      "extraTax": 0,
+      "furtherTax": 0,
+      "sroScheduleNo": "EIGHTH SCHEDULE Table 1",
+      "fedPayable": 0,
+      "discount": 0,
+      "saleType": "Potassium Chlorate",
+      "sroItemSerialNo": "56"
+    }
+  ]
+}

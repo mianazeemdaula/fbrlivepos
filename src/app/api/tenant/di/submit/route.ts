@@ -3,6 +3,8 @@ import { getTenantFromSession } from '@/lib/tenant/context'
 import { getDIClientForTenant, DIAuthError, DIConfigError, DIServerError } from '@/lib/di/client'
 import { buildDIPayload } from '@/lib/di/payload-builder'
 import { mapDIErrorCodes } from '@/lib/di/error-codes'
+import { evaluateDISubmissionEligibility } from '@/lib/di/eligibility'
+import { inferSandboxScenario } from '@/lib/di/scenario-catalog'
 import { SCENARIO_DESCRIPTIONS, getRequiredScenarios } from '@/lib/di/scenarios'
 import { enqueueInvoiceSubmission } from '@/lib/fbr/queue'
 import { prisma } from '@/lib/db/prisma'
@@ -73,11 +75,48 @@ export async function POST(req: NextRequest) {
             )
         }
 
+        const resolvedScenarioId = creds.environment === 'SANDBOX'
+            ? (scenarioId ?? invoice.diScenarioId ?? inferSandboxScenario({
+                buyerRegistrationType: invoice.buyerRegistrationType,
+                items: invoice.items,
+                businessActivity: creds.businessActivity,
+                sector: creds.sector,
+            }).scenarioId)
+            : undefined
+
+        if (resolvedScenarioId && resolvedScenarioId !== invoice.diScenarioId) {
+            await prisma.invoice.updateMany({
+                where: { id: invoiceId, tenantId: tenant.id },
+                data: { diScenarioId: resolvedScenarioId },
+            })
+            invoice.diScenarioId = resolvedScenarioId
+        }
+
         // Guard: sandbox must have scenarioId
-        if (creds.environment === 'SANDBOX' && !scenarioId) {
+        if (creds.environment === 'SANDBOX' && !resolvedScenarioId) {
             return NextResponse.json(
                 {
                     error: 'Sandbox requires a scenarioId (e.g. SN001). Please select the appropriate scenario.',
+                },
+                { status: 422 },
+            )
+        }
+
+        const eligibility = evaluateDISubmissionEligibility({ creds, invoice, scenarioId: resolvedScenarioId })
+        if (!eligibility.eligible) {
+            await recordFBRSubmissionLog({
+                tenantId: tenant.id,
+                invoiceId,
+                attempt,
+                error: eligibility.issues.map((issue) => issue.message).join(' | '),
+                durationMs: Date.now() - start,
+            })
+
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'Invoice is not eligible for PRAL DI submission yet.',
+                    eligibility,
                 },
                 { status: 422 },
             )
@@ -87,7 +126,7 @@ export async function POST(req: NextRequest) {
 
         // Build exact PRAL payload
         payload = buildDIPayload(invoice, creds, {
-            scenarioId,
+            scenarioId: resolvedScenarioId,
             isSandbox: creds.environment === 'SANDBOX',
         })
 
@@ -101,7 +140,7 @@ export async function POST(req: NextRequest) {
                 error: 'Circuit breaker open. Invoice queued for retry.',
                 durationMs: Date.now() - start,
             })
-            await enqueueInvoiceSubmission(tenant.id, invoiceId, scenarioId)
+            await enqueueInvoiceSubmission(tenant.id, invoiceId, resolvedScenarioId)
             return NextResponse.json({
                 success: true,
                 offline: true,
@@ -183,13 +222,13 @@ export async function POST(req: NextRequest) {
         ])
 
         // Update sandbox scenario status if in sandbox
-        if (creds.environment === 'SANDBOX' && scenarioId && isValid) {
+        if (creds.environment === 'SANDBOX' && resolvedScenarioId && isValid) {
             await prisma.sandboxScenario.upsert({
-                where: { tenantId_scenarioId: { tenantId: tenant.id, scenarioId } },
+                where: { tenantId_scenarioId: { tenantId: tenant.id, scenarioId: resolvedScenarioId } },
                 create: {
                     tenantId: tenant.id,
-                    scenarioId,
-                    description: SCENARIO_DESCRIPTIONS[scenarioId] ?? scenarioId,
+                    scenarioId: resolvedScenarioId,
+                    description: SCENARIO_DESCRIPTIONS[resolvedScenarioId] ?? resolvedScenarioId,
                     status: 'PASSED',
                     completedAt: new Date(),
                     invoiceNo: response.invoiceNumber,
@@ -278,7 +317,7 @@ export async function POST(req: NextRequest) {
                 error: err,
                 durationMs: Date.now() - start,
             })
-            await enqueueInvoiceSubmission(tenant.id, invoiceId, scenarioId)
+            await enqueueInvoiceSubmission(tenant.id, invoiceId, resolvedScenarioId)
             return NextResponse.json({
                 success: true,
                 offline: true,

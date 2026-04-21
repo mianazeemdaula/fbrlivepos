@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { SCENARIO_DESCRIPTIONS, getRequiredScenarios } from '@/lib/di/scenarios'
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { useEffect, useMemo, useState } from 'react'
+import { getScenarioPreview } from '@/lib/di/scenario-catalog'
+import { ALL_SCENARIO_IDS, SCENARIO_DESCRIPTIONS, getRequiredScenarios } from '@/lib/di/scenarios'
 
 interface SavedScenario {
     scenarioId: string
@@ -26,244 +25,31 @@ interface TestResult {
     error?: string
 }
 
-interface ScenarioFormData {
-    buyerName: string
-    buyerNTN: string
-    buyerProvince: string
-    buyerAddress: string
-    buyerRegistrationType: 'Registered' | 'Unregistered'
-    hsCode: string
-    itemDescription: string
-    quantity: string
-    unitPrice: string
-    taxRate: string
-    rate: string
-    uom: string
-    saleType: string
-    sroScheduleNo: string
-}
-
 interface Props {
-    open: boolean
-    onClose: () => void
+    open?: boolean
+    onClose?: () => void
     diConfig: DIConfig
     onScenariosUpdated: () => void
+    embedded?: boolean
 }
-
-// ─── Scenario defaults ────────────────────────────────────────────────────────
-
-function getScenarioDefaults(
-    scenarioId: string,
-    sellerProvince?: string,
-): ScenarioFormData {
-    const province = sellerProvince ?? 'Punjab'
-
-    const base: ScenarioFormData = {
-        buyerName: 'Test Buyer',
-        buyerNTN: '',
-        buyerProvince: province,
-        buyerAddress: 'Test Address, City',
-        buyerRegistrationType: 'Registered',
-        hsCode: '8471.3000',
-        itemDescription: 'Laptop Computer',
-        quantity: '1',
-        unitPrice: '100000',
-        taxRate: '18',
-        rate: '18%',
-        uom: 'Numbers, pieces, units',
-        saleType: 'Goods at Standard Rate (default)',
-        sroScheduleNo: '',
-    }
-
-    switch (scenarioId) {
-        case 'SN001':
-            return { ...base, buyerRegistrationType: 'Registered', taxRate: '18', rate: '18%' }
-        case 'SN002':
-            return {
-                ...base,
-                buyerRegistrationType: 'Unregistered',
-                buyerName: 'Walk-in Customer',
-                buyerNTN: '',
-                taxRate: '18',
-                rate: '18%',
-            }
-        case 'SN003':
-            return {
-                ...base,
-                hsCode: '7214.2000',
-                itemDescription: 'Steel Bar (Melted and Re-Rolled)',
-                uom: 'Metric Ton',
-                taxRate: '17',
-                rate: '17%',
-                saleType: 'Sale of Steel (Melted and Re-Rolled)',
-            }
-        case 'SN004':
-            return {
-                ...base,
-                hsCode: '7204.1000',
-                itemDescription: 'Ship Scrap Metal',
-                uom: 'Metric Ton',
-                saleType: 'Sale by Ship Breakers',
-            }
-        case 'SN005':
-            return {
-                ...base,
-                taxRate: '10',
-                rate: '10%',
-                saleType: 'Reduced Rate',
-                sroScheduleNo: 'SRO.XXX',
-            }
-        case 'SN006':
-            return {
-                ...base,
-                hsCode: '0101.2100',
-                itemDescription: 'Exempt Agricultural Goods',
-                taxRate: '0',
-                rate: '0%',
-                saleType: 'Exempt Goods',
-            }
-        case 'SN007':
-            return {
-                ...base,
-                taxRate: '0',
-                rate: '0%',
-                saleType: 'Zero Rated Goods',
-            }
-        case 'SN008':
-            return {
-                ...base,
-                saleType: '3rd Schedule Goods',
-                itemDescription: '3rd Schedule Product',
-            }
-        case 'SN009':
-            return {
-                ...base,
-                hsCode: '5201.0000',
-                itemDescription: 'Cotton (Ginners to Spinners)',
-                uom: 'Metric Ton',
-                saleType: 'Cotton Spinners purchase from Cotton Ginners',
-            }
-        case 'SN010':
-            return {
-                ...base,
-                hsCode: '8517.1200',
-                itemDescription: 'Telecom Service',
-                saleType: 'Telecom services rendered or provided',
-            }
-        case 'SN011':
-            return {
-                ...base,
-                hsCode: '7214.2000',
-                itemDescription: 'Toll Manufacturing (Steel)',
-                uom: 'Metric Ton',
-                saleType: 'Toll Manufacturing sale by Steel sector',
-            }
-        case 'SN012':
-            return {
-                ...base,
-                hsCode: '2710.1200',
-                itemDescription: 'Petroleum Product',
-                uom: 'Liter',
-                saleType: 'Sale of Petroleum products',
-            }
-        case 'SN015':
-            return {
-                ...base,
-                hsCode: '8517.1200',
-                itemDescription: 'Mobile Phone',
-                saleType: 'Sale of mobile phones',
-            }
-        case 'SN016':
-            return { ...base, saleType: 'Processing / Conversion of Goods' }
-        case 'SN017':
-            return {
-                ...base,
-                saleType: 'Sale of Goods where FED is charged in ST mode',
-            }
-        case 'SN018':
-            return {
-                ...base,
-                itemDescription: 'Service with FED',
-                saleType: 'Services rendered where FED is charged in ST mode',
-            }
-        case 'SN019':
-            return {
-                ...base,
-                itemDescription: 'Service Rendered',
-                saleType: 'Services rendered or provided',
-            }
-        case 'SN021':
-            return {
-                ...base,
-                hsCode: '2523.2100',
-                itemDescription: 'Cement Bag (50kg)',
-                uom: 'Metric Ton',
-                saleType: 'Sale of Cement / Concrete Block',
-            }
-        case 'SN022':
-            return {
-                ...base,
-                hsCode: '2829.1900',
-                itemDescription: 'Potassium Chlorate',
-                uom: 'KG',
-                saleType: 'Sale of Potassium Chlorate',
-            }
-        case 'SN024':
-            return {
-                ...base,
-                saleType: 'Goods sold listed in SRO 297(I)/2023',
-                sroScheduleNo: 'SRO 297',
-            }
-        case 'SN026':
-            return {
-                ...base,
-                buyerRegistrationType: 'Unregistered',
-                buyerName: 'Walk-in Customer',
-                buyerNTN: '',
-                saleType: 'Sale to End Consumer (Standard Rate)',
-                rate: '18%',
-                taxRate: '18',
-            }
-        case 'SN027':
-            return {
-                ...base,
-                buyerRegistrationType: 'Unregistered',
-                buyerName: 'Walk-in Customer',
-                buyerNTN: '',
-                saleType: 'Sale to End Consumer (3rd Schedule)',
-                taxRate: '0',
-                rate: '0%',
-            }
-        case 'SN028':
-            return {
-                ...base,
-                buyerRegistrationType: 'Unregistered',
-                buyerName: 'Walk-in Customer',
-                buyerNTN: '',
-                saleType: 'Sale to End Consumer (Reduced Rate)',
-                taxRate: '10',
-                rate: '10%',
-            }
-        default:
-            return base
-    }
-}
-
-// ─── Badge ────────────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
-    if (status === 'PASSED')
+    if (status === 'PASSED') {
         return (
             <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/20">
-                ✓ PASSED
+                PASSED
             </span>
         )
-    if (status === 'FAILED')
+    }
+
+    if (status === 'FAILED') {
         return (
             <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/20">
-                ✗ FAILED
+                FAILED
             </span>
         )
+    }
+
     return (
         <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">
             PENDING
@@ -271,128 +57,71 @@ function StatusBadge({ status }: { status: string }) {
     )
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const PROVINCES = [
-    'Punjab',
-    'Sindh',
-    'Khyber Pakhtunkhwa',
-    'Balochistan',
-    'Islamabad',
-    'Azad Jammu & Kashmir',
-    'Gilgit-Baltistan',
-]
-
-const COMMON_UOMS = [
-    'Numbers, pieces, units',
-    'KG',
-    'Metric Ton',
-    'Liter',
-    'Meter',
-    'Square Meter',
-    'KWH',
-    'Dozen',
-    'Gram',
-    'Milliliter',
-]
-
-const COMMON_RATES = ['18%', '17%', '13%', '10%', '5%', '1%', '0%']
-
-const COMMON_SALE_TYPES = [
-    'Goods at Standard Rate (default)',
-    'Exempt Goods',
-    'Zero Rated Goods',
-    'Reduced Rate',
-    '3rd Schedule Goods',
-    'Sale to End Consumer (Standard Rate)',
-    'Sale to End Consumer (3rd Schedule)',
-    'Sale to End Consumer (Reduced Rate)',
-    'Sale of Steel (Melted and Re-Rolled)',
-    'Sale by Ship Breakers',
-    'Toll Manufacturing sale by Steel sector',
-    'Sale of Petroleum products',
-    'Sale of mobile phones',
-    'Processing / Conversion of Goods',
-    'Sale of Goods where FED is charged in ST mode',
-    'Services rendered where FED is charged in ST mode',
-    'Services rendered or provided',
-    'Sale of Cement / Concrete Block',
-    'Sale of Potassium Chlorate',
-    'Goods sold listed in SRO 297(I)/2023',
-    'Telecom services rendered or provided',
-    'Cotton Spinners purchase from Cotton Ginners',
-]
-
-// ─── Main component ───────────────────────────────────────────────────────────
-
-export function SandboxScenariosModal({ open, onClose, diConfig, onScenariosUpdated }: Props) {
+export function SandboxScenariosModal({ open = false, onClose, diConfig, onScenariosUpdated, embedded = false }: Props) {
     const [activeScenario, setActiveScenario] = useState<string | null>(null)
-    const [form, setForm] = useState<ScenarioFormData>(() =>
-        getScenarioDefaults('SN001', diConfig.sellerProvince),
-    )
-    const [running, setRunning] = useState(false)
+    const [runningScenarioId, setRunningScenarioId] = useState<string | null>(null)
+    const [runningAll, setRunningAll] = useState(false)
     const [results, setResults] = useState<Record<string, TestResult>>({})
     const [statuses, setStatuses] = useState<Record<string, string>>({})
+    const isVisible = embedded || open
 
-    // Sync statuses from diConfig when modal opens
     useEffect(() => {
-        if (open) {
-            const map: Record<string, string> = {}
-            for (const s of diConfig.sandboxScenarios ?? []) {
-                map[s.scenarioId] = s.status
-            }
-            setStatuses(map)
-            setActiveScenario(null)
-            setResults({})
+        if (!isVisible) {
+            return
         }
-    }, [open, diConfig.sandboxScenarios])
 
-    if (!open) return null
+        const nextStatuses: Record<string, string> = {}
+        for (const scenario of diConfig.sandboxScenarios ?? []) {
+            nextStatuses[scenario.scenarioId] = scenario.status
+        }
+
+        setStatuses(nextStatuses)
+    }, [diConfig.sandboxScenarios, isVisible])
+
+    useEffect(() => {
+        if (!isVisible) {
+            return
+        }
+
+        setResults({})
+        setActiveScenario(null)
+        setRunningScenarioId(null)
+        setRunningAll(false)
+    }, [isVisible])
 
     const businessActivity = diConfig.businessActivity ?? ''
     const sector = diConfig.sector ?? ''
-    const requiredIds = getRequiredScenarios(businessActivity, sector)
+    const requiredIds = useMemo(
+        () => getRequiredScenarios(businessActivity, sector),
+        [businessActivity, sector],
+    )
+    const requiredIdSet = useMemo(() => new Set(requiredIds), [requiredIds])
+    const allScenarioIds = useMemo(() => ALL_SCENARIO_IDS, [])
 
     const passed = requiredIds.filter((id) => statuses[id] === 'PASSED').length
     const total = requiredIds.length
     const progressPct = total > 0 ? Math.round((passed / total) * 100) : 0
 
-    function openForm(scenarioId: string) {
-        setActiveScenario(scenarioId)
-        setForm(getScenarioDefaults(scenarioId, diConfig.sellerProvince))
+    if (!isVisible) {
+        return null
     }
 
-    function updateForm<K extends keyof ScenarioFormData>(field: K, value: ScenarioFormData[K]) {
-        setForm((prev) => ({ ...prev, [field]: value }))
-    }
+    const wrapperClassName = embedded
+        ? ''
+        : 'fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm'
 
-    async function runTest(scenarioId: string) {
-        setRunning(true)
+    const containerClassName = embedded
+        ? 'flex flex-col rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl'
+        : 'flex max-h-[90vh] w-full max-w-4xl flex-col rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl'
+
+    async function runScenario(scenarioId: string) {
+        setRunningScenarioId(scenarioId)
+
         try {
             const res = await fetch('/api/tenant/di/sandbox-test', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    scenarioId,
-                    buyer: {
-                        name: form.buyerName,
-                        ntn: form.buyerNTN || undefined,
-                        province: form.buyerProvince,
-                        address: form.buyerAddress,
-                        registrationType: form.buyerRegistrationType,
-                    },
-                    item: {
-                        hsCode: form.hsCode,
-                        description: form.itemDescription,
-                        quantity: parseFloat(form.quantity) || 1,
-                        unitPrice: parseFloat(form.unitPrice) || 0,
-                        taxRate: parseFloat(form.taxRate) || 0,
-                        rate: form.rate,
-                        uom: form.uom,
-                        saleType: form.saleType,
-                        sroScheduleNo: form.sroScheduleNo || undefined,
-                    },
-                }),
+                body: JSON.stringify({ scenarioId }),
             })
 
             const data = await res.json()
@@ -412,46 +141,74 @@ export function SandboxScenariosModal({ open, onClose, diConfig, onScenariosUpda
             if (data.success) {
                 onScenariosUpdated()
             }
+
+            return data.success === true
         } catch {
             setResults((prev) => ({
                 ...prev,
                 [scenarioId]: { success: false, error: 'Network error. Check connection.' },
             }))
+            setStatuses((prev) => ({ ...prev, [scenarioId]: 'FAILED' }))
+            return false
         } finally {
-            setRunning(false)
+            setRunningScenarioId((current) => (current === scenarioId ? null : current))
+        }
+    }
+
+    async function runAllRequired() {
+        const pendingScenarioIds = requiredIds.filter((id) => statuses[id] !== 'PASSED')
+        if (pendingScenarioIds.length === 0) {
+            return
+        }
+
+        setRunningAll(true)
+        try {
+            for (const scenarioId of pendingScenarioIds) {
+                await runScenario(scenarioId)
+            }
+        } finally {
+            setRunningAll(false)
+            setRunningScenarioId(null)
         }
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
-                {/* Header */}
+        <div className={wrapperClassName}>
+            <div className={containerClassName}>
                 <div className="flex items-start justify-between p-6 border-b border-slate-800">
                     <div>
                         <h2 className="text-lg font-semibold text-white">Sandbox Test Scenarios</h2>
                         <p className="text-sm text-slate-400 mt-0.5">
-                            {businessActivity || 'Your sector'} — Run each scenario to verify your integration
+                            Guide-backed buyer and item examples are preloaded for sandbox only.
                         </p>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="text-slate-400 hover:text-white ml-4 mt-0.5"
-                    >
-                        ✕
-                    </button>
+                    {!embedded && onClose && (
+                        <button
+                            onClick={onClose}
+                            className="ml-4 mt-0.5 text-slate-400 hover:text-white"
+                        >
+                            ✕
+                        </button>
+                    )}
                 </div>
 
-                {/* Progress */}
-                <div className="px-6 py-4 border-b border-slate-800">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-slate-300">
-                            {passed} / {total} scenarios passed
-                        </span>
-                        {passed === total && total > 0 && (
-                            <span className="text-xs text-green-400 font-medium">
-                                🎉 All complete — request Production Token from IRIS
-                            </span>
-                        )}
+                <div className="px-6 py-4 border-b border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between gap-4">
+                        <div>
+                            <p className="text-sm text-slate-300">
+                                {passed} / {total} required scenarios passed
+                            </p>
+                            <p className="text-xs text-slate-500 mt-1">
+                                Seller details come from the logged-in tenant configuration. Buyer details use the FBR guide test examples.
+                            </p>
+                        </div>
+                        <button
+                            onClick={runAllRequired}
+                            disabled={runningAll || !!runningScenarioId || total === 0}
+                            className="bg-blue-600 hover:bg-blue-500 disabled:bg-blue-900 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            {runningAll ? 'Submitting required scenarios...' : 'Run Remaining Required'}
+                        </button>
                     </div>
                     <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
                         <div
@@ -461,24 +218,33 @@ export function SandboxScenariosModal({ open, onClose, diConfig, onScenariosUpda
                     </div>
                 </div>
 
-                {/* Scenario list */}
                 <div className="overflow-y-auto flex-1 px-4 py-3 space-y-2">
-                    {requiredIds.map((scenarioId) => {
+                    {allScenarioIds.map((scenarioId) => {
                         const status = statuses[scenarioId] ?? 'PENDING'
                         const description = SCENARIO_DESCRIPTIONS[scenarioId] ?? scenarioId
                         const isActive = activeScenario === scenarioId
                         const result = results[scenarioId]
+                        const preview = getScenarioPreview(scenarioId)
+                        const isRunning = runningScenarioId === scenarioId
+                        const isRequired = requiredIdSet.has(scenarioId)
 
                         return (
                             <div
                                 key={scenarioId}
                                 className="bg-slate-800/60 border border-slate-700/50 rounded-xl overflow-hidden"
                             >
-                                {/* Row header */}
-                                <div className="flex items-center justify-between px-4 py-3">
+                                <div className="flex items-center justify-between px-4 py-3 gap-3">
                                     <div className="flex items-center gap-3 min-w-0">
                                         <span className="font-mono text-xs text-slate-400 shrink-0 bg-slate-700 px-2 py-0.5 rounded">
                                             {scenarioId}
+                                        </span>
+                                        <span
+                                            className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full shrink-0 ${isRequired
+                                                ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/20'
+                                                : 'bg-slate-700 text-slate-400 border border-slate-600'
+                                                }`}
+                                        >
+                                            {isRequired ? 'Required' : 'Optional'}
                                         </span>
                                         <span className="text-sm text-white truncate">{description}</span>
                                     </div>
@@ -486,280 +252,101 @@ export function SandboxScenariosModal({ open, onClose, diConfig, onScenariosUpda
                                         <StatusBadge status={status} />
                                         <button
                                             onClick={() =>
-                                                isActive ? setActiveScenario(null) : openForm(scenarioId)
+                                                setActiveScenario((current) =>
+                                                    current === scenarioId ? null : scenarioId,
+                                                )
                                             }
-                                            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${isActive
-                                                    ? 'bg-slate-700 text-slate-300'
-                                                    : status === 'PASSED'
-                                                        ? 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-                                                        : 'bg-blue-600 hover:bg-blue-500 text-white'
-                                                }`}
+                                            className="text-xs px-3 py-1.5 rounded-lg font-medium bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors"
                                         >
-                                            {isActive ? 'Cancel' : status === 'PASSED' ? 'Re-run' : '▶ Run'}
+                                            {isActive ? 'Hide' : 'Preview'}
+                                        </button>
+                                        <button
+                                            onClick={() => runScenario(scenarioId)}
+                                            disabled={runningAll || !!runningScenarioId}
+                                            className="text-xs px-3 py-1.5 rounded-lg font-medium bg-blue-600 hover:bg-blue-500 disabled:bg-blue-900 disabled:cursor-not-allowed text-white transition-colors"
+                                        >
+                                            {isRunning ? 'Submitting...' : status === 'PASSED' ? 'Re-run' : 'Run'}
                                         </button>
                                     </div>
                                 </div>
 
-                                {/* Inline form */}
                                 {isActive && (
                                     <div className="border-t border-slate-700 px-4 py-4 space-y-4">
-                                        {/* Buyer section */}
-                                        <div>
-                                            <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">
-                                                Buyer Information
-                                            </p>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <label className="block text-xs text-slate-400 mb-1">
-                                                        Buyer Name
-                                                    </label>
-                                                    <input
-                                                        value={form.buyerName}
-                                                        onChange={(e) =>
-                                                            updateForm('buyerName', e.target.value)
-                                                        }
-                                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white"
-                                                        placeholder="Test Buyer Ltd."
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-slate-400 mb-1">
-                                                        Registration Type
-                                                    </label>
-                                                    <select
-                                                        value={form.buyerRegistrationType}
-                                                        onChange={(e) =>
-                                                            updateForm(
-                                                                'buyerRegistrationType',
-                                                                e.target.value as 'Registered' | 'Unregistered',
-                                                            )
-                                                        }
-                                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white"
-                                                    >
-                                                        <option value="Registered">Registered</option>
-                                                        <option value="Unregistered">Unregistered</option>
-                                                    </select>
-                                                </div>
-                                                {form.buyerRegistrationType === 'Registered' && (
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                            <div className="bg-slate-900/60 border border-slate-700 rounded-xl p-4">
+                                                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">
+                                                    Buyer Example
+                                                </p>
+                                                <div className="space-y-2 text-sm">
                                                     <div>
-                                                        <label className="block text-xs text-slate-400 mb-1">
-                                                            Buyer NTN (7 digits)
-                                                        </label>
-                                                        <input
-                                                            value={form.buyerNTN}
-                                                            onChange={(e) =>
-                                                                updateForm('buyerNTN', e.target.value)
-                                                            }
-                                                            maxLength={7}
-                                                            pattern="\d{7}"
-                                                            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white font-mono"
-                                                            placeholder="1234567"
-                                                        />
+                                                        <span className="text-slate-500">Name:</span>{' '}
+                                                        <span className="text-white">{preview.buyer.businessName}</span>
                                                     </div>
-                                                )}
-                                                <div>
-                                                    <label className="block text-xs text-slate-400 mb-1">
-                                                        Buyer Province
-                                                    </label>
-                                                    <select
-                                                        value={form.buyerProvince}
-                                                        onChange={(e) =>
-                                                            updateForm('buyerProvince', e.target.value)
-                                                        }
-                                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white"
-                                                    >
-                                                        <option value="">Select province</option>
-                                                        {PROVINCES.map((p) => (
-                                                            <option key={p} value={p}>
-                                                                {p}
-                                                            </option>
-                                                        ))}
-                                                    </select>
+                                                    <div>
+                                                        <span className="text-slate-500">NTN/CNIC:</span>{' '}
+                                                        <span className="text-white font-mono">
+                                                            {preview.buyer.ntcnic ?? 'Not provided'}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-slate-500">Registration:</span>{' '}
+                                                        <span className="text-white">{preview.buyer.registrationType}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-slate-500">Province:</span>{' '}
+                                                        <span className="text-white">{preview.buyer.province}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-slate-500">Address:</span>{' '}
+                                                        <span className="text-white">{preview.buyer.address}</span>
+                                                    </div>
                                                 </div>
-                                                <div className="col-span-2">
-                                                    <label className="block text-xs text-slate-400 mb-1">
-                                                        Buyer Address
-                                                    </label>
-                                                    <input
-                                                        value={form.buyerAddress}
-                                                        onChange={(e) =>
-                                                            updateForm('buyerAddress', e.target.value)
-                                                        }
-                                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white"
-                                                        placeholder="123 Business Street, Karachi"
-                                                    />
+                                            </div>
+
+                                            <div className="bg-slate-900/60 border border-slate-700 rounded-xl p-4">
+                                                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">
+                                                    Scenario Items
+                                                </p>
+                                                <div className="space-y-3">
+                                                    {preview.items.map((item, index) => (
+                                                        <div key={`${scenarioId}-${index}`} className="border border-slate-700 rounded-lg p-3 space-y-2">
+                                                            <div className="flex items-center justify-between gap-3">
+                                                                <span className="text-sm text-white truncate">
+                                                                    {item.productDescription || 'No description'}
+                                                                </span>
+                                                                <span className="text-xs text-slate-400 font-mono">
+                                                                    {item.hsCode}
+                                                                </span>
+                                                            </div>
+                                                            <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
+                                                                <div>Rate: <span className="text-slate-200">{item.rate}</span></div>
+                                                                <div>Sale type: <span className="text-slate-200">{item.saleType}</span></div>
+                                                                <div>Quantity: <span className="text-slate-200">{item.quantity}</span></div>
+                                                                <div>UOM: <span className="text-slate-200">{item.uoM}</span></div>
+                                                                <div>Value excl. ST: <span className="text-slate-200">{item.valueSalesExcludingST}</span></div>
+                                                                <div>Sales tax: <span className="text-slate-200">{item.salesTaxApplicable}</span></div>
+                                                                <div>Total values: <span className="text-slate-200">{item.totalValues}</span></div>
+                                                                <div>Fixed value/MRP: <span className="text-slate-200">{item.fixedNotifiedValueOrRetailPrice}</span></div>
+                                                                <div>SRO schedule: <span className="text-slate-200">{item.sroScheduleNo || 'N/A'}</span></div>
+                                                                <div>SRO serial: <span className="text-slate-200">{item.sroItemSerialNo || 'N/A'}</span></div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* Item section */}
-                                        <div>
-                                            <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">
-                                                Test Item
-                                            </p>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <label className="block text-xs text-slate-400 mb-1">
-                                                        HS Code
-                                                    </label>
-                                                    <input
-                                                        value={form.hsCode}
-                                                        onChange={(e) =>
-                                                            updateForm('hsCode', e.target.value)
-                                                        }
-                                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white font-mono"
-                                                        placeholder="8471.3000"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-slate-400 mb-1">
-                                                        Description
-                                                    </label>
-                                                    <input
-                                                        value={form.itemDescription}
-                                                        onChange={(e) =>
-                                                            updateForm('itemDescription', e.target.value)
-                                                        }
-                                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white"
-                                                        placeholder="Product Name"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-slate-400 mb-1">
-                                                        Quantity
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        min="0.0001"
-                                                        step="0.0001"
-                                                        value={form.quantity}
-                                                        onChange={(e) =>
-                                                            updateForm('quantity', e.target.value)
-                                                        }
-                                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-slate-400 mb-1">
-                                                        Unit Price (PKR)
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        min="0.01"
-                                                        step="0.01"
-                                                        value={form.unitPrice}
-                                                        onChange={(e) =>
-                                                            updateForm('unitPrice', e.target.value)
-                                                        }
-                                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-slate-400 mb-1">
-                                                        Tax Rate (%)
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        max="100"
-                                                        step="0.01"
-                                                        value={form.taxRate}
-                                                        onChange={(e) =>
-                                                            updateForm('taxRate', e.target.value)
-                                                        }
-                                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-slate-400 mb-1">
-                                                        UOM
-                                                    </label>
-                                                    <select
-                                                        value={form.uom}
-                                                        onChange={(e) => updateForm('uom', e.target.value)}
-                                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white"
-                                                    >
-                                                        {COMMON_UOMS.map((u) => (
-                                                            <option key={u} value={u}>
-                                                                {u}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-slate-400 mb-1">
-                                                        Rate String{' '}
-                                                        <span className="text-slate-500">(exact PRAL value)</span>
-                                                    </label>
-                                                    <select
-                                                        value={form.rate}
-                                                        onChange={(e) => updateForm('rate', e.target.value)}
-                                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white"
-                                                    >
-                                                        {COMMON_RATES.map((r) => (
-                                                            <option key={r} value={r}>
-                                                                {r}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-slate-400 mb-1">
-                                                        Sale Type{' '}
-                                                        <span className="text-slate-500">(exact PRAL value)</span>
-                                                    </label>
-                                                    <select
-                                                        value={form.saleType}
-                                                        onChange={(e) => updateForm('saleType', e.target.value)}
-                                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white"
-                                                    >
-                                                        {COMMON_SALE_TYPES.map((s) => (
-                                                            <option key={s} value={s}>
-                                                                {s}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                                <div className="col-span-2">
-                                                    <label className="block text-xs text-slate-400 mb-1">
-                                                        SRO Schedule No.{' '}
-                                                        <span className="text-slate-500">(if applicable)</span>
-                                                    </label>
-                                                    <input
-                                                        value={form.sroScheduleNo}
-                                                        onChange={(e) =>
-                                                            updateForm('sroScheduleNo', e.target.value)
-                                                        }
-                                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white"
-                                                        placeholder="Leave blank if not applicable"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Submit */}
-                                        <button
-                                            onClick={() => runTest(scenarioId)}
-                                            disabled={running}
-                                            className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-blue-900 disabled:cursor-not-allowed text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
-                                        >
-                                            {running
-                                                ? '⏳ Submitting to PRAL sandbox...'
-                                                : `▶ Run ${scenarioId} Test`}
-                                        </button>
-
-                                        {/* Result */}
                                         {result && (
                                             <div
                                                 className={`rounded-lg p-3 text-sm space-y-2 ${result.success
-                                                        ? 'bg-green-500/10 border border-green-500/20'
-                                                        : 'bg-red-500/10 border border-red-500/20'
+                                                    ? 'bg-green-500/10 border border-green-500/20'
+                                                    : 'bg-red-500/10 border border-red-500/20'
                                                     }`}
                                             >
                                                 {result.success ? (
                                                     <div>
                                                         <p className="text-green-400 font-medium">
-                                                            ✓ PASSED — Scenario accepted by PRAL
+                                                            Scenario accepted by PRAL sandbox.
                                                         </p>
                                                         {result.diInvoiceNumber && (
                                                             <p className="text-green-400/70 text-xs mt-1 font-mono">
@@ -770,25 +357,25 @@ export function SandboxScenariosModal({ open, onClose, diConfig, onScenariosUpda
                                                 ) : (
                                                     <div className="space-y-2">
                                                         <p className="text-red-400 font-medium">
-                                                            ✗ FAILED — {result.error ?? 'Validation failed'}
+                                                            Submission failed: {result.error ?? 'Validation failed'}
                                                         </p>
                                                         {result.errors && result.errors.length > 0 && (
                                                             <ul className="space-y-1">
-                                                                {result.errors.map((e, i) => (
-                                                                    <li key={i} className="text-xs text-red-300">
+                                                                {result.errors.map((error, index) => (
+                                                                    <li key={index} className="text-xs text-red-300">
                                                                         <span className="font-mono text-red-400">
-                                                                            [{e.code}]
+                                                                            [{error.code}]
                                                                         </span>{' '}
-                                                                        {e.message}
-                                                                        {e.item && (
+                                                                        {error.message}
+                                                                        {error.item && (
                                                                             <span className="text-red-400/60">
                                                                                 {' '}
-                                                                                ({e.item})
+                                                                                ({error.item})
                                                                             </span>
                                                                         )}
-                                                                        {e.action && (
+                                                                        {error.action && (
                                                                             <span className="block text-slate-400 pl-2">
-                                                                                → {e.action}
+                                                                                {error.action}
                                                                             </span>
                                                                         )}
                                                                     </li>
@@ -805,25 +392,25 @@ export function SandboxScenariosModal({ open, onClose, diConfig, onScenariosUpda
                         )
                     })}
 
-                    {requiredIds.length === 0 && (
+                    {allScenarioIds.length === 0 && (
                         <p className="text-sm text-slate-400 text-center py-8">
-                            No scenarios found for your business type. Update your business activity and sector in
-                            Settings.
+                            No scenarios found for your business type. Update your business activity and sector in Settings.
                         </p>
                     )}
                 </div>
 
-                {/* Footer */}
-                <div className="px-6 py-4 border-t border-slate-800 flex items-center justify-between">
+                <div className="px-6 py-4 border-t border-slate-800 flex items-center justify-between gap-4">
                     <p className="text-xs text-slate-500">
-                        Scenarios run against the PRAL sandbox endpoint. No production data is affected.
+                        Sandbox examples are taken from the FBR guide and should be replaced with actual buyer data during real invoicing.
                     </p>
-                    <button
-                        onClick={onClose}
-                        className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm"
-                    >
-                        Close
-                    </button>
+                    {!embedded && onClose && (
+                        <button
+                            onClick={onClose}
+                            className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm"
+                        >
+                            Close
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { SandboxScenariosModal } from './SandboxScenariosModal'
+import { ALL_SCENARIO_IDS } from '@/lib/di/scenarios'
+import { isValidSellerNtn, normalizeNtnCnic } from '@/lib/validation/pakistan'
 
 interface DIConfig {
     configured: boolean
@@ -77,9 +78,10 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [verifying, setVerifying] = useState(false)
-    const [showScenariosModal, setShowScenariosModal] = useState(false)
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
     const [step, setStep] = useState(1) // Wizard step: 1=Business Info, 2=Token, 3=Verify, 4=Sandbox, 5=Production
+
+    const normalizedSellerCnic = normalizeNtnCnic(form.sellerCNIC)
 
     useEffect(() => {
         async function loadConfig() {
@@ -116,9 +118,21 @@ export default function SettingsPage() {
         setSaving(true)
         setMessage(null)
 
+        if (!isValidSellerNtn(form.sellerNTN)) {
+            setMessage({ type: 'error', text: 'Seller NTN/registration must be 7, 8, or 9 digits. Values like 6650624-2 are accepted.' })
+            setSaving(false)
+            return
+        }
+
+        if (normalizedSellerCnic && normalizedSellerCnic.length !== 13) {
+            setMessage({ type: 'error', text: 'Seller CNIC must be 13 digits when provided.' })
+            setSaving(false)
+            return
+        }
+
         const data = {
             sellerNTN: form.sellerNTN,
-            sellerCNIC: form.sellerCNIC || undefined,
+            sellerCNIC: normalizedSellerCnic || undefined,
             sellerBusinessName: form.sellerBusinessName,
             sellerProvince: form.sellerProvince,
             sellerAddress: form.sellerAddress,
@@ -184,6 +198,10 @@ export default function SettingsPage() {
     function updateFormField<K extends keyof DIFormState>(field: K, value: DIFormState[K]) {
         setForm((current) => ({ ...current, [field]: value }))
     }
+
+    const sortedSandboxScenarios = [...(diConfig?.sandboxScenarios ?? [])].sort(
+        (left, right) => ALL_SCENARIO_IDS.indexOf(left.scenarioId) - ALL_SCENARIO_IDS.indexOf(right.scenarioId),
+    )
 
     return (
         <div className="p-6 max-w-2xl">
@@ -251,29 +269,31 @@ export default function SettingsPage() {
                         <form onSubmit={handleSaveDI} className="space-y-3">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs text-slate-400 mb-1">Seller NTN (7 digits)</label>
+                                    <label className="block text-xs text-slate-400 mb-1">Seller NTN / Registration No.</label>
                                     <input
                                         name="sellerNTN"
                                         required
-                                        pattern="\d{7}"
-                                        maxLength={7}
                                         value={form.sellerNTN}
                                         onChange={(e) => updateFormField('sellerNTN', e.target.value)}
                                         className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
-                                        placeholder="1234567"
+                                        placeholder="1234567 or 6650624-2"
                                     />
+                                    {form.sellerNTN && !isValidSellerNtn(form.sellerNTN) && (
+                                        <p className="mt-1 text-xs text-amber-400">Use 7, 8, or 9 digits. Hyphenated values are normalized automatically.</p>
+                                    )}
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-slate-400 mb-1">CNIC (optional, 13 digits)</label>
+                                    <label className="block text-xs text-slate-400 mb-1">CNIC (optional fallback)</label>
                                     <input
                                         name="sellerCNIC"
-                                        pattern="\d{13}"
-                                        maxLength={13}
                                         value={form.sellerCNIC}
                                         onChange={(e) => updateFormField('sellerCNIC', e.target.value)}
                                         className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
                                         placeholder="3520112345678"
                                     />
+                                    {form.sellerCNIC && normalizedSellerCnic.length !== 13 && (
+                                        <p className="mt-1 text-xs text-amber-400">CNIC is optional, but if provided it must be 13 digits.</p>
+                                    )}
                                 </div>
                             </div>
                             <div>
@@ -418,19 +438,13 @@ export default function SettingsPage() {
                         <div>
                             <h2 className="text-lg font-semibold text-white">Sandbox Test Scenarios</h2>
                             <p className="text-sm text-slate-400 mt-0.5">
-                                Complete all mandatory scenarios to unlock your Production Token.
+                                Use the dedicated scenarios page to run and review sandbox submissions.
                             </p>
                         </div>
-                        <button
-                            onClick={() => setShowScenariosModal(true)}
-                            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium"
-                        >
-                            &#9654; Run Scenarios
-                        </button>
                     </div>
-                    {diConfig.sandboxScenarios && diConfig.sandboxScenarios.length > 0 && (
+                    {sortedSandboxScenarios.length > 0 && (
                         <div className="space-y-2">
-                            {diConfig.sandboxScenarios.map((s) => (
+                            {sortedSandboxScenarios.map((s) => (
                                 <div
                                     key={s.scenarioId}
                                     className="flex items-center justify-between bg-slate-800 rounded-lg px-4 py-2"
@@ -443,10 +457,10 @@ export default function SettingsPage() {
                                     </div>
                                     <span
                                         className={`text-xs px-2 py-0.5 rounded-full ${s.status === 'PASSED'
-                                                ? 'bg-green-500/10 text-green-400'
-                                                : s.status === 'FAILED'
-                                                    ? 'bg-red-500/10 text-red-400'
-                                                    : 'bg-slate-700 text-slate-400'
+                                            ? 'bg-green-500/10 text-green-400'
+                                            : s.status === 'FAILED'
+                                                ? 'bg-red-500/10 text-red-400'
+                                                : 'bg-slate-700 text-slate-400'
                                             }`}
                                     >
                                         {s.status}
@@ -457,24 +471,6 @@ export default function SettingsPage() {
                     )}
                 </div>
             )}
-
-            <SandboxScenariosModal
-                open={showScenariosModal}
-                onClose={() => setShowScenariosModal(false)}
-                diConfig={{
-                    businessActivity: diConfig?.businessActivity,
-                    sector: diConfig?.sector,
-                    sellerProvince: diConfig?.sellerProvince,
-                    sandboxScenarios: diConfig?.sandboxScenarios,
-                }}
-                onScenariosUpdated={async () => {
-                    const res = await fetch('/api/tenant/fbr-credentials')
-                    if (res.ok) {
-                        const config: DIConfig = await res.json()
-                        setDiConfig(config)
-                    }
-                }}
-            />
         </div>
     )
 }

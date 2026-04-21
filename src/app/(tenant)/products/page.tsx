@@ -1,15 +1,35 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { PaginationControls } from '@/components/pagination-controls'
+import {
+    getProductDIAutofillOptions,
+    getProductDIAutofillPreset,
+    type ProductDIAutofillPreset,
+} from '@/lib/di/scenario-catalog'
 
 interface Product {
     id: string
     name: string
     sku: string | null
+    hsCodeId?: string | null
     hsCode: string
+    description?: string | null
     price: number
     taxRate: number
     unit: string
+    diRate: string | null
+    diUOM: string | null
+    diSaleType: string | null
+    diFixedNotifiedValueOrRetailPrice: number | null
+    diSalesTaxWithheldAtSource: number | null
+    extraTax: number | null
+    furtherTax: number | null
+    fedPayable: number | null
+    sroScheduleNo: string | null
+    sroItemSerialNo: string | null
+    diReady: boolean
+    diIssues: string[]
     isActive: boolean
 }
 
@@ -17,9 +37,15 @@ interface HSCodeOption {
     id: string
     code: string
     description: string
+    shortName?: string | null
     category: string
     unit: string
     defaultTaxRate: number | string
+}
+
+interface SROScheduleOption {
+    id: number
+    description: string
 }
 
 interface ProductFormState {
@@ -30,6 +56,16 @@ interface ProductFormState {
     price: string
     taxRate: string
     unit: string
+    diRate: string
+    diUOM: string
+    diSaleType: string
+    diFixedNotifiedValueOrRetailPrice: string
+    diSalesTaxWithheldAtSource: string
+    extraTax: string
+    furtherTax: string
+    fedPayable: string
+    sroScheduleNo: string
+    sroItemSerialNo: string
 }
 
 const initialFormState: ProductFormState = {
@@ -39,28 +75,186 @@ const initialFormState: ProductFormState = {
     description: '',
     price: '',
     taxRate: '18',
-    unit: 'PCS',
+    unit: '',
+    diRate: '',
+    diUOM: '',
+    diSaleType: '',
+    diFixedNotifiedValueOrRetailPrice: '',
+    diSalesTaxWithheldAtSource: '',
+    extraTax: '',
+    furtherTax: '',
+    fedPayable: '',
+    sroScheduleNo: '',
+    sroItemSerialNo: '',
+}
+
+const PRODUCT_LIMIT = 25
+const DEFAULT_PRAL_SALE_TYPE = 'Goods at standard rate (default)'
+
+function numberOrUndefined(value: string) {
+    const trimmed = value.trim()
+    return trimmed === '' ? undefined : parseFloat(trimmed)
+}
+
+function requiresFixedValue(rate: string) {
+    const normalized = rate.trim().toLowerCase()
+    return normalized.includes('rupees') || normalized.includes('rs.') || normalized.includes('/unit') || normalized.includes('/kg')
+}
+
+function requiresSRODetails(saleType: string, sroScheduleNo: string, sroItemSerialNo: string) {
+    const normalizedSaleType = saleType.trim().toLowerCase()
+    return normalizedSaleType.includes('sro') || Boolean(sroScheduleNo.trim()) || Boolean(sroItemSerialNo.trim())
+}
+
+function isNonDefaultAdvancedValue(value: string) {
+    const trimmed = value.trim()
+    return trimmed !== '' && trimmed !== '0' && trimmed !== '0.00'
 }
 
 export default function ProductsPage() {
     const [products, setProducts] = useState<Product[]>([])
     const [hsCodes, setHsCodes] = useState<HSCodeOption[]>([])
+    const [hsCodeCategories, setHsCodeCategories] = useState<string[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
+    const [page, setPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(1)
+    const [total, setTotal] = useState(0)
     const [hsCodeSearch, setHsCodeSearch] = useState('')
+    const [hsCodeCategory, setHsCodeCategory] = useState('')
     const [showForm, setShowForm] = useState(false)
     const [formLoading, setFormLoading] = useState(false)
     const [hsCodesLoading, setHsCodesLoading] = useState(false)
+    const [showAdvancedDI, setShowAdvancedDI] = useState(false)
     const [error, setError] = useState('')
     const [form, setForm] = useState<ProductFormState>(initialFormState)
+    const [editingProductId, setEditingProductId] = useState<string | null>(null)
+    const [validUOMs, setValidUOMs] = useState<{ id: number; description: string }[]>([])
+    const [uomsLoading, setUomsLoading] = useState(false)
+    const [sroSchedules, setSroSchedules] = useState<SROScheduleOption[]>([])
+
+    const selectedHSCode = hsCodes.find((item) => item.id === form.hsCodeId)
+    const hsPresetOptions = selectedHSCode ? getProductDIAutofillOptions(selectedHSCode.code) : []
+    const shouldShowFixedValue = requiresFixedValue(form.diRate)
+    const shouldShowSRO = requiresSRODetails(form.diSaleType, form.sroScheduleNo, form.sroItemSerialNo)
+
+    function buildFallbackPreset(hsCode: HSCodeOption | undefined): ProductDIAutofillPreset {
+        const defaultRate = hsCode ? String(hsCode.defaultTaxRate) : '18'
+
+        return {
+            hsCode: hsCode?.code || '',
+            diRate: defaultRate.endsWith('%') ? defaultRate : `${defaultRate}%`,
+            diUOM: hsCode?.unit || '',
+            diSaleType: DEFAULT_PRAL_SALE_TYPE,
+            diFixedNotifiedValueOrRetailPrice: '0',
+            diSalesTaxWithheldAtSource: '0',
+            extraTax: '0',
+            furtherTax: '0',
+            fedPayable: '0',
+            sroScheduleNo: '',
+            sroItemSerialNo: '',
+        }
+    }
+
+    function hasAdvancedOverrides(nextForm: ProductFormState, preset: ProductDIAutofillPreset | null) {
+        if (isNonDefaultAdvancedValue(nextForm.diSalesTaxWithheldAtSource)
+            || isNonDefaultAdvancedValue(nextForm.extraTax)
+            || isNonDefaultAdvancedValue(nextForm.furtherTax)
+            || isNonDefaultAdvancedValue(nextForm.fedPayable)) {
+            return true
+        }
+
+        if (preset) {
+            return nextForm.diUOM !== preset.diUOM
+                || nextForm.diRate !== preset.diRate
+                || nextForm.diFixedNotifiedValueOrRetailPrice !== preset.diFixedNotifiedValueOrRetailPrice
+                || nextForm.sroScheduleNo !== preset.sroScheduleNo
+                || nextForm.sroItemSerialNo !== preset.sroItemSerialNo
+        }
+
+        return isNonDefaultAdvancedValue(nextForm.diFixedNotifiedValueOrRetailPrice)
+            || nextForm.sroScheduleNo.trim() !== ''
+            || nextForm.sroItemSerialNo.trim() !== ''
+    }
+
+    function applyHSPreset(selected: HSCodeOption | undefined, preset: ProductDIAutofillPreset, preserveIdentityFields = true) {
+        setForm((current) => {
+            const sharedUOM = preset.diUOM || selected?.unit || current.unit
+            const nextForm = {
+                ...current,
+                hsCodeId: selected?.id || current.hsCodeId,
+                name: preserveIdentityFields && current.name.trim()
+                    ? current.name
+                    : (selected?.shortName || selected?.description || current.name),
+                description: preserveIdentityFields && current.description.trim()
+                    ? current.description
+                    : (selected?.description || current.description),
+                taxRate: selected ? String(selected.defaultTaxRate) : current.taxRate,
+                unit: sharedUOM,
+                diUOM: sharedUOM,
+                diSaleType: preset.diSaleType,
+                diRate: preset.diRate,
+                diFixedNotifiedValueOrRetailPrice: preset.diFixedNotifiedValueOrRetailPrice,
+                diSalesTaxWithheldAtSource: preset.diSalesTaxWithheldAtSource,
+                extraTax: preset.extraTax,
+                furtherTax: preset.furtherTax,
+                fedPayable: preset.fedPayable,
+                sroScheduleNo: preset.sroScheduleNo,
+                sroItemSerialNo: preset.sroItemSerialNo,
+            }
+
+            setShowAdvancedDI(hasAdvancedOverrides(nextForm, preset))
+            return nextForm
+        })
+    }
+
+    async function fetchValidUOMs(hsCode: string) {
+        setValidUOMs([])
+        setUomsLoading(true)
+        try {
+            const res = await fetch(`/api/tenant/fbr/hs-uom?hs_code=${encodeURIComponent(hsCode)}`)
+            if (res.ok) {
+                const data = await res.json()
+                const uoms: { id: number; description: string }[] = data.uoms || []
+                console.log('Fetched valid UOMs from PRAL for HS code', hsCode, uoms)
+                setValidUOMs(uoms)
+                // If current unit isn't in the returned list, force a valid shared UOM.
+                if (uoms.length > 0) {
+                    setForm((current) => {
+                        const isValid = uoms.some((u) => u.description === current.unit || u.description === current.diUOM)
+                        const nextUOM = isValid
+                            ? (current.unit || current.diUOM)
+                            : (uoms.length === 1 ? uoms[0].description : '')
+
+                        return {
+                            ...current,
+                            unit: nextUOM,
+                            diUOM: nextUOM,
+                        }
+                    })
+                }
+            }
+        } catch {
+            // Silently ignore — UOM field will fall back to free-text
+        } finally {
+            setUomsLoading(false)
+        }
+    }
 
     async function loadProducts() {
         setLoading(true)
         try {
-            const res = await fetch(`/api/products?q=${encodeURIComponent(search)}&limit=100`)
+            const params = new URLSearchParams({
+                q: search,
+                page: String(page),
+                limit: String(PRODUCT_LIMIT),
+            })
+            const res = await fetch(`/api/products?${params.toString()}`)
             if (res.ok) {
                 const data = await res.json()
                 setProducts(data.data || [])
+                setTotal(data.total ?? 0)
+                setTotalPages(data.pages ?? 1)
             }
         } catch {
             // Ignore
@@ -72,10 +266,17 @@ export default function ProductsPage() {
     async function loadHSCodes(query = '') {
         setHsCodesLoading(true)
         try {
-            const res = await fetch(`/api/hs-codes/search?q=${encodeURIComponent(query)}`)
+            const params = new URLSearchParams({
+                q: query,
+                category: hsCodeCategory,
+                page: '1',
+                limit: '50',
+            })
+            const res = await fetch(`/api/hs-codes?${params.toString()}`)
             if (res.ok) {
-                const data = (await res.json()) as HSCodeOption[]
-                setHsCodes(data)
+                const data = await res.json()
+                setHsCodes(data.data || [])
+                setHsCodeCategories(data.categories || [])
             }
         } catch {
             // Ignore
@@ -84,10 +285,57 @@ export default function ProductsPage() {
         }
     }
 
+    async function loadSroSchedules(query = '') {
+        try {
+            const params = new URLSearchParams({ limit: '100' })
+            if (query.trim()) {
+                params.set('q', query.trim())
+            }
+
+            const res = await fetch(`/api/tenant/fbr/sro-schedules?${params.toString()}`)
+            if (res.ok) {
+                const data = await res.json()
+                setSroSchedules(data.data || [])
+            }
+        } catch {
+            // Ignore
+        }
+    }
+
+    async function hydrateHSCodeSelection(code: string) {
+        try {
+            const res = await fetch(`/api/hs-codes/search?q=${encodeURIComponent(code)}`)
+            if (!res.ok) {
+                return
+            }
+
+            const options = (await res.json()) as HSCodeOption[]
+            console.log('Hydrating HS code selection, found options:', options)
+            const selected = options.find((item) => item.code === code) ?? options[0]
+
+            if (!selected) {
+                return
+            }
+
+            setHsCodes((current) => {
+                if (current.some((item) => item.id === selected.id)) {
+                    return current
+                }
+
+                return [selected, ...current]
+            })
+            setHsCodeSearch(selected.code)
+            setHsCodeCategory(selected.category)
+            setForm((current) => ({ ...current, hsCodeId: selected.id }))
+        } catch {
+            // Ignore
+        }
+    }
+
     useEffect(() => {
         loadProducts()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [search])
+    }, [search, page])
 
     useEffect(() => {
         if (!showForm) return
@@ -98,16 +346,26 @@ export default function ProductsPage() {
 
         return () => clearTimeout(timer)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [showForm, hsCodeSearch])
+    }, [showForm, hsCodeSearch, hsCodeCategory])
+
+    useEffect(() => {
+        if (!showForm) return
+
+        loadSroSchedules()
+    }, [showForm])
 
     function handleFormToggle() {
         const next = !showForm
         setShowForm(next)
         setError('')
+        setEditingProductId(null)
+        setShowAdvancedDI(false)
 
         if (!next) {
             setForm(initialFormState)
             setHsCodeSearch('')
+            setHsCodeCategory('')
+            setValidUOMs([])
             return
         }
 
@@ -115,18 +373,89 @@ export default function ProductsPage() {
         loadHSCodes('')
     }
 
+    function handleEditProduct(product: Product) {
+        setEditingProductId(product.id)
+        setShowForm(true)
+        setError('')
+        setHsCodeSearch(product.hsCode)
+        const nextForm = {
+            name: product.name,
+            sku: product.sku || '',
+            hsCodeId: product.hsCodeId || '',
+            description: product.description || '',
+            price: String(product.price),
+            taxRate: String(product.taxRate),
+            unit: product.diUOM || product.unit || '',
+            diRate: product.diRate || '',
+            diUOM: product.diUOM || product.unit || '',
+            diSaleType: product.diSaleType || '',
+            diFixedNotifiedValueOrRetailPrice: product.diFixedNotifiedValueOrRetailPrice != null ? String(product.diFixedNotifiedValueOrRetailPrice) : '',
+            diSalesTaxWithheldAtSource: product.diSalesTaxWithheldAtSource != null ? String(product.diSalesTaxWithheldAtSource) : '',
+            extraTax: product.extraTax != null ? String(product.extraTax) : '',
+            furtherTax: product.furtherTax != null ? String(product.furtherTax) : '',
+            fedPayable: product.fedPayable != null ? String(product.fedPayable) : '',
+            sroScheduleNo: product.sroScheduleNo || '',
+            sroItemSerialNo: product.sroItemSerialNo || '',
+        }
+        setForm(nextForm)
+        setShowAdvancedDI(
+            isNonDefaultAdvancedValue(nextForm.diFixedNotifiedValueOrRetailPrice)
+            || isNonDefaultAdvancedValue(nextForm.diSalesTaxWithheldAtSource)
+            || isNonDefaultAdvancedValue(nextForm.extraTax)
+            || isNonDefaultAdvancedValue(nextForm.furtherTax)
+            || isNonDefaultAdvancedValue(nextForm.fedPayable)
+            || nextForm.sroScheduleNo.trim() !== ''
+            || nextForm.sroItemSerialNo.trim() !== ''
+        )
+
+        if (product.hsCodeId) {
+            loadHSCodes(product.hsCode)
+        } else {
+            hydrateHSCodeSelection(product.hsCode)
+        }
+
+        fetchValidUOMs(product.hsCode)
+    }
+
     function handleFormChange<K extends keyof ProductFormState>(field: K, value: ProductFormState[K]) {
         setForm((current) => ({ ...current, [field]: value }))
     }
 
-    function handleHSCodeSelect(hsCodeId: string) {
-        const selected = hsCodes.find((item) => item.id === hsCodeId)
+    function handleSharedUOMChange(value: string) {
         setForm((current) => ({
             ...current,
-            hsCodeId,
-            taxRate: selected ? String(selected.defaultTaxRate) : current.taxRate,
-            unit: selected?.unit ?? current.unit,
+            unit: value,
+            diUOM: value,
         }))
+    }
+
+    function handleHSCodeSelect(hsCodeId: string) {
+        const selected = hsCodes.find((item) => item.id === hsCodeId)
+        const presetOptions = selected ? getProductDIAutofillOptions(selected.code) : []
+        const preset = getProductDIAutofillPreset(selected?.code || '')
+            || presetOptions.find((option) => option.diSaleType === DEFAULT_PRAL_SALE_TYPE)
+            || presetOptions[0]
+            || buildFallbackPreset(selected)
+
+        // Clear stale UOM list before fetching new ones and reset diUOM to preset value
+        setValidUOMs([])
+        applyHSPreset(selected, preset)
+
+        if (selected) {
+            setHsCodeSearch(selected.code)
+            setHsCodeCategory(selected.category)
+            fetchValidUOMs(selected.code)
+        }
+    }
+
+    function handleSaleTypeChange(diSaleType: string) {
+        const preset = hsPresetOptions.find((option) => option.diSaleType === diSaleType)
+        if (!preset) {
+            handleFormChange('diSaleType', diSaleType)
+            return
+        }
+
+        applyHSPreset(selectedHSCode, preset)
     }
 
     async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
@@ -142,11 +471,21 @@ export default function ProductsPage() {
             price: parseFloat(form.price),
             taxRate: parseFloat(form.taxRate),
             unit: form.unit,
+            diRate: form.diRate || undefined,
+            diUOM: form.diUOM || undefined,
+            diSaleType: form.diSaleType || undefined,
+            diFixedNotifiedValueOrRetailPrice: numberOrUndefined(form.diFixedNotifiedValueOrRetailPrice),
+            diSalesTaxWithheldAtSource: numberOrUndefined(form.diSalesTaxWithheldAtSource),
+            extraTax: numberOrUndefined(form.extraTax),
+            furtherTax: numberOrUndefined(form.furtherTax),
+            fedPayable: numberOrUndefined(form.fedPayable),
+            sroScheduleNo: form.sroScheduleNo || undefined,
+            sroItemSerialNo: form.sroItemSerialNo || undefined,
         }
 
         try {
-            const res = await fetch('/api/products', {
-                method: 'POST',
+            const res = await fetch(editingProductId ? `/api/products/${editingProductId}` : '/api/products', {
+                method: editingProductId ? 'PATCH' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             })
@@ -159,6 +498,7 @@ export default function ProductsPage() {
 
             setShowForm(false)
             setForm(initialFormState)
+            setEditingProductId(null)
             setHsCodeSearch('')
             loadProducts()
         } catch {
@@ -167,6 +507,9 @@ export default function ProductsPage() {
             setFormLoading(false)
         }
     }
+
+    const from = total === 0 ? 0 : (page - 1) * PRODUCT_LIMIT + 1
+    const to = Math.min(page * PRODUCT_LIMIT, total)
 
     return (
         <div className="p-6">
@@ -187,31 +530,47 @@ export default function ProductsPage() {
                             {error}
                         </div>
                     )}
-                    <div className="mb-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+                    <div className="mb-4 grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label className="block text-xs text-slate-400 mb-1">Category</label>
+                            <select
+                                value={hsCodeCategory}
+                                onChange={(e) => {
+                                    setHsCodeCategory(e.target.value)
+                                    setForm((current) => ({ ...current, hsCodeId: '' }))
+                                }}
+                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                            >
+                                <option value="">All categories</option>
+                                {hsCodeCategories.map((category) => (
+                                    <option key={category} value={category}>{category}</option>
+                                ))}
+                            </select>
+                        </div>
                         <div>
                             <label className="block text-xs text-slate-400 mb-1">Find HS Code</label>
                             <input
                                 value={hsCodeSearch}
                                 onChange={(e) => setHsCodeSearch(e.target.value)}
                                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
-                                placeholder="Search by code or description"
+                                placeholder="Search by code, short name, or description"
                             />
                         </div>
-                        <div>
+                        <div className="md:col-span-2">
                             <label className="block text-xs text-slate-400 mb-1">Select HS Code</label>
                             <select
                                 name="hsCodeId"
                                 required
                                 value={form.hsCodeId}
                                 onChange={(e) => handleHSCodeSelect(e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white"
                             >
                                 <option value="">
-                                    {hsCodesLoading ? 'Loading HS codes...' : hsCodes.length === 0 ? 'No HS codes available' : 'Choose a managed HS code'}
+                                    {hsCodesLoading ? 'Loading HS codes...' : hsCodes.length === 0 ? 'No HS codes available' : 'Choose the closest managed HS code'}
                                 </option>
                                 {hsCodes.map((item) => (
                                     <option key={item.id} value={item.id}>
-                                        {item.code} - {item.description}
+                                        {item.code} - {item.shortName || item.description}
                                     </option>
                                 ))}
                             </select>
@@ -222,6 +581,31 @@ export default function ProductsPage() {
                             )}
                         </div>
                     </div>
+                    {form.hsCodeId && (
+                        <div className="mb-4 rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                            <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-4">
+                                <div>
+                                    <p className="mb-1 text-xs text-slate-500">HS Code</p>
+                                    <p className="break-all font-mono text-white">{selectedHSCode?.code}</p>
+                                </div>
+                                <div>
+                                    <p className="mb-1 text-xs text-slate-500">Category</p>
+                                    <p className="text-white">{selectedHSCode?.category}</p>
+                                </div>
+                                <div>
+                                    <p className="mb-1 text-xs text-slate-500">Default Tax</p>
+                                    <p className="text-white">{selectedHSCode?.defaultTaxRate}%</p>
+                                </div>
+                                <div>
+                                    <p className="mb-1 text-xs text-slate-500">Default Unit</p>
+                                    <p className="text-white">{selectedHSCode?.unit}</p>
+                                </div>
+                            </div>
+                            <p className="mt-3 text-xs text-slate-400">
+                                FBR item fields are synced from the selected HS code and PRAL sale type. This follows the documented PRAL mapping where HS code controls UOM validity and sale type controls the rate descriptor.
+                            </p>
+                        </div>
+                    )}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
                             <label className="block text-xs text-slate-400 mb-1">Name</label>
@@ -242,15 +626,6 @@ export default function ProductsPage() {
                                 onChange={(e) => handleFormChange('sku', e.target.value)}
                                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
                                 placeholder="SKU-001"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs text-slate-400 mb-1">HS Code</label>
-                            <input
-                                value={hsCodes.find((item) => item.id === form.hsCodeId)?.code || ''}
-                                readOnly
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
-                                placeholder="Select from managed list"
                             />
                         </div>
                         <div>
@@ -282,24 +657,54 @@ export default function ProductsPage() {
                         </div>
                         <div>
                             <label className="block text-xs text-slate-400 mb-1">Unit of Measure</label>
+                            {validUOMs.length > 0 ? (
+                                <select
+                                    name="unit"
+                                    value={form.unit}
+                                    onChange={(e) => handleSharedUOMChange(e.target.value)}
+                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                    required={!!form.hsCodeId}
+                                >
+                                    <option value="">Select UOM</option>
+                                    {validUOMs.map((uom) => (
+                                        <option key={uom.id} value={uom.description}>{uom.description}</option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <input
+                                    value={uomsLoading ? '' : (form.unit || form.diUOM)}
+                                    readOnly
+                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300"
+                                    placeholder={uomsLoading ? 'Loading UOMs...' : 'Select an HS code first'}
+                                />
+                            )}
+                            <p className="mt-1 text-xs text-slate-500">The local unit and PRAL UOM stay identical and are loaded from seeded PRAL reference data.</p>
+                        </div>
+                        <div>
+                            <label className="block text-xs text-slate-400 mb-1">PRAL Sale Type</label>
                             <select
-                                name="unit"
-                                required
-                                value={form.unit}
-                                onChange={(e) => handleFormChange('unit', e.target.value)}
+                                value={form.diSaleType}
+                                onChange={(e) => handleSaleTypeChange(e.target.value)}
                                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                disabled={!form.hsCodeId}
                             >
-                                <option value="PCS">PCS (Pieces)</option>
-                                <option value="KG">KG (Kilograms)</option>
-                                <option value="LTR">LTR (Litres)</option>
-                                <option value="MTR">MTR (Metres)</option>
-                                <option value="SQM">SQM (Square Metres)</option>
-                                <option value="SET">SET</option>
-                                <option value="PKT">PKT (Packet)</option>
-                                <option value="BOX">BOX</option>
-                                <option value="DOZ">DOZ (Dozen)</option>
-                                <option value="NOS">NOS (Numbers)</option>
+                                <option value="">{form.hsCodeId ? 'Select PRAL sale type' : 'Select an HS code first'}</option>
+                                {hsPresetOptions.length === 0 && form.hsCodeId && (
+                                    <option value={DEFAULT_PRAL_SALE_TYPE}>{DEFAULT_PRAL_SALE_TYPE}</option>
+                                )}
+                                {hsPresetOptions.map((preset) => (
+                                    <option key={preset.diSaleType} value={preset.diSaleType}>{preset.diSaleType}</option>
+                                ))}
                             </select>
+                        </div>
+                        <div className="col-span-2">
+                            <label className="block text-xs text-slate-400 mb-1">PRAL Rate Descriptor</label>
+                            <input
+                                value={form.diRate}
+                                readOnly
+                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300"
+                                placeholder="Choose an HS code and sale type"
+                            />
                         </div>
                         <div className="col-span-2">
                             <label className="block text-xs text-slate-400 mb-1">Description (optional)</label>
@@ -312,12 +717,77 @@ export default function ProductsPage() {
                             />
                         </div>
                     </div>
+                    <div className="mt-4 border-t border-slate-800 pt-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p className="text-xs font-semibold tracking-wide text-slate-400 uppercase">Advanced PRAL Overrides</p>
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Use these only when FBR documentation for the selected HS code and sale type requires a non-default value.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowAdvancedDI((current) => !current)}
+                                className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800"
+                            >
+                                {showAdvancedDI ? 'Hide Advanced Fields' : 'Show Advanced Fields'}
+                            </button>
+                        </div>
+
+                        {showAdvancedDI && (
+                            <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-5">
+                                <div className="col-span-2 md:col-span-3">
+                                    <label className="block text-xs text-slate-400 mb-1">Rate Descriptor Override</label>
+                                    <input value={form.diRate} onChange={(e) => handleFormChange('diRate', e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" placeholder="18% along with rupees 60 per kilogram" />
+                                </div>
+                                {shouldShowFixedValue && (
+                                    <div>
+                                        <label className="block text-xs text-slate-400 mb-1">Fixed Value / Retail Price</label>
+                                        <input value={form.diFixedNotifiedValueOrRetailPrice} onChange={(e) => handleFormChange('diFixedNotifiedValueOrRetailPrice', e.target.value)} type="number" step="0.01" min="0" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+                                    </div>
+                                )}
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">ST Withheld at Source</label>
+                                    <input value={form.diSalesTaxWithheldAtSource} onChange={(e) => handleFormChange('diSalesTaxWithheldAtSource', e.target.value)} type="number" step="0.01" min="0" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">Extra Tax</label>
+                                    <input value={form.extraTax} onChange={(e) => handleFormChange('extraTax', e.target.value)} type="number" step="0.01" min="0" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">Further Tax</label>
+                                    <input value={form.furtherTax} onChange={(e) => handleFormChange('furtherTax', e.target.value)} type="number" step="0.01" min="0" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">FED Payable</label>
+                                    <input value={form.fedPayable} onChange={(e) => handleFormChange('fedPayable', e.target.value)} type="number" step="0.01" min="0" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+                                </div>
+                                {shouldShowSRO && (
+                                    <>
+                                        <div className="col-span-2 md:col-span-3">
+                                            <label className="block text-xs text-slate-400 mb-1">SRO Schedule</label>
+                                            <input list="sro-schedule-options" value={form.sroScheduleNo} onChange={(e) => { handleFormChange('sroScheduleNo', e.target.value); loadSroSchedules(e.target.value) }} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" placeholder="297(I)/2023-Table-I" />
+                                            <datalist id="sro-schedule-options">
+                                                {sroSchedules.map((schedule) => (
+                                                    <option key={schedule.id} value={schedule.description}>{`${schedule.id} - ${schedule.description}`}</option>
+                                                ))}
+                                            </datalist>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-xs text-slate-400 mb-1">SRO Item Serial</label>
+                                            <input value={form.sroItemSerialNo} onChange={(e) => handleFormChange('sroItemSerialNo', e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" placeholder="12" />
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </div>
                     <button
                         type="submit"
                         disabled={formLoading}
                         className="mt-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white px-6 py-2 rounded-lg text-sm font-medium"
                     >
-                        {formLoading ? 'Creating...' : 'Create Product'}
+                        {formLoading ? (editingProductId ? 'Saving...' : 'Creating...') : (editingProductId ? 'Save Product' : 'Create Product')}
                     </button>
                 </form>
             )}
@@ -327,7 +797,10 @@ export default function ProductsPage() {
                     type="text"
                     placeholder="Search products..."
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => {
+                        setSearch(e.target.value)
+                        setPage(1)
+                    }}
                     className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500"
                 />
             </div>
@@ -342,21 +815,23 @@ export default function ProductsPage() {
                             <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Price</th>
                             <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Tax %</th>
                             <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Unit</th>
+                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">DI Ready</th>
                             <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Status</th>
+                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             Array.from({ length: 3 }).map((_, i) => (
                                 <tr key={i} className="border-b border-slate-800/50">
-                                    <td colSpan={7} className="px-4 py-3">
+                                    <td colSpan={9} className="px-4 py-3">
                                         <div className="h-4 bg-slate-800 rounded animate-pulse" />
                                     </td>
                                 </tr>
                             ))
                         ) : products.length === 0 ? (
                             <tr>
-                                <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
+                                <td colSpan={9} className="px-4 py-12 text-center text-slate-500">
                                     No products. Add your first product above.
                                 </td>
                             </tr>
@@ -369,6 +844,18 @@ export default function ProductsPage() {
                                     <td className="px-4 py-3 text-sm text-white">PKR {Number(p.price).toLocaleString()}</td>
                                     <td className="px-4 py-3 text-sm text-slate-400">{Number(p.taxRate)}%</td>
                                     <td className="px-4 py-3 text-sm text-slate-400">{p.unit}</td>
+                                    <td className="px-4 py-3 align-top">
+                                        <span className={`text-xs px-2 py-0.5 rounded-full ${p.diReady ? 'bg-green-500/10 text-green-400' : 'bg-amber-500/10 text-amber-300'}`}>
+                                            {p.diReady ? 'Ready' : 'Needs PRAL fields'}
+                                        </span>
+                                        {!p.diReady && p.diIssues.length > 0 && (
+                                            <div className="mt-2 text-xs text-amber-200 max-w-xs space-y-1">
+                                                {p.diIssues.slice(0, 2).map((issue) => (
+                                                    <p key={issue}>{issue}</p>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </td>
                                     <td className="px-4 py-3">
                                         <span
                                             className={`text-xs px-2 py-0.5 rounded-full ${p.isActive
@@ -379,12 +866,29 @@ export default function ProductsPage() {
                                             {p.isActive ? 'Active' : 'Inactive'}
                                         </span>
                                     </td>
+                                    <td className="px-4 py-3">
+                                        <button
+                                            onClick={() => handleEditProduct(p)}
+                                            className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200"
+                                        >
+                                            Edit
+                                        </button>
+                                    </td>
                                 </tr>
                             ))
                         )}
                     </tbody>
                 </table>
             </div>
+
+            {!loading && total > 0 && (
+                <PaginationControls
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    summary={`Showing ${from}-${to} of ${total.toLocaleString()} products`}
+                />
+            )}
         </div>
     )
 }

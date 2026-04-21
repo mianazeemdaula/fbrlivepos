@@ -1,0 +1,119 @@
+[
+  {
+    "scenarioId": "SN021",
+    "validation": {
+      "status": 200,
+      "statusText": "",
+      "headers": {
+        "access-control-allow-headers": "authorization,Access-Control-Allow-Origin,Content-Type,SOAPAction",
+        "access-control-allow-methods": "POST",
+        "access-control-allow-origin": "*",
+        "connection": "keep-alive",
+        "content-encoding": "gzip",
+        "content-length": "335",
+        "content-type": "application/json; charset=UTF-8",
+        "date": "Tue, 21 Apr 2026 10:07:40 GMT",
+        "server": "nginx/1.20.1",
+        "set-cookie": "cookiesession1=678B28EDDBC9E9718528B579030D3D8B;Expires=Wed, 21 Apr 2027 10:09:28 GMT;Path=/;HttpOnly",
+        "vary": "origin,access-control-request-method,access-control-request-headers,accept-encoding"
+      },
+      "rawBody": "{\n\t\t\t\t\t\t\t\t\t\t\"dated\": \"2026-04-21 15:07:51\" ,\n\t\t\t\t\t\t\t\t\t\t\"sourceInvoiceNo\":\"\",\n\t\t\t\t\t\t\t\t\t\t\"validationResponse\": {\"statusCode\":\"01\",\"status\":\"Invalid\",\"errorCode\":null,\"error\":\"\",\"invoiceStatuses\":[{\"itemSNo\":\"1\",\"statusCode\":\"01\",\"status\":\"Invalid\",\"invoiceNo\":null,\"errorCode\":\"0046\",\"error\":\"Provided Rate is not correct. Please provide valid rate for selected Sales Type. Please refer to relevant reference API in the technical document for DI API.\"}]}\n\t\t\t\t\t\t\t\t\t\t}",
+      "json": {
+        "dated": "2026-04-21 15:07:51",
+        "sourceInvoiceNo": "",
+        "validationResponse": {
+          "statusCode": "01",
+          "status": "Invalid",
+          "errorCode": null,
+          "error": "",
+          "invoiceStatuses": [
+            {
+              "itemSNo": "1",
+              "statusCode": "01",
+              "status": "Invalid",
+              "invoiceNo": null,
+              "errorCode": "0046",
+              "error": "Provided Rate is not correct. Please provide valid rate for selected Sales Type. Please refer to relevant reference API in the technical document for DI API."
+            }
+          ]
+        }
+      }
+    },
+    "ok": false
+  },
+  {
+    "scenarioId": "SN023",
+    "validation": {
+      "status": 200,
+      "statusText": "",
+      "headers": {
+        "access-control-allow-headers": "authorization,Access-Control-Allow-Origin,Content-Type,SOAPAction",
+        "access-control-allow-methods": "POST",
+        "access-control-allow-origin": "*",
+        "connection": "keep-alive",
+        "content-encoding": "gzip",
+        "content-length": "335",
+        "content-type": "application/json; charset=UTF-8",
+        "date": "Tue, 21 Apr 2026 10:07:40 GMT",
+        "server": "nginx/1.20.1",
+        "set-cookie": "cookiesession1=678B2AFCACFE2E33976EC60803CD393E;Expires=Wed, 21 Apr 2027 10:09:28 GMT;Path=/;HttpOnly",
+        "vary": "origin,access-control-request-method,access-control-request-headers,accept-encoding"
+      },
+      "rawBody": "{\n\t\t\t\t\t\t\t\t\t\t\"dated\": \"2026-04-21 15:07:51\" ,\n\t\t\t\t\t\t\t\t\t\t\"sourceInvoiceNo\":\"\",\n\t\t\t\t\t\t\t\t\t\t\"validationResponse\": {\"statusCode\":\"01\",\"status\":\"Invalid\",\"errorCode\":null,\"error\":\"\",\"invoiceStatuses\":[{\"itemSNo\":\"1\",\"statusCode\":\"01\",\"status\":\"Invalid\",\"invoiceNo\":null,\"errorCode\":\"0046\",\"error\":\"Provided Rate is not correct. Please provide valid rate for selected Sales Type. Please refer to relevant reference API in the technical document for DI API.\"}]}\n\t\t\t\t\t\t\t\t\t\t}",
+      "json": {
+        "dated": "2026-04-21 15:07:51",
+        "sourceInvoiceNo": "",
+        "validationResponse": {
+          "statusCode": "01",
+          "status": "Invalid",
+          "errorCode": null,
+          "error": "",
+          "invoiceStatuses": [
+            {
+              "itemSNo": "1",
+              "statusCode": "01",
+              "status": "Invalid",
+              "invoiceNo": null,
+              "errorCode": "0046",
+              "error": "Provided Rate is not correct. Please provide valid rate for selected Sales Type. Please refer to relevant reference API in the technical document for DI API."
+            }
+          ]
+        }
+      }
+    },
+    "ok": false
+  },
+  {
+    "scenarioId": "SN011",
+    "validation": {
+      "status": 200,
+      "statusText": "",
+      "headers": {
+        "access-control-allow-headers": "authorization,Access-Control-Allow-Origin,Content-Type,SOAPAction",
+        "access-control-allow-methods": "POST",
+        "access-control-allow-origin": "*",
+        "connection": "keep-alive",
+        "content-encoding": "gzip",
+        "content-length": "202",
+        "content-type": "application/json; charset=UTF-8",
+        "date": "Tue, 21 Apr 2026 10:07:41 GMT",
+        "server": "nginx/1.20.1",
+        "set-cookie": "cookiesession1=678B2AFCDABF408D18CA1DD31BF4C06B;Expires=Wed, 21 Apr 2027 10:09:29 GMT;Path=/;HttpOnly",
+        "vary": "origin,access-control-request-method,access-control-request-headers,accept-encoding"
+      },
+      "rawBody": "{\n\t\t\t\t\t\t\t\t\t\t\"dated\": \"2026-04-21 15:07:51\" ,\n\t\t\t\t\t\t\t\t\t\t\"sourceInvoiceNo\":\"\",\n\t\t\t\t\t\t\t\t\t\t\"validationResponse\": {\"statusCode\":\"01\",\"status\":\"Invalid\",\"errorCode\":\"0203\",\"error\":\"Provided scenario does not exists\",\"invoiceStatuses\":null}\n\t\t\t\t\t\t\t\t\t\t}",
+      "json": {
+        "dated": "2026-04-21 15:07:51",
+        "sourceInvoiceNo": "",
+        "validationResponse": {
+          "statusCode": "01",
+          "status": "Invalid",
+          "errorCode": "0203",
+          "error": "Provided scenario does not exists",
+          "invoiceStatuses": null
+        }
+      }
+    },
+    "ok": false
+  }
+]

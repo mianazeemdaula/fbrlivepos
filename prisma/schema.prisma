@@ -148,20 +148,30 @@ model User {
 // ─── PRODUCTS ─────────────────────────────────────────────────────────────────
 
 model Product {
-  id            String         @id @default(cuid())
-  tenant        Tenant         @relation(fields: [tenantId], references: [id])
-  tenantId      String
-  name          String
-  sku           String?
-  hsCode        String
-  description   String?
-  price         Decimal        @db.Decimal(10, 2)
-  taxRate       Decimal        @db.Decimal(5, 2)
-  unit          String
-  isActive      Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  invoiceItems  InvoiceItem[]
-  hsCodeMapping ProductHSCode?
+  id                                String         @id @default(cuid())
+  tenant                            Tenant         @relation(fields: [tenantId], references: [id])
+  tenantId                          String
+  name                              String
+  sku                               String?
+  hsCode                            String
+  description                       String?
+  price                             Decimal        @db.Decimal(10, 2)
+  taxRate                           Decimal        @db.Decimal(5, 2)
+  unit                              String
+  diRate                            String?
+  diUOM                             String?
+  diSaleType                        String?
+  diFixedNotifiedValueOrRetailPrice Decimal?       @db.Decimal(10, 2)
+  diSalesTaxWithheldAtSource        Decimal?       @db.Decimal(10, 2)
+  extraTax                          Decimal?       @db.Decimal(10, 2)
+  furtherTax                        Decimal?       @db.Decimal(10, 2)
+  fedPayable                        Decimal?       @db.Decimal(10, 2)
+  sroScheduleNo                     String?
+  sroItemSerialNo                   String?
+  isActive                          Boolean        @default(true)
+  createdAt                         DateTime       @default(now())
+  invoiceItems                      InvoiceItem[]
+  hsCodeMapping                     ProductHSCode?
 
   @@index([tenantId])
   @@index([tenantId, hsCode])
@@ -236,15 +246,17 @@ model InvoiceItem {
   lineTotal Decimal @db.Decimal(12, 2)
 
   // PRAL DI specific fields
-  diRate          String? // Exact string from Reference API 5.8 ratE_DESC
-  diUOM           String? // Exact string from Reference API 5.6 description
-  diSaleType      String? // Exact string from Reference API
-  extraTax        Decimal? @db.Decimal(10, 2)
-  furtherTax      Decimal? @db.Decimal(10, 2)
-  fedPayable      Decimal? @db.Decimal(10, 2)
-  discount        Decimal? @db.Decimal(10, 2)
-  sroScheduleNo   String?
-  sroItemSerialNo String?
+  diRate                            String? // Exact string from Reference API 5.8 ratE_DESC
+  diUOM                             String? // Exact string from Reference API 5.6 description
+  diSaleType                        String? // Exact string from Reference API
+  diFixedNotifiedValueOrRetailPrice Decimal? @db.Decimal(10, 2)
+  diSalesTaxWithheldAtSource        Decimal? @db.Decimal(10, 2)
+  extraTax                          Decimal? @db.Decimal(10, 2)
+  furtherTax                        Decimal? @db.Decimal(10, 2)
+  fedPayable                        Decimal? @db.Decimal(10, 2)
+  discount                          Decimal? @db.Decimal(10, 2)
+  sroScheduleNo                     String?
+  sroItemSerialNo                   String?
 }
 
 // ─── LOGS ─────────────────────────────────────────────────────────────────────
@@ -578,24 +590,24 @@ model DIItemDescription {
 // ─── CUSTOMERS (BUYERS) ─────────────────────────────────────────────────────
 
 model Customer {
-  id                  String   @id @default(cuid())
-  tenant              Tenant   @relation(fields: [tenantId], references: [id])
+  id                  String    @id @default(cuid())
+  tenant              Tenant    @relation(fields: [tenantId], references: [id])
   tenantId            String
   name                String
-  ntnCnic             String?  // 7-digit NTN or 13-digit CNIC
+  ntnCnic             String? // 7-digit NTN or 13-digit CNIC
   phone               String?
   email               String?
   province            String?
   address             String?
-  registrationType    String?  // "Registered" or "Unregistered" — from FBR verification
-  atlStatus           String?  // "Active" or "In-Active" — from FBR ATL check
-  fbrVerified         Boolean  @default(false)
+  registrationType    String? // "Registered" or "Unregistered" — from FBR verification
+  atlStatus           String? // "Active" or "In-Active" — from FBR ATL check
+  fbrVerified         Boolean   @default(false)
   fbrVerifiedAt       DateTime?
-  fbrRegistrationNo   String?  // REGISTRATION_NO from FBR response
-  fbrRegistrationType String?  // REGISTRATION_TYPE from FBR response
-  isActive            Boolean  @default(true)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  fbrRegistrationNo   String? // REGISTRATION_NO from FBR response
+  fbrRegistrationType String? // REGISTRATION_TYPE from FBR response
+  isActive            Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
   invoices            Invoice[]
 
   @@unique([tenantId, ntnCnic])

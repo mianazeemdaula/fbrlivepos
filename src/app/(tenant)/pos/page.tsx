@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useCartStore } from '@/stores/cart'
+import { isValidMobile, isValidNtnCnic, normalizeMobile, normalizeNtnCnic } from '@/lib/validation/pakistan'
 
 interface Product {
     id: string
@@ -16,6 +17,7 @@ interface CustomerResult {
     id: string
     name: string
     ntnCnic: string | null
+    email?: string | null
     phone: string | null
     province: string | null
     address: string | null
@@ -111,8 +113,71 @@ export default function POSPage() {
         })
     }
 
+    async function handleSaveCustomer() {
+        const normalizedBuyerNTN = normalizeNtnCnic(buyerNTN)
+        const normalizedBuyerPhone = normalizeMobile(buyerPhone)
+
+        if (!buyerName.trim()) {
+            setMessage({ type: 'error', text: 'Buyer name is required before saving a customer.' })
+            return
+        }
+
+        if (normalizedBuyerNTN && !isValidNtnCnic(normalizedBuyerNTN)) {
+            setMessage({ type: 'error', text: 'Buyer NTN/CNIC must be 7 digits for NTN or 13 digits for CNIC.' })
+            return
+        }
+
+        if (normalizedBuyerPhone && !isValidMobile(normalizedBuyerPhone)) {
+            setMessage({ type: 'error', text: 'Buyer mobile must be a valid Pakistani number like 03001234567.' })
+            return
+        }
+
+        try {
+            const res = await fetch('/api/customers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: buyerName.trim(),
+                    ntnCnic: normalizedBuyerNTN || undefined,
+                    phone: normalizedBuyerPhone || undefined,
+                    province: buyerProvince || undefined,
+                    address: buyerAddress || undefined,
+                    registrationType: buyerRegistrationType || undefined,
+                }),
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                setMessage({ type: 'error', text: data.error || 'Failed to save customer.' })
+                return
+            }
+
+            setCustomer(data.customer)
+            setCustomerSearch(data.customer.name)
+            setShowCustomerDropdown(false)
+            setMessage({ type: 'success', text: `${data.customer.name} saved to customers.` })
+        } catch {
+            setMessage({ type: 'error', text: 'Failed to save customer.' })
+        }
+    }
+
     async function handleSubmit() {
         if (items.length === 0) return
+
+        const normalizedBuyerNTN = normalizeNtnCnic(buyerNTN)
+        const normalizedBuyerPhone = normalizeMobile(buyerPhone)
+
+        if (normalizedBuyerNTN && !isValidNtnCnic(normalizedBuyerNTN)) {
+            setMessage({ type: 'error', text: 'Buyer NTN/CNIC must be 7 digits for NTN or 13 digits for CNIC.' })
+            return
+        }
+
+        if (normalizedBuyerPhone && !isValidMobile(normalizedBuyerPhone)) {
+            setMessage({ type: 'error', text: 'Buyer mobile must be a valid Pakistani number like 03001234567.' })
+            return
+        }
+
         setSubmitting(true)
         setMessage(null)
 
@@ -123,8 +188,8 @@ export default function POSPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     buyerName: buyerName || undefined,
-                    buyerNTN: buyerNTN || undefined,
-                    buyerPhone: buyerPhone || undefined,
+                    buyerNTN: normalizedBuyerNTN || undefined,
+                    buyerPhone: normalizedBuyerPhone || undefined,
                     buyerProvince: buyerProvince || undefined,
                     buyerAddress: buyerAddress || undefined,
                     buyerRegistrationType: buyerRegistrationType || undefined,
@@ -179,9 +244,9 @@ export default function POSPage() {
     }
 
     return (
-        <div className="flex h-screen">
+        <div className="flex min-h-screen flex-col overflow-x-hidden xl:h-screen xl:flex-row">
             {/* Product Search Panel */}
-            <div className="flex-1 flex flex-col bg-slate-950 border-r border-slate-800">
+            <div className="flex min-h-0 flex-1 flex-col border-b border-slate-800 bg-slate-950 xl:border-b-0 xl:border-r">
                 <div className="p-4 border-b border-slate-800">
                     <input
                         type="text"
@@ -196,20 +261,20 @@ export default function POSPage() {
                     {products.length === 0 ? (
                         <p className="text-center text-slate-500 mt-8">No products found</p>
                     ) : (
-                        <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
                             {products.map((product) => (
                                 <button
                                     key={product.id}
                                     onClick={() => handleAddProduct(product)}
-                                    className="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-xl p-4 text-left transition-colors"
+                                    className="min-w-0 rounded-xl border border-slate-800 bg-slate-900 p-4 text-left transition-colors hover:border-blue-500/50"
                                 >
                                     <p className="text-sm font-medium text-white truncate">{product.name}</p>
-                                    <p className="text-xs text-slate-500 mt-0.5">{product.hsCode}</p>
-                                    <div className="flex justify-between items-center mt-2">
-                                        <span className="text-sm font-bold text-blue-400">
+                                    <p className="mt-0.5 break-all text-xs text-slate-500">{product.hsCode}</p>
+                                    <div className="mt-2 flex items-center justify-between gap-3">
+                                        <span className="min-w-0 text-sm font-bold text-blue-400">
                                             PKR {product.price.toLocaleString()}
                                         </span>
-                                        <span className="text-xs text-slate-500">{product.taxRate}% Tax</span>
+                                        <span className="shrink-0 text-xs text-slate-500">{product.taxRate}% Tax</span>
                                     </div>
                                 </button>
                             ))}
@@ -219,7 +284,7 @@ export default function POSPage() {
             </div>
 
             {/* Cart Panel */}
-            <div className="w-96 flex flex-col bg-slate-900">
+            <div className="flex w-full min-w-0 shrink-0 flex-col bg-slate-900 xl:w-md">
                 <div className="p-4 border-b border-slate-800">
                     <h2 className="text-lg font-bold text-white">Cart ({items.length})</h2>
                 </div>
@@ -233,7 +298,7 @@ export default function POSPage() {
                                 key={item.productId}
                                 className="bg-slate-800 rounded-lg p-3"
                             >
-                                <div className="flex justify-between items-start">
+                                <div className="flex items-start justify-between gap-2">
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium text-white truncate">{item.name}</p>
                                         <p className="text-xs text-slate-400">
@@ -329,6 +394,15 @@ export default function POSPage() {
                             </div>
                         )}
                     </div>
+                    {!customerId && buyerName.trim() && (
+                        <button
+                            type="button"
+                            onClick={handleSaveCustomer}
+                            className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-slate-700"
+                        >
+                            Save As Customer
+                        </button>
+                    )}
                     <input
                         type="text"
                         placeholder="Buyer Name"
@@ -336,27 +410,31 @@ export default function POSPage() {
                         onChange={(e) => setBuyerInfo({ buyerName: e.target.value })}
                         className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
                     />
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <input
                             type="text"
                             placeholder="NTN/CNIC"
                             value={buyerNTN}
-                            onChange={(e) => setBuyerInfo({ buyerNTN: e.target.value })}
-                            className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
+                            onChange={(e) => setBuyerInfo({ buyerNTN: normalizeNtnCnic(e.target.value) })}
+                            inputMode="numeric"
+                            maxLength={13}
+                            className="min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
                         />
                         <input
                             type="text"
                             placeholder="Phone"
                             value={buyerPhone}
-                            onChange={(e) => setBuyerInfo({ buyerPhone: e.target.value })}
-                            className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
+                            onChange={(e) => setBuyerInfo({ buyerPhone: normalizeMobile(e.target.value) })}
+                            inputMode="numeric"
+                            maxLength={11}
+                            className="min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
                         />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <select
                             value={buyerProvince}
                             onChange={(e) => setBuyerInfo({ buyerProvince: e.target.value })}
-                            className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white"
+                            className="min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white"
                         >
                             <option value="">Province</option>
                             <option value="Punjab">Punjab</option>
@@ -368,7 +446,7 @@ export default function POSPage() {
                         <select
                             value={buyerRegistrationType}
                             onChange={(e) => setBuyerInfo({ buyerRegistrationType: e.target.value as 'Registered' | 'Unregistered' | '' })}
-                            className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white"
+                            className="min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white"
                         >
                             <option value="">Reg Type</option>
                             <option value="Registered">Registered</option>
@@ -382,6 +460,16 @@ export default function POSPage() {
                         onChange={(e) => setBuyerInfo({ buyerAddress: e.target.value })}
                         className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
                     />
+                    {(buyerNTN || buyerPhone) && (
+                        <div className="space-y-1 text-xs">
+                            {buyerNTN && !isValidNtnCnic(buyerNTN) && (
+                                <p className="text-amber-400">Buyer NTN/CNIC must be 7 digits for NTN or 13 digits for CNIC.</p>
+                            )}
+                            {buyerPhone && !isValidMobile(buyerPhone) && (
+                                <p className="text-amber-400">Buyer phone must be in Pakistani mobile format, for example 03001234567.</p>
+                            )}
+                        </div>
+                    )}
                     <select
                         value={paymentMethod}
                         onChange={(e) => setPaymentMethod(e.target.value as 'CASH' | 'CARD' | 'BANK_TRANSFER')}

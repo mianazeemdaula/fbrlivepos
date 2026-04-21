@@ -1,0 +1,20 @@
+{
+  "dated": "2026-04-21 15:07:51",
+  "sourceInvoiceNo": "",
+  "validationResponse": {
+    "statusCode": "01",
+    "status": "Invalid",
+    "errorCode": null,
+    "error": "",
+    "invoiceStatuses": [
+      {
+        "itemSNo": "1",
+        "statusCode": "01",
+        "status": "Invalid",
+        "invoiceNo": null,
+        "errorCode": "0046",
+        "error": "Provided Rate is not correct. Please provide valid rate for selected Sales Type. Please refer to relevant reference API in the technical document for DI API."
+      }
+    ]
+  }
+}

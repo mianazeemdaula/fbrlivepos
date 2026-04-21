@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getTenantFromSession } from '@/lib/tenant/context'
 import { prisma } from '@/lib/db/prisma'
+import { isValidMobile, isValidNtnCnic, normalizeMobile, normalizeNtnCnic } from '@/lib/validation/pakistan'
 
 const UpdateCustomerSchema = z.object({
     name: z.string().min(1).optional(),
-    ntnCnic: z.string().regex(/^(\d{7}|\d{13})$/).optional(),
-    phone: z.string().optional(),
+    ntnCnic: z.string().optional().transform((value) => {
+        const normalized = normalizeNtnCnic(value)
+        return normalized || undefined
+    }).refine((value) => value === undefined || isValidNtnCnic(value), 'Must be 7-digit NTN or 13-digit CNIC'),
+    phone: z.string().optional().transform((value) => {
+        const normalized = normalizeMobile(value)
+        return normalized || undefined
+    }).refine((value) => value === undefined || isValidMobile(value), 'Mobile must be a valid Pakistani number'),
     email: z.string().email().optional().or(z.literal('')),
     province: z.string().optional(),
     address: z.string().optional(),
@@ -55,15 +62,28 @@ export async function PATCH(
         return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
 
+    if (body.ntnCnic && body.ntnCnic !== existing.ntnCnic) {
+        const duplicate = await prisma.customer.findUnique({
+            where: { tenantId_ntnCnic: { tenantId: tenant.id, ntnCnic: body.ntnCnic } },
+        })
+
+        if (duplicate && duplicate.id !== existing.id) {
+            return NextResponse.json(
+                { error: `A customer with NTN/CNIC ${body.ntnCnic} already exists` },
+                { status: 409 },
+            )
+        }
+    }
+
     const customer = await prisma.customer.update({
         where: { id },
         data: {
             ...(body.name !== undefined ? { name: body.name } : {}),
-            ...(body.ntnCnic !== undefined ? { ntnCnic: body.ntnCnic } : {}),
-            ...(body.phone !== undefined ? { phone: body.phone } : {}),
+            ...(body.ntnCnic !== undefined ? { ntnCnic: body.ntnCnic || null } : {}),
+            ...(body.phone !== undefined ? { phone: body.phone || null } : {}),
             ...(body.email !== undefined ? { email: body.email || null } : {}),
-            ...(body.province !== undefined ? { province: body.province } : {}),
-            ...(body.address !== undefined ? { address: body.address } : {}),
+            ...(body.province !== undefined ? { province: body.province || null } : {}),
+            ...(body.address !== undefined ? { address: body.address || null } : {}),
             ...(body.registrationType !== undefined ? { registrationType: body.registrationType } : {}),
             ...(body.isActive !== undefined ? { isActive: body.isActive } : {}),
         },

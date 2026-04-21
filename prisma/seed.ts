@@ -2,6 +2,7 @@ import { PrismaClient, BillingCycle, SubStatus } from '../src/generated/prisma/c
 import { PrismaPg } from '@prisma/adapter-pg'
 import { hash } from '@node-rs/argon2'
 import 'dotenv/config'
+import { syncAllReferenceData } from '../workers/di-reference-sync.worker'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
@@ -12,6 +13,14 @@ function feat(key: string, value: string, label: string) {
 
 async function main() {
     console.log('🌱 Seeding database...')
+
+    if (process.env.PRAL_PLATFORM_TOKEN) {
+        console.log('🔄 Syncing FBR DI reference data...')
+        await syncAllReferenceData()
+        console.log('✅ FBR DI reference data synced')
+    } else {
+        console.warn('⚠️ PRAL_PLATFORM_TOKEN not set. Skipping FBR DI reference-data sync during seed.')
+    }
 
     // --- Subscription Plans ---
     const freePlan = await prisma.subscriptionPlan.upsert({
@@ -197,50 +206,6 @@ async function main() {
             currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         },
     })
-
-    // Demo products
-    const demoProducts = [
-        { name: 'Laptop HP ProBook 450', sku: 'HP-PB450', hsCode: '8471.30.00', price: 185000, taxRate: 18, unit: 'PCS' },
-        { name: 'Printer Canon PIXMA', sku: 'CN-PIXMA', hsCode: '8443.32.00', price: 35000, taxRate: 18, unit: 'PCS' },
-        { name: 'USB Cable 2m', sku: 'USB-2M', hsCode: '8544.42.00', price: 350, taxRate: 18, unit: 'PCS' },
-        { name: 'Office Chair Ergonomic', sku: 'OC-ERGO', hsCode: '9401.30.00', price: 25000, taxRate: 18, unit: 'PCS' },
-        { name: 'Wireless Mouse Logitech', sku: 'LG-WMOUSE', hsCode: '8471.60.00', price: 3500, taxRate: 18, unit: 'PCS' },
-        { name: 'Monitor Dell 24"', sku: 'DL-MON24', hsCode: '8528.52.00', price: 52000, taxRate: 18, unit: 'PCS' },
-        { name: 'Keyboard Mechanical', sku: 'KB-MECH', hsCode: '8471.60.00', price: 8500, taxRate: 18, unit: 'PCS' },
-        { name: 'Headphones Sony WH', sku: 'SN-WHHP', hsCode: '8518.30.00', price: 42000, taxRate: 18, unit: 'PCS' },
-    ]
-
-    for (const p of demoProducts) {
-        await prisma.product.create({
-            data: { ...p, tenantId: demoTenant.id },
-        })
-    }
-
-    console.log('✅ Demo tenant created (demo@example.com / Demo@123456)')
-
-    // --- Sample HS Codes ---
-    const hsCodes = [
-        { code: '8471.30.00', description: 'Portable digital automatic data processing machines (laptops)', defaultTaxRate: 18, category: 'Electronics', unit: 'PCS' },
-        { code: '8443.32.00', description: 'Printers, copying and facsimile machines', defaultTaxRate: 18, category: 'Electronics', unit: 'PCS' },
-        { code: '8544.42.00', description: 'Electric conductors fitted with connectors (USB cables)', defaultTaxRate: 18, category: 'Electronics', unit: 'PCS' },
-        { code: '9401.30.00', description: 'Swivel seats with variable height adjustment', defaultTaxRate: 18, category: 'Furniture', unit: 'PCS' },
-        { code: '8471.60.00', description: 'Input or output units (keyboards, mice)', defaultTaxRate: 18, category: 'Electronics', unit: 'PCS' },
-        { code: '8528.52.00', description: 'Monitors, not incorporating TV reception', defaultTaxRate: 18, category: 'Electronics', unit: 'PCS' },
-        { code: '8518.30.00', description: 'Headphones and earphones', defaultTaxRate: 18, category: 'Electronics', unit: 'PCS' },
-        { code: '0402.10.00', description: 'Milk powder, not exceeding 1.5% fat', defaultTaxRate: 0, category: 'Food', unit: 'KG' },
-        { code: '1006.30.00', description: 'Semi-milled or wholly milled rice', defaultTaxRate: 0, category: 'Food', unit: 'KG' },
-        { code: '6203.42.00', description: 'Men\'s trousers and shorts of cotton', defaultTaxRate: 17, category: 'Textiles', unit: 'PCS' },
-    ]
-
-    for (const hs of hsCodes) {
-        await prisma.hSCode.upsert({
-            where: { code: hs.code },
-            update: {},
-            create: hs,
-        })
-    }
-
-    console.log('✅ Sample HS codes created')
 
     // --- Feature Flags ---
     const flags = [

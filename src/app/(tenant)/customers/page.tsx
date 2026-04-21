@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { isValidMobile, isValidNtnCnic, normalizeMobile, normalizeNtnCnic } from '@/lib/validation/pakistan'
 
 interface Customer {
     id: string
@@ -44,6 +45,9 @@ export default function CustomersPage() {
     const [showVerifyModal, setShowVerifyModal] = useState(false)
     const [verifyResult, setVerifyResult] = useState<VerifyResult | null>(null)
 
+    const normalizedFormNtnCnic = normalizeNtnCnic(form.ntnCnic)
+    const normalizedFormPhone = normalizeMobile(form.phone)
+
     const fetchCustomers = useCallback(async () => {
         setLoading(true)
         try {
@@ -72,14 +76,27 @@ export default function CustomersPage() {
         e.preventDefault()
         setSaving(true)
         setMessage(null)
+
+        if (normalizedFormNtnCnic && !isValidNtnCnic(normalizedFormNtnCnic)) {
+            setMessage({ type: 'error', text: 'NTN/CNIC must be 7 digits for NTN or 13 digits for CNIC.' })
+            setSaving(false)
+            return
+        }
+
+        if (normalizedFormPhone && !isValidMobile(normalizedFormPhone)) {
+            setMessage({ type: 'error', text: 'Mobile must be a valid Pakistani number like 03001234567.' })
+            setSaving(false)
+            return
+        }
+
         try {
             const res = await fetch('/api/customers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: form.name,
-                    ntnCnic: form.ntnCnic || undefined,
-                    phone: form.phone || undefined,
+                    ntnCnic: normalizedFormNtnCnic || undefined,
+                    phone: normalizedFormPhone || undefined,
                     email: form.email || undefined,
                     province: form.province || undefined,
                     address: form.address || undefined,
@@ -125,14 +142,19 @@ export default function CustomersPage() {
     }
 
     async function handleQuickVerify() {
-        if (!verifyNtn) return
+        const normalized = normalizeNtnCnic(verifyNtn)
+        if (!normalized) return
+        if (!isValidNtnCnic(normalized)) {
+            setMessage({ type: 'error', text: 'Enter a valid 7-digit NTN or 13-digit CNIC.' })
+            return
+        }
         setVerifying('quick')
         setVerifyResult(null)
         try {
             const res = await fetch('/api/customers/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ntnCnic: verifyNtn }),
+                body: JSON.stringify({ ntnCnic: normalized }),
             })
             const data = await res.json()
             if (res.ok) {
@@ -200,10 +222,15 @@ export default function CustomersPage() {
                                 <label className="block text-xs text-slate-400 mb-1">NTN/CNIC</label>
                                 <input
                                     value={form.ntnCnic}
-                                    onChange={(e) => setForm({ ...form, ntnCnic: e.target.value })}
+                                    onChange={(e) => setForm({ ...form, ntnCnic: normalizeNtnCnic(e.target.value) })}
+                                    inputMode="numeric"
+                                    maxLength={13}
                                     className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
                                     placeholder="7-digit NTN or 13-digit CNIC"
                                 />
+                                {form.ntnCnic && !isValidNtnCnic(normalizedFormNtnCnic) && (
+                                    <p className="mt-1 text-xs text-amber-400">Use 7 digits for NTN or 13 digits for CNIC.</p>
+                                )}
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -211,10 +238,15 @@ export default function CustomersPage() {
                                 <label className="block text-xs text-slate-400 mb-1">Phone</label>
                                 <input
                                     value={form.phone}
-                                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                                    onChange={(e) => setForm({ ...form, phone: normalizeMobile(e.target.value) })}
+                                    inputMode="numeric"
+                                    maxLength={11}
                                     className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
-                                    placeholder="+92 3XX XXXXXXX"
+                                    placeholder="03001234567"
                                 />
+                                {form.phone && !isValidMobile(normalizedFormPhone) && (
+                                    <p className="mt-1 text-xs text-amber-400">Use a Pakistani mobile number like 03001234567.</p>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-xs text-slate-400 mb-1">Email</label>
@@ -377,7 +409,9 @@ export default function CustomersPage() {
                             <input
                                 type="text"
                                 value={verifyNtn}
-                                onChange={(e) => setVerifyNtn(e.target.value)}
+                                onChange={(e) => setVerifyNtn(normalizeNtnCnic(e.target.value))}
+                                inputMode="numeric"
+                                maxLength={13}
                                 placeholder="Enter 7-digit NTN or 13-digit CNIC"
                                 className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
                             />

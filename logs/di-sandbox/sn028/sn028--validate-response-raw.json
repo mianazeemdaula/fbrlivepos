@@ -1,0 +1,18 @@
+{
+  "status": 200,
+  "statusText": "",
+  "headers": {
+    "access-control-allow-headers": "authorization,Access-Control-Allow-Origin,Content-Type,SOAPAction",
+    "access-control-allow-methods": "POST",
+    "access-control-allow-origin": "*",
+    "connection": "keep-alive",
+    "content-encoding": "gzip",
+    "content-length": "171",
+    "content-type": "application/json; charset=UTF-8",
+    "date": "Tue, 21 Apr 2026 04:57:58 GMT",
+    "server": "nginx/1.20.1",
+    "set-cookie": "cookiesession1=678B2AFC8A37FD53701CC0A9CEEC6A3F;Expires=Wed, 21 Apr 2027 04:59:46 GMT;Path=/;HttpOnly",
+    "vary": "origin,access-control-request-method,access-control-request-headers,accept-encoding"
+  },
+  "body": "{\n\t\t\t\t\t\t\t\t\t\t\"dated\": \"2026-04-21 09:58:04\",\n\t\t\t\t\t\t\t\t\t\t\"validationResponse\": {\"statusCode\":\"00\",\"status\":\"Valid\",\"error\":\"\",\"invoiceStatuses\":[{\"itemSNo\":\"1\",\"statusCode\":\"00\",\"status\":\"Valid\",\"invoiceNo\":\"\",\"errorCode\":\"\",\"error\":\"\"}]}\n\t\t\t\t\t\t\t\t\t\t}"
+}

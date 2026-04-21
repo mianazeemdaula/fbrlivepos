@@ -1,0 +1,18 @@
+{
+  "dated": "2026-04-21 10:22:49",
+  "validationResponse": {
+    "statusCode": "00",
+    "status": "Valid",
+    "error": "",
+    "invoiceStatuses": [
+      {
+        "itemSNo": "1",
+        "statusCode": "00",
+        "status": "Valid",
+        "invoiceNo": "",
+        "errorCode": "",
+        "error": ""
+      }
+    ]
+  }
+}
