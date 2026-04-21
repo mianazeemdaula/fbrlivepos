@@ -131,14 +131,15 @@ export default function HSCodesPage() {
 
     return (
         <div className="p-8">
-            <div className="flex items-start justify-between mb-8">
+            <div className="mb-8 flex items-start justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">HS Code Library</h1>
-                    <p className="text-slate-400 text-sm mt-1">Manage the master list of FBR Harmonized System codes</p>
+                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Tax reference</p>
+                    <h1 className="brand-heading text-3xl font-bold text-white">HS Code Library</h1>
+                    <p className="mt-1 text-sm text-[#c1bcaf]">Manage the master list of FBR Harmonized System codes</p>
                 </div>
                 <div className="flex gap-2">
                     <label
-                        className={`bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${importLoading ? 'opacity-50 pointer-events-none' : ''
+                        className={`cursor-pointer rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-[#d8d0bf] transition-colors ${importLoading ? 'opacity-50 pointer-events-none' : ''
                             }`}
                     >
                         {importLoading ? 'Importing...' : 'Import CSV'}
@@ -146,7 +147,7 @@ export default function HSCodesPage() {
                     </label>
                     <button
                         onClick={() => setShowForm(!showForm)}
-                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        className="flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)]"
                     >
                         {showForm ? 'Cancel' : '+ Add HS Code'}
                     </button>
@@ -160,7 +161,7 @@ export default function HSCodesPage() {
             )}
 
             {showForm && (
-                <form onSubmit={handleCreate} className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6">
+                <form onSubmit={handleCreate} className="app-panel mb-6 rounded-2xl p-6">
                     {error && (
                         <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg p-3 mb-4">
                             {error}
@@ -169,20 +170,20 @@ export default function HSCodesPage() {
                     <h2 className="text-sm font-semibold text-white mb-4">New HS Code</h2>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">HS Code</label>
-                            <input name="code" required className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50" placeholder="1234.56.78" />
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">HS Code</label>
+                            <input name="code" required className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" placeholder="1234.56.78" />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Description</label>
-                            <input name="description" required className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Description</label>
+                            <input name="description" required className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Category</label>
-                            <input name="category" required className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Category</label>
+                            <input name="category" required className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Unit</label>
-                            <select name="unit" required className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Unit</label>
+                            <select name="unit" required className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white">
                                 <option value="PCS">PCS</option>
                                 <option value="KG">KG</option>
                                 <option value="LTR">LTR</option>
@@ -196,16 +197,16 @@ export default function HSCodesPage() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Default Tax %</label>
-                            <input name="defaultTaxRate" type="number" step="0.01" min="0" defaultValue="18" required className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Default Tax %</label>
+                            <input name="defaultTaxRate" type="number" step="0.01" min="0" defaultValue="18" required className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" />
                         </div>
                     </div>
                     <div className="flex justify-end gap-3 mt-5">
-                        <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">Cancel</button>
+                        <button type="button" onClick={() => setShowForm(false)} className="rounded-lg px-4 py-2 text-sm text-[#c1bcaf] transition-colors hover:bg-white/6 hover:text-white">Cancel</button>
                         <button
                             type="submit"
                             disabled={formLoading}
-                            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors"
+                            className="rounded-full bg-[var(--accent)] px-6 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {formLoading ? 'Creating...' : 'Create HS Code'}
                         </button>
@@ -222,11 +223,11 @@ export default function HSCodesPage() {
                         setSearch(e.target.value)
                         setPage(1)
                     }}
-                    className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                    className="w-full max-w-sm rounded-xl border border-white/10 bg-white/6 px-4 py-2 text-sm text-white placeholder:text-[#8d897d]"
                 />
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div className="app-panel overflow-hidden rounded-2xl">
                 <table className="w-full">
                     <thead>
                         <tr className="border-b border-slate-800">

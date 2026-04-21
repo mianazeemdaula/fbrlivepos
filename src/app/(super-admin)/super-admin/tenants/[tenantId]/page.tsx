@@ -119,8 +119,8 @@ export default function TenantDetailPage() {
         return (
             <div className="p-8">
                 <div className="animate-pulse space-y-4">
-                    <div className="h-8 bg-slate-800 rounded w-48" />
-                    <div className="h-64 bg-slate-800 rounded" />
+                    <div className="h-8 w-48 rounded bg-white/10" />
+                    <div className="h-64 rounded bg-white/10" />
                 </div>
             </div>
         )
@@ -128,9 +128,9 @@ export default function TenantDetailPage() {
 
     if (!tenant) {
         return (
-            <div className="p-8 text-center text-slate-500">
+            <div className="p-8 text-center text-[#8d897d]">
                 Tenant not found.
-                <button onClick={() => router.back()} className="text-indigo-400 ml-2 hover:underline">
+                <button onClick={() => router.back()} className="ml-2 text-[#f0d9a0] hover:underline">
                     Go back
                 </button>
             </div>
@@ -138,16 +138,17 @@ export default function TenantDetailPage() {
     }
 
     return (
-        <div className="p-8 max-w-4xl">
-            <button onClick={() => router.back()} className="text-sm text-slate-500 hover:text-white mb-6 inline-flex items-center gap-1.5 transition-colors">
+        <div className="max-w-4xl p-8">
+            <button onClick={() => router.back()} className="mb-6 inline-flex items-center gap-1.5 text-sm text-[#8d897d] transition-colors hover:text-white">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
                 Back to Tenants
             </button>
 
             <div className="flex justify-between items-start mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">{tenant.businessName}</h1>
-                    <p className="text-sm text-slate-400 mt-0.5">{tenant.email}</p>
+                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Tenant detail</p>
+                    <h1 className="brand-heading mt-2 text-3xl font-bold text-white">{tenant.businessName}</h1>
+                    <p className="mt-0.5 text-sm text-[#c1bcaf]">{tenant.email}</p>
                 </div>
                 <span
                     className={`text-xs px-3 py-1 rounded-full font-medium ${tenant.isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
@@ -166,23 +167,23 @@ export default function TenantDetailPage() {
             </div>
 
             {/* Details */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6">
+            <div className="app-panel mb-6 rounded-2xl p-6">
                 <h2 className="text-sm font-semibold text-white mb-4">Business Details</h2>
                 <dl className="grid grid-cols-2 gap-x-8 gap-y-3">
-                    <div><dt className="text-xs text-slate-500">NTN</dt><dd className="text-sm text-slate-300 font-mono mt-0.5">{tenant.ntn || '—'}</dd></div>
-                    <div><dt className="text-xs text-slate-500">Phone</dt><dd className="text-sm text-slate-300 mt-0.5">{tenant.phone || '—'}</dd></div>
-                    <div className="col-span-2"><dt className="text-xs text-slate-500">Address</dt><dd className="text-sm text-slate-300 mt-0.5">{tenant.address || '—'}</dd></div>
-                    <div><dt className="text-xs text-slate-500">Joined</dt><dd className="text-sm text-slate-300 mt-0.5">{new Date(tenant.createdAt).toLocaleDateString()}</dd></div>
+                    <div><dt className="text-xs text-[#8d897d]">NTN</dt><dd className="mt-0.5 font-mono text-sm text-[#d8d0bf]">{tenant.ntn || '—'}</dd></div>
+                    <div><dt className="text-xs text-[#8d897d]">Phone</dt><dd className="mt-0.5 text-sm text-[#d8d0bf]">{tenant.phone || '—'}</dd></div>
+                    <div className="col-span-2"><dt className="text-xs text-[#8d897d]">Address</dt><dd className="mt-0.5 text-sm text-[#d8d0bf]">{tenant.address || '—'}</dd></div>
+                    <div><dt className="text-xs text-[#8d897d]">Joined</dt><dd className="mt-0.5 text-sm text-[#d8d0bf]">{new Date(tenant.createdAt).toLocaleDateString()}</dd></div>
                 </dl>
             </div>
 
             {/* Subscription */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6">
+            <div className="app-panel mb-6 rounded-2xl p-6">
                 <h2 className="text-sm font-semibold text-white mb-4">Subscription</h2>
-                <p className="text-sm text-slate-400 mb-4">
+                <p className="mb-4 text-sm text-[#c1bcaf]">
                     Current plan: <span className="text-white font-medium">{tenant.subscription?.plan?.name || 'Free'}</span>
-                    <span className="mx-2 text-slate-700">·</span>
-                    Status: <span className="text-slate-300">{tenant.subscription?.status || 'N/A'}</span>
+                    <span className="mx-2 text-[#8d897d]">·</span>
+                    Status: <span className="text-[#d8d0bf]">{tenant.subscription?.status || 'N/A'}</span>
                 </p>
                 <div className="flex flex-wrap gap-2">
                     {plans.map((plan) => (
@@ -191,8 +192,8 @@ export default function TenantDetailPage() {
                             onClick={() => handleChangePlan(plan.id)}
                             disabled={actionLoading === 'plan' || tenant.subscription?.plan?.id === plan.id}
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${tenant.subscription?.plan?.id === plan.id
-                                ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30'
-                                : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
+                                ? 'border border-[rgba(200,164,90,0.28)] bg-[rgba(200,164,90,0.16)] text-[#f0d9a0]'
+                                : 'border border-white/10 bg-white/6 text-[#d8d0bf] hover:bg-white/10'
                                 }`}
                         >
                             {plan.name} — PKR {plan.monthlyPrice.toLocaleString()}
@@ -202,7 +203,7 @@ export default function TenantDetailPage() {
             </div>
 
             {/* Actions */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+            <div className="app-panel rounded-2xl p-6">
                 <h2 className="text-sm font-semibold text-white mb-4">Actions</h2>
                 <div className="flex flex-wrap gap-3">
                     <button

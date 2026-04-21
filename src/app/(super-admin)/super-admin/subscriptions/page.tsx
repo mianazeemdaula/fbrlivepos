@@ -43,7 +43,7 @@ interface PlanFormState {
     isPublic: boolean
 }
 
-const inputClassName = 'w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50'
+const inputClassName = 'w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d] focus:outline-none focus:ring-2 focus:ring-[#f0d9a0]/30'
 
 function createDefaultFormState(): PlanFormState {
     return {
@@ -221,109 +221,110 @@ export default function SubscriptionsPage() {
         <div className="p-8">
             <div className="flex items-start justify-between mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Subscription Plans</h1>
-                    <p className="text-slate-400 text-sm mt-1">Manage pricing tiers and feature entitlements</p>
+                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Packages</p>
+                    <h1 className="brand-heading text-3xl font-bold text-white">Subscription Plans</h1>
+                    <p className="mt-1 text-sm text-[#c1bcaf]">Manage pricing tiers and feature entitlements</p>
                 </div>
                 <button
                     onClick={() => (showForm && !editingPlanId ? resetForm() : openCreateForm())}
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    className="flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)]"
                 >
                     {showForm && !editingPlanId ? 'Cancel' : '+ New Plan'}
                 </button>
             </div>
 
             {error && !showForm && (
-                <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg p-3 mb-6">
+                <div className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300">
                     {error}
                 </div>
             )}
 
             {showForm && (
-                <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6">
+                <form onSubmit={handleSubmit} className="app-panel mb-6 rounded-2xl p-6">
                     {error && (
-                        <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg p-3 mb-4">
+                        <div className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300">
                             {error}
                         </div>
                     )}
                     <h2 className="text-sm font-semibold text-white mb-4">{formTitle}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Plan Name</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Plan Name</label>
                             <input value={form.name} onChange={(e) => setForm((current) => ({ ...current, name: e.target.value }))} required className={inputClassName} />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Slug</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Slug</label>
                             <input value={form.slug} onChange={(e) => setForm((current) => ({ ...current, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') }))} required className={inputClassName} placeholder="e.g. starter" />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Monthly Price (PKR)</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Monthly Price (PKR)</label>
                             <input value={form.monthlyPrice} onChange={(e) => setForm((current) => ({ ...current, monthlyPrice: e.target.value }))} type="number" step="0.01" min="0" required className={inputClassName} />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Yearly Price (PKR)</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Yearly Price (PKR)</label>
                             <input value={form.yearlyPrice} onChange={(e) => setForm((current) => ({ ...current, yearlyPrice: e.target.value }))} type="number" step="0.01" min="0" required className={inputClassName} />
                         </div>
                     </div>
                     <div className="mb-4">
-                        <label className="block text-xs font-medium text-slate-400 mb-1.5">Description</label>
+                        <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Description</label>
                         <textarea value={form.description} onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))} required rows={3} className={`${inputClassName} resize-none`} placeholder="Short summary of what this plan includes" />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Max POS Terminals</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Max POS Terminals</label>
                             <input value={form.maxPosTerminals} onChange={(e) => setForm((current) => ({ ...current, maxPosTerminals: e.target.value }))} type="number" min="1" className={inputClassName} />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Max Users</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Max Users</label>
                             <input value={form.maxUsers} onChange={(e) => setForm((current) => ({ ...current, maxUsers: e.target.value }))} type="number" min="1" className={inputClassName} />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Max Products</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Max Products</label>
                             <input value={form.maxProducts} onChange={(e) => setForm((current) => ({ ...current, maxProducts: e.target.value }))} type="number" min="1" className={inputClassName} />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Max Invoices/Month</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Max Invoices/Month</label>
                             <input value={form.maxInvoicesMonth} onChange={(e) => setForm((current) => ({ ...current, maxInvoicesMonth: e.target.value }))} type="number" min="1" className={inputClassName} />
                         </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Max HS Codes</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Max HS Codes</label>
                             <input value={form.maxHsCodesAccess} onChange={(e) => setForm((current) => ({ ...current, maxHsCodesAccess: e.target.value }))} type="number" min="1" className={inputClassName} placeholder="Unlimited if blank" />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Retention Days</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Retention Days</label>
                             <input value={form.dataRetentionDays} onChange={(e) => setForm((current) => ({ ...current, dataRetentionDays: e.target.value }))} type="number" min="30" required className={inputClassName} />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Trial Days</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Trial Days</label>
                             <input value={form.trialDays} onChange={(e) => setForm((current) => ({ ...current, trialDays: e.target.value }))} type="number" min="0" max="90" required className={inputClassName} />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Sort Order</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Sort Order</label>
                             <input value={form.sortOrder} onChange={(e) => setForm((current) => ({ ...current, sortOrder: e.target.value }))} type="number" min="0" required className={inputClassName} />
                         </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Currency</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Currency</label>
                             <input value={form.currency} onChange={(e) => setForm((current) => ({ ...current, currency: e.target.value.toUpperCase() }))} maxLength={3} required className={inputClassName} />
                         </div>
-                        <label className="flex items-center justify-between bg-slate-800/70 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-300">
+                        <label className="flex items-center justify-between rounded-xl border border-white/10 bg-white/6 px-3 py-2.5 text-sm text-[#d8d0bf]">
                             <span>Plan is active</span>
                             <input checked={form.isActive} onChange={(e) => setForm((current) => ({ ...current, isActive: e.target.checked }))} type="checkbox" className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-indigo-500 focus:ring-indigo-500/50" />
                         </label>
-                        <label className="flex items-center justify-between bg-slate-800/70 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-300">
+                        <label className="flex items-center justify-between rounded-xl border border-white/10 bg-white/6 px-3 py-2.5 text-sm text-[#d8d0bf]">
                             <span>Visible on public pricing</span>
                             <input checked={form.isPublic} onChange={(e) => setForm((current) => ({ ...current, isPublic: e.target.checked }))} type="checkbox" className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-indigo-500 focus:ring-indigo-500/50" />
                         </label>
                     </div>
                     <div className="flex justify-end gap-3">
-                        <button type="button" onClick={resetForm} className="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">Cancel</button>
+                        <button type="button" onClick={resetForm} className="rounded-lg px-4 py-2 text-sm text-[#c1bcaf] transition-colors hover:bg-white/6 hover:text-white">Cancel</button>
                         <button
                             type="submit"
                             disabled={formLoading}
-                            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors"
+                            className="rounded-full bg-[var(--accent)] px-6 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {submitLabel}
                         </button>
@@ -334,50 +335,50 @@ export default function SubscriptionsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {loading
                     ? Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-5 animate-pulse">
-                            <div className="h-6 bg-slate-800 rounded w-24 mb-3" />
-                            <div className="h-4 bg-slate-800 rounded w-16" />
+                        <div key={i} className="app-panel rounded-2xl p-5 animate-pulse">
+                            <div className="mb-3 h-6 w-24 rounded bg-white/10" />
+                            <div className="h-4 w-16 rounded bg-white/10" />
                         </div>
                     ))
                     : plans.map((plan) => (
-                        <div key={plan.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                        <div key={plan.id} className="app-panel rounded-2xl p-5">
                             <div className="flex justify-between items-start mb-3">
                                 <div>
                                     <h3 className="text-base font-bold text-white">{plan.name}</h3>
-                                    <p className="text-xs text-slate-600 font-mono mt-0.5">{plan.slug}</p>
+                                    <p className="mt-0.5 font-mono text-xs text-[#8d897d]">{plan.slug}</p>
                                 </div>
                                 <span
                                     className={`text-xs px-2 py-0.5 rounded-full font-medium ${plan.isActive
-                                        ? 'bg-emerald-500/10 text-emerald-400'
-                                        : 'bg-red-500/10 text-red-400'
+                                        ? 'bg-emerald-500/10 text-emerald-300'
+                                        : 'bg-red-500/10 text-red-300'
                                         }`}
                                 >
                                     {plan.isActive ? 'Active' : 'Inactive'}
                                 </span>
                             </div>
-                            <p className="text-sm text-slate-400 mb-3 min-h-10">{plan.description}</p>
-                            <p className="text-2xl font-bold text-indigo-400 mb-1">
+                            <p className="mb-3 min-h-10 text-sm text-[#c1bcaf]">{plan.description}</p>
+                            <p className="mb-1 text-2xl font-bold text-[#f0d9a0]">
                                 {plan.currency} {plan.monthlyPrice.toLocaleString()}
-                                <span className="text-sm font-normal text-slate-500">/mo</span>
+                                <span className="text-sm font-normal text-[#8d897d]">/mo</span>
                             </p>
-                            <p className="text-xs text-slate-500 mb-1">
+                            <p className="mb-1 text-xs text-[#8d897d]">
                                 {plan.currency} {plan.yearlyPrice.toLocaleString()} yearly
                             </p>
-                            <p className="text-xs text-slate-500 mb-4">
+                            <p className="mb-4 text-xs text-[#8d897d]">
                                 {plan._count?.tenantSubscriptions ?? 0} active subscribers
                             </p>
-                            <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-slate-500 mb-4 border-t border-slate-800 pt-3">
-                                <span>POS: <span className="text-slate-300">{plan.maxPosTerminals ?? 'Unlimited'}</span></span>
-                                <span>Users: <span className="text-slate-300">{plan.maxUsers ?? 'Unlimited'}</span></span>
-                                <span>Products: <span className="text-slate-300">{plan.maxProducts ?? 'Unlimited'}</span></span>
-                                <span>Invoices: <span className="text-slate-300">{plan.maxInvoicesMonth ?? 'Unlimited'}</span></span>
+                            <div className="mb-4 grid grid-cols-2 gap-x-3 gap-y-1 border-t border-white/10 pt-3 text-xs text-[#8d897d]">
+                                <span>POS: <span className="text-[#e7e0cf]">{plan.maxPosTerminals ?? 'Unlimited'}</span></span>
+                                <span>Users: <span className="text-[#e7e0cf]">{plan.maxUsers ?? 'Unlimited'}</span></span>
+                                <span>Products: <span className="text-[#e7e0cf]">{plan.maxProducts ?? 'Unlimited'}</span></span>
+                                <span>Invoices: <span className="text-[#e7e0cf]">{plan.maxInvoicesMonth ?? 'Unlimited'}</span></span>
                             </div>
                             {plan.features.length > 0 && (
-                                <ul className="space-y-1 border-t border-slate-800 pt-3 mb-4">
+                                <ul className="mb-4 space-y-1 border-t border-white/10 pt-3">
                                     {plan.features.map((f) => (
-                                        <li key={f.key} className="text-xs text-slate-500 flex justify-between">
+                                        <li key={f.key} className="flex justify-between text-xs text-[#8d897d]">
                                             <span>{f.key}</span>
-                                            <span className="text-slate-300">{f.value}</span>
+                                            <span className="text-[#e7e0cf]">{f.value}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -386,7 +387,7 @@ export default function SubscriptionsPage() {
                                 <button
                                     type="button"
                                     onClick={() => openEditForm(plan)}
-                                    className="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                                    className="flex-1 rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm font-medium text-[#f6f0e4] transition-colors hover:bg-white/10"
                                 >
                                     Edit
                                 </button>
@@ -395,8 +396,8 @@ export default function SubscriptionsPage() {
                                     onClick={() => handleTogglePlan(plan)}
                                     disabled={actionPlanId === plan.id}
                                     className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60 ${plan.isActive
-                                        ? 'bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-300'
-                                        : 'bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-300'
+                                        ? 'border border-red-500/20 bg-red-500/10 text-red-300 hover:bg-red-500/20'
+                                        : 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20'
                                         }`}
                                 >
                                     {actionPlanId === plan.id ? 'Saving...' : plan.isActive ? 'Deactivate' : 'Activate'}

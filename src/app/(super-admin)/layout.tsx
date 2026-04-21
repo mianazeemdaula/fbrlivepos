@@ -90,26 +90,26 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
     const { data: session } = useSession()
 
     return (
-        <div className="min-h-screen bg-slate-950 flex">
+        <div className="app-shell flex min-h-screen">
             {/* Sidebar */}
-            <aside className="w-60 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0">
+            <aside className="app-sidebar flex w-64 shrink-0 flex-col">
                 {/* Brand */}
-                <div className="px-5 py-4 border-b border-slate-800">
+                <div className="border-b border-white/10 px-5 py-5">
                     <div className="flex items-center gap-2.5 mb-0.5">
-                        <div className="w-7 h-7 rounded-md bg-indigo-600 flex items-center justify-center">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[var(--accent)] text-[var(--primary)]">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" />
                                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                             </svg>
                         </div>
-                        <span className="text-sm font-semibold text-white">Platform Admin</span>
+                        <span className="brand-heading text-sm font-semibold text-white">Platform Admin</span>
                     </div>
-                    <p className="text-xs text-slate-500 truncate pl-9">{session?.user?.email}</p>
+                    <p className="truncate pl-10 text-xs text-[#c1bcaf]">{session?.user?.email}</p>
                 </div>
 
                 {/* Nav */}
                 <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
-                    <p className="px-2 pt-1 pb-1.5 text-xs font-semibold text-slate-600 uppercase tracking-widest">Management</p>
+                    <p className="px-2 pb-1.5 pt-1 text-xs font-semibold uppercase tracking-widest text-[#8d897d]">Management</p>
                     {navItems.slice(0, 4).map((item) => {
                         const isActive =
                             item.href === '/super-admin'
@@ -120,17 +120,17 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive
-                                    ? 'bg-indigo-600/15 text-indigo-400 border border-indigo-500/20'
-                                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                                    ? 'app-nav-active'
+                                    : 'text-[#c1bcaf] hover:bg-white/6 hover:text-white'
                                     }`}
                             >
-                                <span className={isActive ? 'text-indigo-400' : 'text-slate-500'}>{item.icon}</span>
+                                <span className={isActive ? 'text-[#f0d9a0]' : 'text-[#8d897d]'}>{item.icon}</span>
                                 {item.label}
                             </Link>
                         )
                     })}
 
-                    <p className="px-2 pt-3 pb-1.5 text-xs font-semibold text-slate-600 uppercase tracking-widest">Platform</p>
+                    <p className="px-2 pb-1.5 pt-3 text-xs font-semibold uppercase tracking-widest text-[#8d897d]">Platform</p>
                     {navItems.slice(4).map((item) => {
                         const isActive = pathname.startsWith(item.href)
                         return (
@@ -138,11 +138,11 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive
-                                    ? 'bg-indigo-600/15 text-indigo-400 border border-indigo-500/20'
-                                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                                    ? 'app-nav-active'
+                                    : 'text-[#c1bcaf] hover:bg-white/6 hover:text-white'
                                     }`}
                             >
-                                <span className={isActive ? 'text-indigo-400' : 'text-slate-500'}>{item.icon}</span>
+                                <span className={isActive ? 'text-[#f0d9a0]' : 'text-[#8d897d]'}>{item.icon}</span>
                                 {item.label}
                             </Link>
                         )
@@ -150,10 +150,10 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                 </nav>
 
                 {/* Footer */}
-                <div className="px-3 py-3 border-t border-slate-800 space-y-0.5">
+                <div className="space-y-0.5 border-t border-white/10 px-3 py-3">
                     <button
                         onClick={() => signOut({ callbackUrl: '/login' })}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-all"
+                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#c1bcaf] transition-all hover:bg-white/6 hover:text-[#f0d9a0]"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -165,7 +165,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
             </aside>
 
             {/* Main content */}
-            <main className="flex-1 overflow-auto min-w-0">
+            <main className="min-w-0 flex-1 overflow-auto bg-[radial-gradient(circle_at_top_right,rgba(200,164,90,0.08),transparent_24%)]">
                 {children}
             </main>
         </div>

@@ -123,14 +123,15 @@ export default function AnnouncementsPage() {
     return (
         <div className="p-8">
             {/* Header */}
-            <div className="flex items-start justify-between mb-8">
+            <div className="mb-8 flex items-start justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Announcements</h1>
-                    <p className="text-slate-400 text-sm mt-1">Publish platform-wide notices to tenants</p>
+                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Comms</p>
+                    <h1 className="brand-heading text-3xl font-bold text-white">Announcements</h1>
+                    <p className="mt-1 text-sm text-[#c1bcaf]">Publish platform-wide notices to tenants</p>
                 </div>
                 <button
                     onClick={() => { setShowForm(!showForm); setError('') }}
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    className="flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)]"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
@@ -141,7 +142,7 @@ export default function AnnouncementsPage() {
 
             {/* Create form */}
             {showForm && (
-                <form onSubmit={handleCreate} className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6">
+                <form onSubmit={handleCreate} className="app-panel mb-6 rounded-2xl p-6">
                     <h2 className="text-sm font-semibold text-white mb-4">Create Announcement</h2>
 
                     {error && (
@@ -152,32 +153,32 @@ export default function AnnouncementsPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div className="md:col-span-2">
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Title</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Title</label>
                             <input
                                 name="title"
                                 required
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50"
+                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]"
                                 placeholder="e.g. Scheduled Maintenance on Saturday"
                             />
                         </div>
 
                         <div className="md:col-span-2">
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Body</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Body</label>
                             <textarea
                                 name="body"
                                 required
                                 rows={3}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 resize-none"
+                                className="w-full resize-none rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]"
                                 placeholder="Announcement details..."
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Type</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Type</label>
                             <select
                                 name="type"
                                 defaultValue="INFO"
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                             >
                                 <option value="INFO">Info</option>
                                 <option value="WARNING">Warning</option>
@@ -187,11 +188,11 @@ export default function AnnouncementsPage() {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Dismissable</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Dismissable</label>
                             <select
                                 name="isDismissable"
                                 defaultValue="true"
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                             >
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
@@ -199,22 +200,22 @@ export default function AnnouncementsPage() {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Starts At</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Starts At</label>
                             <input
                                 name="startsAt"
                                 type="datetime-local"
                                 required
                                 defaultValue={new Date().toISOString().slice(0, 16)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Ends At <span className="text-slate-600">(optional)</span></label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Ends At <span className="text-[#8d897d]">(optional)</span></label>
                             <input
                                 name="endsAt"
                                 type="datetime-local"
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                             />
                         </div>
                     </div>
@@ -223,14 +224,14 @@ export default function AnnouncementsPage() {
                         <button
                             type="button"
                             onClick={() => setShowForm(false)}
-                            className="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                            className="rounded-lg px-4 py-2 text-sm text-[#c1bcaf] transition-colors hover:bg-white/6 hover:text-white"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={formLoading}
-                            className="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white transition-colors"
+                            className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {formLoading ? 'Publishing...' : 'Publish'}
                         </button>
@@ -242,7 +243,7 @@ export default function AnnouncementsPage() {
             {loading ? (
                 <div className="space-y-3">
                     {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-5 animate-pulse">
+                        <div key={i} className="app-panel rounded-2xl p-5 animate-pulse">
                             <div className="flex gap-3 mb-3">
                                 <div className="h-5 w-20 bg-slate-800 rounded-full" />
                                 <div className="h-5 w-40 bg-slate-800 rounded" />
@@ -253,7 +254,7 @@ export default function AnnouncementsPage() {
                     ))}
                 </div>
             ) : announcements.length === 0 ? (
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center">
+                <div className="app-panel rounded-2xl p-12 text-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-slate-700 mb-4">
                         <path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0" />
                     </svg>
@@ -266,7 +267,7 @@ export default function AnnouncementsPage() {
                         const style = TYPE_STYLES[a.type]
                         const active = isActive(a)
                         return (
-                            <div key={a.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                            <div key={a.id} className="app-panel rounded-2xl p-5">
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center flex-wrap gap-2 mb-2">

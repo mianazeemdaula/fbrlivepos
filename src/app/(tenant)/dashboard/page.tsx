@@ -61,32 +61,35 @@ export default function DashboardPage() {
     }, [])
 
     return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold text-white mb-6">Dashboard</h1>
+        <div className="p-6 lg:p-8">
+            <div className="mb-8">
+                <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Tenant overview</p>
+                <h1 className="brand-heading mt-2 text-3xl font-bold text-white">Dashboard</h1>
+            </div>
 
             {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-5 animate-pulse">
-                            <div className="h-4 bg-slate-800 rounded w-24 mb-3" />
-                            <div className="h-8 bg-slate-800 rounded w-16" />
+                        <div key={i} className="app-panel rounded-2xl p-5 animate-pulse">
+                            <div className="mb-3 h-4 w-24 rounded bg-white/10" />
+                            <div className="h-8 w-16 rounded bg-white/10" />
                         </div>
                     ))}
                 </div>
             ) : (
                 <>
                     {!stats?.diConfigured && (
-                        <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+                        <div className="mb-6 rounded-2xl border border-[#f0d9a03a] bg-[#f0d9a00f] p-4">
                             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-amber-300">PRAL DI setup is still pending</p>
-                                    <p className="mt-1 text-sm text-amber-100/80">
+                                    <p className="text-sm font-medium text-[#f0d9a0]">PRAL DI setup is still pending</p>
+                                    <p className="mt-1 text-sm text-[#d8d0bf]">
                                         You can manage products and use the dashboard now, then finish DI credentials in Settings before live submissions.
                                     </p>
                                 </div>
                                 <Link
                                     href="/settings"
-                                    className="inline-flex items-center justify-center rounded-lg bg-amber-400 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-amber-300"
+                                    className="inline-flex items-center justify-center rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--primary)] hover:bg-[var(--accent-soft)]"
                                 >
                                     Open Settings
                                 </Link>
@@ -119,8 +122,8 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                            <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
+                        <div className="app-panel rounded-2xl p-5">
+                            <h2 className="mb-4 text-lg font-semibold text-white">Quick Actions</h2>
                             <div className="grid grid-cols-2 gap-3">
                                 <QuickAction href="/pos" icon="🖥️" label="Open POS" />
                                 <QuickAction href="/invoices" icon="📄" label="View Invoices" />
@@ -129,8 +132,8 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                            <h2 className="text-lg font-semibold text-white mb-4">Getting Started</h2>
+                        <div className="app-panel rounded-2xl p-5">
+                            <h2 className="mb-4 text-lg font-semibold text-white">Getting Started</h2>
                             <div className="space-y-3">
                                 <Step
                                     number={1}
@@ -168,10 +171,10 @@ function StatCard({
     valueColor?: string
 }) {
     return (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-            <p className="text-sm text-slate-400 mb-1">{label}</p>
-            <p className={`text-2xl font-bold ${valueColor}`}>{value}</p>
-            <p className="text-xs text-slate-500 mt-1">{sub}</p>
+        <div className="app-panel rounded-2xl p-5">
+            <p className="mb-1 text-sm text-[#c1bcaf]">{label}</p>
+            <p className={`metric-value text-2xl font-bold ${valueColor}`}>{value}</p>
+            <p className="mt-1 text-xs text-[#8d897d]">{sub}</p>
         </div>
     )
 }
@@ -180,7 +183,7 @@ function QuickAction({ href, icon, label }: { href: string; icon: string; label:
     return (
         <a
             href={href}
-            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 rounded-lg px-4 py-3 text-sm text-slate-300 hover:text-white transition-colors"
+            className="flex items-center gap-2 rounded-xl bg-white/6 px-4 py-3 text-sm text-[#d8d0bf] transition-colors hover:bg-white/10 hover:text-white"
         >
             <span>{icon}</span>
             {label}
@@ -199,12 +202,12 @@ function Step({
 }) {
     return (
         <div className="flex gap-3">
-            <div className="shrink-0 w-7 h-7 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center text-xs font-bold">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f0d9a01a] text-xs font-bold text-[#f0d9a0]">
                 {number}
             </div>
             <div>
                 <p className="text-sm font-medium text-white">{title}</p>
-                <p className="text-xs text-slate-400">{description}</p>
+                <p className="text-xs text-[#c1bcaf]">{description}</p>
             </div>
         </div>
     )

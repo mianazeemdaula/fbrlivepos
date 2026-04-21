@@ -1,139 +1,128 @@
 import Link from 'next/link'
+import { Check, Sparkles } from 'lucide-react'
+import { prisma } from '@/lib/db/prisma'
+import { defaultMarketingPlans } from '@/lib/marketing'
 
-const plans = [
-    {
-        name: 'Free',
-        price: 0,
-        period: '/mo',
-        description: 'For small businesses getting started',
-        features: [
-            '1 POS Terminal',
-            '2 Staff accounts',
-            '100 Products',
-            '500 Invoices/month',
-            'Basic PRAL DI integration',
-            'Email support',
-        ],
-        cta: 'Start Free',
-        popular: false,
-    },
-    {
-        name: 'Starter',
-        price: 2500,
-        period: '/mo',
-        description: 'Growing businesses with moderate volume',
-        features: [
-            '3 POS Terminals',
-            '10 Staff accounts',
-            '1,000 Products',
-            '2,500 Invoices/month',
-            'Advanced reports',
-            'Custom branding',
-            'CSV product import',
-        ],
-        cta: 'Start Free Trial',
-        popular: false,
-    },
-    {
-        name: 'Pro',
-        price: 6500,
-        period: '/mo',
-        description: 'High-volume businesses with advanced needs',
-        features: [
-            '5 POS Terminals',
-            '20 Staff accounts',
-            'Unlimited Products',
-            'Unlimited Invoices',
-            'API Access',
-            'Priority support',
-            'Email invoices to buyers',
-            'Advanced analytics',
-        ],
-        cta: 'Start Free Trial',
-        popular: true,
-    },
-    {
-        name: 'Enterprise',
-        price: 15000,
-        period: '/mo',
-        description: 'Large operations with multiple locations',
-        features: [
-            'Unlimited POS Terminals',
-            'Unlimited Staff',
-            'Unlimited Everything',
-            'White label',
-            'Multi-branch support',
-            'Accountant access',
-            'Dedicated support',
-            'Custom integrations',
-        ],
-        cta: 'Contact Sales',
-        popular: false,
-    },
-]
+async function getPublicPlans() {
+    try {
+        const plans = await prisma.subscriptionPlan.findMany({
+            where: { isActive: true, isPublic: true },
+            orderBy: { sortOrder: 'asc' },
+            include: { features: true },
+        })
 
-export default function PricingPage() {
+        if (!plans.length) {
+            return defaultMarketingPlans
+        }
+
+        return plans.map((plan, index) => ({
+            id: plan.id,
+            name: plan.name,
+            tagline: plan.description,
+            monthlyPrice: Number(plan.priceMonthly),
+            annualPrice: Number(plan.priceYearly),
+            invoicesPerMonth: plan.maxInvoicesMonth ?? 'unlimited',
+            users: plan.maxUsers ?? 'unlimited',
+            badge: index === 2 ? 'Most Popular' : undefined,
+            highlight: index === 2,
+            features: plan.features.length
+                ? plan.features.map((feature) => feature.label || `${feature.key}: ${feature.value}`)
+                : ['Full FBR DI integration', 'Sandbox support', 'Ongoing platform updates'],
+        }))
+    } catch {
+        return defaultMarketingPlans
+    }
+}
+
+export default async function PricingPage() {
+    const plans = await getPublicPlans()
+
     return (
-        <div className="min-h-screen bg-slate-950 text-white">
-            <nav className="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
-                <Link href="/" className="text-xl font-bold">
-                    PRAL DI POS Platform
-                </Link>
-                <div className="flex items-center gap-4">
-                    <Link href="/login" className="text-sm text-slate-300 hover:text-white">
-                        Login
+        <div className="min-h-screen text-[var(--foreground)]">
+            <nav className="border-b border-[var(--border)] bg-[rgba(247,246,242,0.82)] backdrop-blur-xl">
+                <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+                    <Link href="/" className="brand-heading text-xl font-bold text-[var(--primary)]">
+                        FBR Live POS
                     </Link>
-                    <Link
-                        href="/signup"
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
-                    >
-                        Get Started
-                    </Link>
+                    <div className="flex items-center gap-4">
+                        <Link href="/login" className="text-sm text-[var(--muted)] hover:text-[var(--primary)]">
+                            Login
+                        </Link>
+                        <Link
+                            href="/signup"
+                            className="rounded-full bg-[var(--primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--primary-strong)]"
+                        >
+                            Get Started
+                        </Link>
+                    </div>
                 </div>
             </nav>
 
-            <main className="max-w-7xl mx-auto px-6 py-16">
-                <div className="text-center mb-16">
-                    <h1 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h1>
-                    <p className="text-slate-400 text-lg">
-                        Choose the plan that fits your business. All plans include PRAL DI integration.
+            <main className="mx-auto max-w-7xl px-6 py-16">
+                <div className="mx-auto mb-14 max-w-3xl text-center">
+                    <div className="mb-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm brand-chip">
+                        <Sparkles size={16} />
+                        No setup fee, sandbox-first onboarding, admin-managed packages
+                    </div>
+                    <h1 className="brand-heading text-5xl font-bold text-[var(--primary)]">Pricing designed for compliance rollout, not guesswork.</h1>
+                    <p className="mt-5 text-lg leading-8 brand-muted">
+                        Public pricing now reflects the same package structure your super-admin team manages in the platform. If plans already exist in the database, those are shown here automatically.
                     </p>
                 </div>
 
-                <div className="grid md:grid-cols-4 gap-6">
+                <div className="grid gap-6 lg:grid-cols-3 xl:grid-cols-4">
                     {plans.map((plan) => (
                         <div
-                            key={plan.name}
-                            className={`rounded-xl p-6 ${plan.popular
-                                ? 'bg-blue-600/10 border-2 border-blue-500 relative'
-                                : 'bg-slate-900 border border-slate-800'
-                                }`}
+                            key={plan.id}
+                            className={`rounded-[1.9rem] p-6 ${plan.highlight ? 'brand-gradient text-white shadow-[var(--shadow-hover)]' : 'brand-panel'}`}
                         >
-                            {plan.popular && (
-                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-xs font-bold px-3 py-1 rounded-full">
-                                    MOST POPULAR
+                            <div className="mb-4 flex items-start justify-between gap-4">
+                                <div>
+                                    <h2 className={`text-2xl font-bold ${plan.highlight ? 'text-white' : 'text-[var(--primary)]'}`}>{plan.name}</h2>
+                                    <p className={`mt-2 text-sm leading-7 ${plan.highlight ? 'text-white/80' : 'brand-muted'}`}>{plan.tagline}</p>
                                 </div>
-                            )}
-                            <h3 className="text-xl font-bold mb-1">{plan.name}</h3>
-                            <p className="text-sm text-slate-400 mb-4">{plan.description}</p>
-                            <div className="mb-6">
-                                <span className="text-3xl font-bold">PKR {plan.price.toLocaleString()}</span>
-                                <span className="text-slate-400">{plan.period}</span>
+                                {plan.badge && (
+                                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${plan.highlight ? 'bg-white/16 text-white' : 'brand-chip'}`}>
+                                        {plan.badge}
+                                    </span>
+                                )}
                             </div>
+
+                            <div className="mb-5">
+                                <span className={`text-4xl font-bold ${plan.highlight ? 'text-white' : 'text-[var(--primary)]'}`}>
+                                    {plan.monthlyPrice === null ? 'Custom' : `PKR ${plan.monthlyPrice.toLocaleString()}`}
+                                </span>
+                                <span className={`ml-2 text-sm ${plan.highlight ? 'text-white/70' : 'brand-muted'}`}>
+                                    {plan.monthlyPrice === null ? 'pricing' : '/month'}
+                                </span>
+                                <p className={`mt-2 text-sm ${plan.highlight ? 'text-white/72' : 'brand-muted'}`}>
+                                    {plan.annualPrice === null ? 'Annual plan available on request' : `PKR ${plan.annualPrice.toLocaleString()} yearly`}
+                                </p>
+                            </div>
+
+                            <div className={`mb-5 grid grid-cols-2 gap-3 rounded-2xl border p-3 text-sm ${plan.highlight ? 'border-white/12 bg-white/8' : 'border-[var(--border)] bg-[var(--surface-strong)]/65'}`}>
+                                <div>
+                                    <p className={plan.highlight ? 'text-white/65' : 'brand-muted'}>Invoices</p>
+                                    <p className="font-semibold">{plan.invoicesPerMonth === 'unlimited' ? 'Unlimited' : plan.invoicesPerMonth}</p>
+                                </div>
+                                <div>
+                                    <p className={plan.highlight ? 'text-white/65' : 'brand-muted'}>Users</p>
+                                    <p className="font-semibold">{plan.users === 'unlimited' ? 'Unlimited' : plan.users}</p>
+                                </div>
+                            </div>
+
                             <Link
                                 href="/signup"
-                                className={`block text-center py-2.5 rounded-lg font-medium text-sm mb-6 ${plan.popular
-                                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                    : 'bg-slate-800 hover:bg-slate-700 text-white'
-                                    }`}
+                                className={`mb-5 inline-flex w-full items-center justify-center rounded-full px-4 py-3 text-sm font-semibold transition ${plan.highlight ? 'bg-white text-[var(--primary)] hover:bg-[#f6f0e4]' : 'bg-[var(--primary)] text-white hover:bg-[var(--primary-strong)]'}`}
                             >
-                                {plan.cta}
+                                Get Compliant Today
                             </Link>
-                            <ul className="space-y-2">
+
+                            <ul className="space-y-3">
                                 {plan.features.map((feature) => (
-                                    <li key={feature} className="text-sm text-slate-300 flex items-start gap-2">
-                                        <span className="text-green-400 mt-0.5">✓</span>
-                                        {feature}
+                                    <li key={feature} className={`flex items-start gap-3 text-sm ${plan.highlight ? 'text-white/86' : 'text-[var(--foreground)]'}`}>
+                                        <Check size={16} className="mt-0.5 shrink-0 text-[var(--accent)]" />
+                                        <span>{feature}</span>
                                     </li>
                                 ))}
                             </ul>

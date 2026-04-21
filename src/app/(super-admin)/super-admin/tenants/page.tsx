@@ -58,8 +58,9 @@ export default function TenantsPage() {
     return (
         <div className="p-8">
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-white">Tenants</h1>
-                <p className="text-slate-400 text-sm mt-1">Manage all registered businesses on the platform</p>
+                <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Accounts</p>
+                <h1 className="brand-heading text-3xl font-bold text-white">Tenants</h1>
+                <p className="mt-1 text-sm text-[#c1bcaf]">Manage all registered businesses on the platform</p>
             </div>
 
             <div className="flex gap-3 mb-4">
@@ -71,7 +72,7 @@ export default function TenantsPage() {
                         setSearch(e.target.value)
                         setPage(1)
                     }}
-                    className="flex-1 max-w-sm bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                    className="flex-1 max-w-sm rounded-xl border border-white/10 bg-white/6 px-4 py-2 text-sm text-white placeholder:text-[#8d897d]"
                 />
                 <select
                     value={filter}
@@ -79,7 +80,7 @@ export default function TenantsPage() {
                         setFilter(e.target.value)
                         setPage(1)
                     }}
-                    className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                    className="rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                 >
                     <option value="all">All tenants</option>
                     <option value="active">Active</option>
@@ -87,43 +88,43 @@ export default function TenantsPage() {
                 </select>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div className="app-panel overflow-hidden rounded-2xl">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-slate-800 bg-slate-900/80">
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Business</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Plan</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">DI Status</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Invoices</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Status</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Joined</th>
+                        <tr className="border-b border-white/10 bg-white/3">
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Business</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Plan</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">DI Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Invoices</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Joined</th>
                             <th className="px-4 py-3" />
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             Array.from({ length: 5 }).map((_, i) => (
-                                <tr key={i} className="border-b border-slate-800/50">
+                                <tr key={i} className="border-b border-white/10">
                                     <td colSpan={7} className="px-4 py-3">
-                                        <div className="h-4 bg-slate-800 rounded animate-pulse" />
+                                        <div className="h-4 rounded bg-white/10 animate-pulse" />
                                     </td>
                                 </tr>
                             ))
                         ) : tenants.length === 0 ? (
                             <tr>
-                                <td colSpan={7} className="px-4 py-12 text-center text-slate-500 text-sm">
+                                <td colSpan={7} className="px-4 py-12 text-center text-sm text-[#8d897d]">
                                     No tenants found.
                                 </td>
                             </tr>
                         ) : (
                             tenants.map((t) => (
-                                <tr key={t.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                                <tr key={t.id} className="border-b border-white/10 transition-colors hover:bg-white/6">
                                     <td className="px-4 py-3">
                                         <p className="text-sm text-white font-medium">{t.name}</p>
-                                        <p className="text-xs text-slate-500">{t.email}</p>
+                                        <p className="text-xs text-[#8d897d]">{t.email}</p>
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-slate-300">
-                                        {t.subscription?.plan?.name || <span className="text-slate-600">—</span>}
+                                    <td className="px-4 py-3 text-sm text-[#d8d0bf]">
+                                        {t.subscription?.plan?.name || <span className="text-[#8d897d]">—</span>}
                                     </td>
                                     <td className="px-4 py-3">
                                         {t.diCredentials?.isProductionReady ? (
@@ -131,10 +132,10 @@ export default function TenantsPage() {
                                         ) : t.diCredentials ? (
                                             <span className="text-xs text-amber-400 font-medium">{t.diCredentials.environment}</span>
                                         ) : (
-                                            <span className="text-xs text-slate-600">Not set</span>
+                                            <span className="text-xs text-[#8d897d]">Not set</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-slate-300">
+                                    <td className="px-4 py-3 text-sm text-[#d8d0bf]">
                                         {t._count?.invoices ?? 0}
                                     </td>
                                     <td className="px-4 py-3">
@@ -147,13 +148,13 @@ export default function TenantsPage() {
                                             {t.isActive ? 'Active' : 'Suspended'}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-slate-500">
+                                    <td className="px-4 py-3 text-xs text-[#8d897d]">
                                         {new Date(t.createdAt).toLocaleDateString()}
                                     </td>
                                     <td className="px-4 py-3">
                                         <Link
                                             href={`/super-admin/tenants/${t.id}`}
-                                            className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+                                            className="text-xs font-medium text-[#f0d9a0] transition-colors hover:text-[#f6e7bf]"
                                         >
                                             Manage →
                                         </Link>

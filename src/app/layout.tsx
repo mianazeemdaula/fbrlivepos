@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Plus_Jakarta_Sans, Syne } from "next/font/google";
 import AuthProvider from "@/components/auth-provider";
 import "./globals.css";
 
@@ -13,9 +13,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const bodyFont = Plus_Jakarta_Sans({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const displayFont = Syne({
+  variable: "--font-brand-display",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "PRAL DI POS Platform",
-  description: "Multi-Tenant PRAL Digital Invoicing SaaS POS & Invoicing Platform — Pakistan GST Compliance",
+  title: "FBR Digital Invoicing Software Pakistan | FBR Live POS",
+  description: "Pakistan's FBR digital invoicing and tax advisory platform with DI API submission, pricing plans, audit-ready workflows, and multi-tenant operations.",
 };
 
 export default function RootLayout({
@@ -26,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${bodyFont.variable} ${displayFont.variable} brand-shell antialiased`}
       >
         <AuthProvider>{children}</AuthProvider>
       </body>

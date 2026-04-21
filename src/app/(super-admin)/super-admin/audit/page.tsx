@@ -44,68 +44,69 @@ export default function AuditLogPage() {
 
     return (
         <div className="p-8">
-            <div className="flex items-start justify-between mb-8">
+            <div className="mb-8 flex items-start justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Audit Log</h1>
-                    <p className="text-slate-400 text-sm mt-1">Track all platform-level administrative actions</p>
+                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Governance</p>
+                    <h1 className="brand-heading text-3xl font-bold text-white">Audit Log</h1>
+                    <p className="mt-1 text-sm text-[#c1bcaf]">Track all platform-level administrative actions</p>
                 </div>
                 <input
                     type="text"
                     placeholder="Filter by action..."
                     value={actionFilter}
                     onChange={(e) => { setActionFilter(e.target.value); setPage(1) }}
-                    className="bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                    className="rounded-xl border border-white/10 bg-white/6 px-4 py-2 text-sm text-white placeholder:text-[#8d897d]"
                 />
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div className="app-panel overflow-hidden rounded-2xl">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-slate-800">
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Time</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Actor</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Role</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Action</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Entity</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">IP</th>
+                        <tr className="border-b border-white/10">
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Time</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Actor</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Role</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Action</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Entity</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">IP</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             Array.from({ length: 5 }).map((_, i) => (
-                                <tr key={i} className="border-b border-slate-800/50">
+                                <tr key={i} className="border-b border-white/10">
                                     <td colSpan={6} className="px-4 py-3">
-                                        <div className="h-4 bg-slate-800 rounded animate-pulse" />
+                                        <div className="h-4 rounded bg-white/10 animate-pulse" />
                                     </td>
                                 </tr>
                             ))
                         ) : entries.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">
+                                <td colSpan={6} className="px-4 py-12 text-center text-sm text-[#8d897d]">
                                     No audit entries found.
                                 </td>
                             </tr>
                         ) : (
                             entries.map((entry) => (
-                                <tr key={entry.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                                    <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+                                <tr key={entry.id} className="border-b border-white/10 transition-colors hover:bg-white/6">
+                                    <td className="px-4 py-3 text-xs whitespace-nowrap text-[#8d897d]">
                                         {new Date(entry.createdAt).toLocaleString()}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <p className="text-sm text-slate-300">{entry.actorEmail || '—'}</p>
+                                        <p className="text-sm text-[#d8d0bf]">{entry.actorEmail || '—'}</p>
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-slate-500">
+                                    <td className="px-4 py-3 text-xs text-[#8d897d]">
                                         {entry.actorRole || '—'}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono border border-slate-700">
+                                        <span className="rounded border border-white/10 bg-white/6 px-2 py-0.5 font-mono text-xs text-[#d8d0bf]">
                                             {entry.action}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-slate-500">
+                                    <td className="px-4 py-3 text-xs text-[#8d897d]">
                                         {entry.entity ? `${entry.entity}:${entry.entityId?.slice(0, 8)}` : '—'}
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-slate-600 font-mono">
+                                    <td className="px-4 py-3 font-mono text-xs text-[#8d897d]">
                                         {entry.ipAddress || '—'}
                                     </td>
                                 </tr>
@@ -120,17 +121,17 @@ export default function AuditLogPage() {
                     <button
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
-                        className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-sm text-slate-300 disabled:opacity-40 hover:bg-slate-800 transition-colors"
+                        className="rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-[#d8d0bf] disabled:opacity-40"
                     >
                         Previous
                     </button>
-                    <span className="px-3 py-1.5 text-sm text-slate-500">
+                    <span className="px-3 py-1.5 text-sm text-[#8d897d]">
                         Page {page} of {totalPages}
                     </span>
                     <button
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
-                        className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-sm text-slate-300 disabled:opacity-40 hover:bg-slate-800 transition-colors"
+                        className="rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-[#d8d0bf] disabled:opacity-40"
                     >
                         Next
                     </button>

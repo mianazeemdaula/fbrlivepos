@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { BadgeCheck, Building2, ShieldCheck } from 'lucide-react'
 
 export default function SignupPage() {
     const router = useRouter()
@@ -46,94 +47,130 @@ export default function SignupPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6">
-            <div className="w-full max-w-md">
-                <div className="text-center mb-8">
-                    <Link href="/" className="text-2xl font-bold">
-                        PRAL DI POS Platform
-                    </Link>
-                    <p className="text-slate-400 mt-2">Create your business account</p>
+        <div className="min-h-screen px-6 py-10 lg:px-10">
+            <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl overflow-hidden rounded-[2rem] border border-[var(--border)] bg-white/70 shadow-[var(--shadow-card)] backdrop-blur-xl lg:grid-cols-[0.92fr_1.08fr]">
+                <div className="brand-gradient flex flex-col justify-between p-8 text-white lg:p-10">
+                    <div>
+                        <p className="brand-heading text-4xl font-bold">Join 500+ Pakistani businesses that invoice smarter.</p>
+                        <p className="mt-4 max-w-md text-sm leading-7 text-white/78">
+                            Set up your tenant, connect your team, and move from sandbox validation to live invoicing in the same platform theme your admins already manage.
+                        </p>
+                    </div>
+                    <div className="space-y-4">
+                        <div className="rounded-[1.7rem] border border-white/12 bg-white/10 p-5">
+                            <p className="text-xs uppercase tracking-[0.24em] text-white/65">What you get</p>
+                            <div className="mt-3 space-y-3 text-sm text-white/84">
+                                <div className="flex items-center gap-3"><BadgeCheck size={16} /> FBR DI ready onboarding</div>
+                                <div className="flex items-center gap-3"><ShieldCheck size={16} /> Encrypted credential storage</div>
+                                <div className="flex items-center gap-3"><Building2 size={16} /> Multi-user tenant workspace</div>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap gap-3 text-xs text-white/75">
+                            <span className="rounded-full border border-white/15 px-3 py-1.5">No setup fee</span>
+                            <span className="rounded-full border border-white/15 px-3 py-1.5">Sandbox-first</span>
+                            <span className="rounded-full border border-white/15 px-3 py-1.5">Package upgrades later</span>
+                        </div>
+                    </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4 bg-slate-900 border border-slate-800 rounded-xl p-6">
-                    {error && (
-                        <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm rounded-lg p-3">
-                            {error}
+                <div className="flex items-center justify-center p-6 lg:p-10">
+                    <div className="w-full max-w-xl">
+                        <div className="mb-8 text-center lg:text-left">
+                            <Link href="/" className="brand-heading text-3xl font-bold text-[var(--primary)]">
+                                FBR Live POS
+                            </Link>
+                            <p className="mt-2 text-[var(--muted)]">Create your business account</p>
                         </div>
-                    )}
 
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Your Name</label>
-                        <input
-                            name="name"
-                            type="text"
-                            required
-                            minLength={2}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="John Doe"
-                        />
+                        <form onSubmit={handleSubmit} className="brand-panel space-y-4 rounded-[1.8rem] p-6">
+                            {error && (
+                                <div className="rounded-2xl border border-red-500/25 bg-red-500/8 p-3 text-sm text-red-700">
+                                    {error}
+                                </div>
+                            )}
+
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium text-[var(--primary)]">Your Name</label>
+                                    <input
+                                        name="name"
+                                        type="text"
+                                        required
+                                        minLength={2}
+                                        className="w-full rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
+                                        placeholder="John Doe"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium text-[var(--primary)]">Business Name</label>
+                                    <input
+                                        name="businessName"
+                                        type="text"
+                                        required
+                                        minLength={2}
+                                        className="w-full rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
+                                        placeholder="Acme Traders"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium text-[var(--primary)]">Email</label>
+                                    <input
+                                        name="email"
+                                        type="email"
+                                        required
+                                        className="w-full rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
+                                        placeholder="you@business.com"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium text-[var(--primary)]">Phone</label>
+                                    <input
+                                        name="phone"
+                                        type="tel"
+                                        className="w-full rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
+                                        placeholder="+92 300 1234567"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-[var(--primary)]">Password</label>
+                                <input
+                                    name="password"
+                                    type="password"
+                                    required
+                                    minLength={8}
+                                    className="w-full rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
+                                    placeholder="Min 8 characters"
+                                />
+                            </div>
+
+                            <div className="rounded-2xl bg-[var(--primary-soft)] px-4 py-3 text-sm text-[var(--primary)]">
+                                The system will create your tenant and, if available, automatically attach the active free plan from the existing subscription table.
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full rounded-full bg-[var(--primary)] py-3 font-medium text-white transition hover:bg-[var(--primary-strong)] disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                                {loading ? 'Creating account...' : 'Create Account'}
+                            </button>
+
+                            <p className="text-center text-sm text-[var(--muted)]">
+                                Already have an account?{' '}
+                                <Link href="/login" className="font-semibold text-[var(--primary)] hover:text-[var(--primary-strong)]">
+                                    Sign in
+                                </Link>
+                            </p>
+                        </form>
                     </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Business Name</label>
-                        <input
-                            name="businessName"
-                            type="text"
-                            required
-                            minLength={2}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Acme Traders"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Email</label>
-                        <input
-                            name="email"
-                            type="email"
-                            required
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="you@business.com"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Phone (optional)</label>
-                        <input
-                            name="phone"
-                            type="tel"
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="+92 300 1234567"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Password</label>
-                        <input
-                            name="password"
-                            type="password"
-                            required
-                            minLength={8}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Min 8 characters"
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white py-2.5 rounded-lg font-medium"
-                    >
-                        {loading ? 'Creating account...' : 'Create Account'}
-                    </button>
-
-                    <p className="text-center text-sm text-slate-400">
-                        Already have an account?{' '}
-                        <Link href="/login" className="text-blue-400 hover:text-blue-300">
-                            Sign in
-                        </Link>
-                    </p>
-                </form>
+                </div>
             </div>
         </div>
     )

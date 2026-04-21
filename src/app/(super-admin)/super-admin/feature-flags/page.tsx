@@ -79,45 +79,46 @@ export default function FeatureFlagsPage() {
 
     return (
         <div className="p-8">
-            <div className="flex items-start justify-between mb-8">
+            <div className="mb-8 flex items-start justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Feature Flags</h1>
-                    <p className="text-slate-400 text-sm mt-1">Control platform features globally or per tenant</p>
+                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Platform controls</p>
+                    <h1 className="brand-heading text-3xl font-bold text-white">Feature Flags</h1>
+                    <p className="mt-1 text-sm text-[#c1bcaf]">Control platform features globally or per tenant</p>
                 </div>
                 <button
                     onClick={() => setShowForm(!showForm)}
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    className="flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)]"
                 >
                     {showForm ? 'Cancel' : '+ New Flag'}
                 </button>
             </div>
 
             {showForm && (
-                <form onSubmit={handleCreate} className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6">
+                <form onSubmit={handleCreate} className="app-panel mb-6 rounded-2xl p-6">
                     <h2 className="text-sm font-semibold text-white mb-4">New Feature Flag</h2>
                     <div className="grid grid-cols-3 gap-4">
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Key</label>
-                            <input name="key" required className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50" placeholder="e.g. email_invoices" />
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Key</label>
+                            <input name="key" required className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" placeholder="e.g. email_invoices" />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Description</label>
-                            <input name="description" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Description</label>
+                            <input name="description" className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1.5">Default State</label>
-                            <select name="isEnabled" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Default State</label>
+                            <select name="isEnabled" className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white">
                                 <option value="false">Disabled</option>
                                 <option value="true">Enabled</option>
                             </select>
                         </div>
                     </div>
                     <div className="flex justify-end gap-3 mt-4">
-                        <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">Cancel</button>
+                        <button type="button" onClick={() => setShowForm(false)} className="rounded-lg px-4 py-2 text-sm text-[#c1bcaf] transition-colors hover:bg-white/6 hover:text-white">Cancel</button>
                         <button
                             type="submit"
                             disabled={formLoading}
-                            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors"
+                            className="rounded-full bg-[var(--accent)] px-6 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {formLoading ? 'Creating...' : 'Create Flag'}
                         </button>
@@ -128,24 +129,24 @@ export default function FeatureFlagsPage() {
             <div className="space-y-2">
                 {loading
                     ? Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-5 animate-pulse">
-                            <div className="h-5 bg-slate-800 rounded w-32" />
+                        <div key={i} className="app-panel rounded-2xl p-5 animate-pulse">
+                            <div className="h-5 w-32 rounded bg-white/10" />
                         </div>
                     ))
                     : flags.length === 0
                         ? (
-                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center text-slate-500 text-sm">No feature flags configured.</div>
+                            <div className="app-panel rounded-2xl p-12 text-center text-sm text-[#8d897d]">No feature flags configured.</div>
                         )
                         : flags.map((flag) => (
-                            <div key={flag.id} className="bg-slate-900 border border-slate-800 rounded-xl px-5 py-4">
+                            <div key={flag.id} className="app-panel rounded-2xl px-5 py-4">
                                 <div className="flex justify-between items-center">
                                     <div>
                                         <h3 className="text-sm font-semibold text-white font-mono">{flag.key}</h3>
                                         {flag.description && (
-                                            <p className="text-xs text-slate-500 mt-0.5">{flag.description}</p>
+                                            <p className="mt-0.5 text-xs text-[#8d897d]">{flag.description}</p>
                                         )}
                                         {flag.tenantOverrides.length > 0 && (
-                                            <p className="text-xs text-slate-600 mt-1">
+                                            <p className="mt-1 text-xs text-[#8d897d]">
                                                 {flag.tenantOverrides.length} tenant override(s)
                                             </p>
                                         )}

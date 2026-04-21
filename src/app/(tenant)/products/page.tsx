@@ -512,19 +512,22 @@ export default function ProductsPage() {
     const to = Math.min(page * PRODUCT_LIMIT, total)
 
     return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-white">Products</h1>
+        <div className="p-6 lg:p-8">
+            <div className="mb-6 flex items-center justify-between">
+                <div>
+                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Catalog</p>
+                    <h1 className="brand-heading mt-2 text-3xl font-bold text-white">Products</h1>
+                </div>
                 <button
                     onClick={handleFormToggle}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                    className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-(--accent-soft)"
                 >
                     {showForm ? 'Cancel' : '+ Add Product'}
                 </button>
             </div>
 
             {showForm && (
-                <form onSubmit={handleCreate} className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6">
+                <form onSubmit={handleCreate} className="app-panel mb-6 rounded-2xl p-6">
                     {error && (
                         <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm rounded-lg p-3 mb-4">
                             {error}
@@ -532,14 +535,14 @@ export default function ProductsPage() {
                     )}
                     <div className="mb-4 grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="block text-xs text-slate-400 mb-1">Category</label>
+                            <label className="mb-1 block text-xs text-[#c1bcaf]">Category</label>
                             <select
                                 value={hsCodeCategory}
                                 onChange={(e) => {
                                     setHsCodeCategory(e.target.value)
                                     setForm((current) => ({ ...current, hsCodeId: '' }))
                                 }}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                             >
                                 <option value="">All categories</option>
                                 {hsCodeCategories.map((category) => (
@@ -548,22 +551,22 @@ export default function ProductsPage() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs text-slate-400 mb-1">Find HS Code</label>
+                            <label className="mb-1 block text-xs text-[#c1bcaf]">Find HS Code</label>
                             <input
                                 value={hsCodeSearch}
                                 onChange={(e) => setHsCodeSearch(e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                 placeholder="Search by code, short name, or description"
                             />
                         </div>
                         <div className="md:col-span-2">
-                            <label className="block text-xs text-slate-400 mb-1">Select HS Code</label>
+                            <label className="mb-1 block text-xs text-[#c1bcaf]">Select HS Code</label>
                             <select
                                 name="hsCodeId"
                                 required
                                 value={form.hsCodeId}
                                 onChange={(e) => handleHSCodeSelect(e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white"
+                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-xs text-white"
                             >
                                 <option value="">
                                     {hsCodesLoading ? 'Loading HS codes...' : hsCodes.length === 0 ? 'No HS codes available' : 'Choose the closest managed HS code'}
@@ -575,33 +578,33 @@ export default function ProductsPage() {
                                 ))}
                             </select>
                             {form.hsCodeId && (
-                                <p className="mt-1 text-xs text-slate-500">
+                                <p className="mt-1 text-xs text-[#8d897d]">
                                     {hsCodes.find((item) => item.id === form.hsCodeId)?.category || 'Uncategorized'}
                                 </p>
                             )}
                         </div>
                     </div>
                     {form.hsCodeId && (
-                        <div className="mb-4 rounded-xl border border-slate-800 bg-slate-950/70 p-4">
-                            <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-4">
+                        <div className="mb-4 rounded-2xl border border-white/10 bg-[#0b1510] p-4">
+                            <div className="grid gap-3 text-sm text-[#d8d0bf] md:grid-cols-4">
                                 <div>
-                                    <p className="mb-1 text-xs text-slate-500">HS Code</p>
+                                    <p className="mb-1 text-xs text-[#8d897d]">HS Code</p>
                                     <p className="break-all font-mono text-white">{selectedHSCode?.code}</p>
                                 </div>
                                 <div>
-                                    <p className="mb-1 text-xs text-slate-500">Category</p>
+                                    <p className="mb-1 text-xs text-[#8d897d]">Category</p>
                                     <p className="text-white">{selectedHSCode?.category}</p>
                                 </div>
                                 <div>
-                                    <p className="mb-1 text-xs text-slate-500">Default Tax</p>
+                                    <p className="mb-1 text-xs text-[#8d897d]">Default Tax</p>
                                     <p className="text-white">{selectedHSCode?.defaultTaxRate}%</p>
                                 </div>
                                 <div>
-                                    <p className="mb-1 text-xs text-slate-500">Default Unit</p>
+                                    <p className="mb-1 text-xs text-[#8d897d]">Default Unit</p>
                                     <p className="text-white">{selectedHSCode?.unit}</p>
                                 </div>
                             </div>
-                            <p className="mt-3 text-xs text-slate-400">
+                            <p className="mt-3 text-xs text-[#c1bcaf]">
                                 FBR item fields are synced from the selected HS code and PRAL sale type. This follows the documented PRAL mapping where HS code controls UOM validity and sale type controls the rate descriptor.
                             </p>
                         </div>

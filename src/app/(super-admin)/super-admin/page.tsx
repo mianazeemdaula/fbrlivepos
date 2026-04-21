@@ -48,18 +48,19 @@ export default function AdminOverviewPage() {
         <div className="p-8">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-white">Platform Overview</h1>
-                <p className="text-slate-400 text-sm mt-1">Real-time metrics across all tenants</p>
+                <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Super admin</p>
+                <h1 className="brand-heading text-3xl font-bold text-white">Platform Overview</h1>
+                <p className="mt-1 text-sm text-[#c1bcaf]">Real-time metrics across all tenants</p>
             </div>
 
             {/* Stats grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
                 {loading ? (
                     Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-5 animate-pulse">
-                            <div className="h-3.5 bg-slate-800 rounded w-24 mb-4" />
-                            <div className="h-7 bg-slate-800 rounded w-20 mb-2" />
-                            <div className="h-3 bg-slate-800 rounded w-16" />
+                        <div key={i} className="app-panel rounded-2xl p-5 animate-pulse">
+                            <div className="mb-4 h-3.5 w-24 rounded bg-white/10" />
+                            <div className="mb-2 h-7 w-20 rounded bg-white/10" />
+                            <div className="h-3 w-16 rounded bg-white/10" />
                         </div>
                     ))
                 ) : (
@@ -172,25 +173,25 @@ function StatCard({
         violet: 'text-violet-400 bg-violet-500/10',
     }
     return (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <div className="app-panel rounded-2xl p-5">
             <div className="flex items-start justify-between mb-3">
-                <p className="text-xs font-medium text-slate-400 leading-tight">{label}</p>
+                <p className="text-xs font-medium leading-tight text-[#c1bcaf]">{label}</p>
                 <span className={`p-1.5 rounded-lg ${accentMap[accent]}`}>{icon}</span>
             </div>
-            <p className="text-2xl font-bold text-white">{value}</p>
-            {sub && <p className="text-xs text-slate-500 mt-1">{sub}</p>}
+            <p className="metric-value text-2xl font-bold">{value}</p>
+            {sub && <p className="mt-1 text-xs text-[#8d897d]">{sub}</p>}
         </div>
     )
 }
 
 function QuickLink({ href, title, description, icon }: { href: string; title: string; description: string; icon: React.ReactNode }) {
     return (
-        <a href={href} className="group bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/40 hover:bg-slate-800/60 transition-all block">
+        <a href={href} className="app-panel group block rounded-2xl p-5 transition-all hover:border-[rgba(200,164,90,0.28)] hover:bg-[rgba(29,44,34,0.88)]">
             <div className="flex items-center gap-3 mb-2">
-                <span className="text-indigo-400 group-hover:text-indigo-300 transition-colors">{icon}</span>
+                <span className="text-[#f0d9a0] transition-colors group-hover:text-[#f6e7bf]">{icon}</span>
                 <h3 className="text-sm font-semibold text-white">{title}</h3>
             </div>
-            <p className="text-xs text-slate-500">{description}</p>
+            <p className="text-xs text-[#8d897d]">{description}</p>
         </a>
     )
 }

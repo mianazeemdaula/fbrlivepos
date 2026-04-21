@@ -51,59 +51,62 @@ export default function InvoicesPage() {
     }
 
     return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-white">Invoices</h1>
+        <div className="p-6 lg:p-8">
+            <div className="mb-6 flex items-center justify-between">
+                <div>
+                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Sales ledger</p>
+                    <h1 className="brand-heading mt-2 text-3xl font-bold text-white">Invoices</h1>
+                </div>
                 <Link
                     href="/pos"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                    className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)]"
                 >
                     New Invoice (POS)
                 </Link>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div className="app-panel overflow-hidden rounded-2xl">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-slate-800">
-                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Invoice #</th>
-                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Buyer</th>
-                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Amount</th>
-                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Payment</th>
-                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">DI Status</th>
-                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Date</th>
+                        <tr className="border-b border-white/10">
+                            <th className="px-4 py-3 text-left text-xs font-medium text-[#8d897d]">Invoice #</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-[#8d897d]">Buyer</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-[#8d897d]">Amount</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-[#8d897d]">Payment</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-[#8d897d]">DI Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-[#8d897d]">Date</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             Array.from({ length: 5 }).map((_, i) => (
-                                <tr key={i} className="border-b border-slate-800/50">
+                                <tr key={i} className="border-b border-white/10">
                                     <td colSpan={6} className="px-4 py-3">
-                                        <div className="h-4 bg-slate-800 rounded animate-pulse" />
+                                        <div className="h-4 rounded bg-white/10 animate-pulse" />
                                     </td>
                                 </tr>
                             ))
                         ) : invoices.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="px-4 py-12 text-center text-slate-500">
+                                <td colSpan={6} className="px-4 py-12 text-center text-[#8d897d]">
                                     No invoices yet. Create your first invoice from the POS terminal.
                                 </td>
                             </tr>
                         ) : (
                             invoices.map((inv) => (
-                                <tr key={inv.id} className="border-b border-slate-800/50 hover:bg-slate-800/30">
+                                <tr key={inv.id} className="border-b border-white/10 transition-colors hover:bg-white/6">
                                     <td className="px-4 py-3">
-                                        <Link href={`/invoices/${inv.id}`} className="text-sm text-blue-400 hover:underline">
+                                        <Link href={`/invoices/${inv.id}`} className="text-sm text-[#f0d9a0] hover:underline">
                                             {inv.invoiceNumber}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-slate-300">
+                                    <td className="px-4 py-3 text-sm text-[#d8d0bf]">
                                         {inv.buyerName || '—'}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-white font-medium">
                                         PKR {inv.totalAmount.toLocaleString()}
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-slate-400">{inv.paymentMethod}</td>
+                                    <td className="px-4 py-3 text-sm text-[#c1bcaf]">{inv.paymentMethod}</td>
                                     <td className="px-4 py-3">
                                         <span
                                             className={`text-xs px-2 py-0.5 rounded-full border ${statusBadge(inv.status)}`}
@@ -111,7 +114,7 @@ export default function InvoicesPage() {
                                             {inv.status}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-slate-400">
+                                    <td className="px-4 py-3 text-sm text-[#c1bcaf]">
                                         {new Date(inv.createdAt).toLocaleDateString() + " " + new Date(inv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </td>
                                 </tr>
@@ -122,21 +125,21 @@ export default function InvoicesPage() {
             </div>
 
             {totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-4">
+                <div className="mt-4 flex justify-center gap-2">
                     <button
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
-                        className="px-3 py-1.5 rounded bg-slate-800 text-sm text-slate-300 disabled:opacity-50"
+                        className="rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-[#d8d0bf] disabled:opacity-50"
                     >
                         Previous
                     </button>
-                    <span className="px-3 py-1.5 text-sm text-slate-400">
+                    <span className="px-3 py-1.5 text-sm text-[#8d897d]">
                         Page {page} of {totalPages}
                     </span>
                     <button
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
-                        className="px-3 py-1.5 rounded bg-slate-800 text-sm text-slate-300 disabled:opacity-50"
+                        className="rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-[#d8d0bf] disabled:opacity-50"
                     >
                         Next
                     </button>

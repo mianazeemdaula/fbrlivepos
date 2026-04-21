@@ -246,35 +246,36 @@ export default function POSPage() {
     return (
         <div className="flex min-h-screen flex-col overflow-x-hidden xl:h-screen xl:flex-row">
             {/* Product Search Panel */}
-            <div className="flex min-h-0 flex-1 flex-col border-b border-slate-800 bg-slate-950 xl:border-b-0 xl:border-r">
-                <div className="p-4 border-b border-slate-800">
+            <div className="flex min-h-0 flex-1 flex-col border-b border-white/10 bg-[linear-gradient(180deg,rgba(7,20,15,0.96),rgba(6,14,11,0.98))] xl:border-b-0 xl:border-r">
+                <div className="border-b border-white/10 p-4">
+                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Point of sale</p>
                     <input
                         type="text"
                         placeholder="Search products by name, SKU..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="mt-3 w-full rounded-xl border border-white/10 bg-white/6 px-4 py-2.5 text-white placeholder:text-[#8d897d]"
                     />
                 </div>
 
                 <div className="flex-1 overflow-auto p-4">
                     {products.length === 0 ? (
-                        <p className="text-center text-slate-500 mt-8">No products found</p>
+                        <p className="mt-8 text-center text-[#8d897d]">No products found</p>
                     ) : (
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
                             {products.map((product) => (
                                 <button
                                     key={product.id}
                                     onClick={() => handleAddProduct(product)}
-                                    className="min-w-0 rounded-xl border border-slate-800 bg-slate-900 p-4 text-left transition-colors hover:border-blue-500/50"
+                                    className="min-w-0 rounded-2xl border border-white/10 bg-white/6 p-4 text-left transition-colors hover:border-[rgba(200,164,90,0.4)] hover:bg-white/8"
                                 >
                                     <p className="text-sm font-medium text-white truncate">{product.name}</p>
-                                    <p className="mt-0.5 break-all text-xs text-slate-500">{product.hsCode}</p>
+                                    <p className="mt-0.5 break-all text-xs text-[#8d897d]">{product.hsCode}</p>
                                     <div className="mt-2 flex items-center justify-between gap-3">
-                                        <span className="min-w-0 text-sm font-bold text-blue-400">
+                                        <span className="min-w-0 text-sm font-bold text-[#f0d9a0]">
                                             PKR {product.price.toLocaleString()}
                                         </span>
-                                        <span className="shrink-0 text-xs text-slate-500">{product.taxRate}% Tax</span>
+                                        <span className="shrink-0 text-xs text-[#8d897d]">{product.taxRate}% Tax</span>
                                     </div>
                                 </button>
                             ))}
@@ -284,51 +285,51 @@ export default function POSPage() {
             </div>
 
             {/* Cart Panel */}
-            <div className="flex w-full min-w-0 shrink-0 flex-col bg-slate-900 xl:w-md">
-                <div className="p-4 border-b border-slate-800">
-                    <h2 className="text-lg font-bold text-white">Cart ({items.length})</h2>
+            <div className="flex w-full min-w-0 shrink-0 flex-col bg-[linear-gradient(180deg,rgba(8,23,18,0.98),rgba(5,13,10,0.98))] xl:w-md">
+                <div className="border-b border-white/10 p-4">
+                    <h2 className="brand-heading text-2xl font-bold text-white">Cart ({items.length})</h2>
                 </div>
 
                 <div className="flex-1 overflow-auto p-4 space-y-2">
                     {items.length === 0 ? (
-                        <p className="text-center text-slate-500 mt-8">Cart is empty</p>
+                        <p className="mt-8 text-center text-[#8d897d]">Cart is empty</p>
                     ) : (
                         items.map((item) => (
                             <div
                                 key={item.productId}
-                                className="bg-slate-800 rounded-lg p-3"
+                                className="rounded-2xl border border-white/10 bg-white/6 p-3"
                             >
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium text-white truncate">{item.name}</p>
-                                        <p className="text-xs text-slate-400">
+                                        <p className="text-xs text-[#8d897d]">
                                             PKR {item.price.toLocaleString()} × {item.quantity}
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-2 ml-2">
                                         <button
                                             onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                                            className="w-6 h-6 rounded bg-slate-700 text-white text-sm flex items-center justify-center hover:bg-slate-600"
+                                            className="flex h-6 w-6 items-center justify-center rounded bg-white/10 text-sm text-white hover:bg-white/16"
                                         >
                                             −
                                         </button>
                                         <span className="text-sm text-white w-6 text-center">{item.quantity}</span>
                                         <button
                                             onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                                            className="w-6 h-6 rounded bg-slate-700 text-white text-sm flex items-center justify-center hover:bg-slate-600"
+                                            className="flex h-6 w-6 items-center justify-center rounded bg-white/10 text-sm text-white hover:bg-white/16"
                                         >
                                             +
                                         </button>
                                         <button
                                             onClick={() => removeItem(item.productId)}
-                                            className="w-6 h-6 rounded bg-red-900/50 text-red-400 text-xs flex items-center justify-center hover:bg-red-900"
+                                            className="flex h-6 w-6 items-center justify-center rounded bg-red-900/40 text-xs text-red-300 hover:bg-red-900/70"
                                         >
                                             ✕
                                         </button>
                                     </div>
                                 </div>
                                 <div className="mt-2 flex items-center gap-2">
-                                    <label className="text-xs text-slate-500">Discount:</label>
+                                    <label className="text-xs text-[#8d897d]">Discount:</label>
                                     <input
                                         type="number"
                                         min={0}
@@ -336,7 +337,7 @@ export default function POSPage() {
                                         value={item.discount || ''}
                                         onChange={(e) => updateDiscount(item.productId, Number(e.target.value) || 0)}
                                         placeholder="0"
-                                        className="w-24 bg-slate-700 border border-slate-600 rounded px-2 py-0.5 text-xs text-white placeholder-slate-500"
+                                        className="w-24 rounded border border-white/10 bg-white/8 px-2 py-0.5 text-xs text-white placeholder:text-[#8d897d]"
                                     />
                                 </div>
                             </div>
@@ -345,13 +346,13 @@ export default function POSPage() {
                 </div>
 
                 {/* Buyer Info */}
-                <div className="p-4 border-t border-slate-800 space-y-2">
+                <div className="space-y-2 border-t border-white/10 p-4">
                     <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs text-slate-400 font-medium">Buyer / Customer</label>
+                        <label className="text-xs font-medium text-[#c1bcaf]">Buyer / Customer</label>
                         {customerId && (
                             <button
                                 onClick={() => { setCustomer(null); setCustomerSearch('') }}
-                                className="text-xs text-red-400 hover:text-red-300"
+                                className="text-xs text-red-300 hover:text-red-200"
                             >
                                 Clear
                             </button>
@@ -364,10 +365,10 @@ export default function POSPage() {
                             value={customerSearch}
                             onChange={(e) => setCustomerSearch(e.target.value)}
                             onFocus={() => customerResults.length > 0 && setShowCustomerDropdown(true)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
+                            className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white placeholder:text-[#8d897d]"
                         />
                         {showCustomerDropdown && customerResults.length > 0 && (
-                            <div className="absolute bottom-full left-0 right-0 mb-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-10 max-h-40 overflow-auto">
+                            <div className="absolute bottom-full left-0 right-0 z-10 mb-1 max-h-40 overflow-auto rounded-xl border border-white/10 bg-[#0e1d17] shadow-xl">
                                 {customerResults.map((c) => (
                                     <button
                                         key={c.id}
@@ -376,18 +377,18 @@ export default function POSPage() {
                                             setCustomerSearch(c.name)
                                             setShowCustomerDropdown(false)
                                         }}
-                                        className="w-full text-left px-3 py-2 hover:bg-slate-700 text-sm border-b border-slate-700/50 last:border-0"
+                                        className="w-full border-b border-white/10 px-3 py-2 text-left text-sm hover:bg-white/6 last:border-0"
                                     >
                                         <div className="flex justify-between items-center">
                                             <span className="text-white">{c.name}</span>
                                             {c.fbrVerified && (
-                                                <span className="text-xs bg-green-500/10 text-green-400 px-1.5 py-0.5 rounded">
+                                                <span className="rounded bg-green-500/10 px-1.5 py-0.5 text-xs text-green-400">
                                                     {c.registrationType}
                                                 </span>
                                             )}
                                         </div>
                                         {c.ntnCnic && (
-                                            <span className="text-xs text-slate-400 font-mono">{c.ntnCnic}</span>
+                                            <span className="font-mono text-xs text-[#8d897d]">{c.ntnCnic}</span>
                                         )}
                                     </button>
                                 ))}
@@ -398,7 +399,7 @@ export default function POSPage() {
                         <button
                             type="button"
                             onClick={handleSaveCustomer}
-                            className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-slate-700"
+                            className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm font-medium text-[#d8d0bf] hover:bg-white/10"
                         >
                             Save As Customer
                         </button>
@@ -408,7 +409,7 @@ export default function POSPage() {
                         placeholder="Buyer Name"
                         value={buyerName}
                         onChange={(e) => setBuyerInfo({ buyerName: e.target.value })}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
+                        className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white placeholder:text-[#8d897d]"
                     />
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <input
@@ -418,7 +419,7 @@ export default function POSPage() {
                             onChange={(e) => setBuyerInfo({ buyerNTN: normalizeNtnCnic(e.target.value) })}
                             inputMode="numeric"
                             maxLength={13}
-                            className="min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
+                            className="min-w-0 rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white placeholder:text-[#8d897d]"
                         />
                         <input
                             type="text"
@@ -427,14 +428,14 @@ export default function POSPage() {
                             onChange={(e) => setBuyerInfo({ buyerPhone: normalizeMobile(e.target.value) })}
                             inputMode="numeric"
                             maxLength={11}
-                            className="min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
+                            className="min-w-0 rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white placeholder:text-[#8d897d]"
                         />
                     </div>
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <select
                             value={buyerProvince}
                             onChange={(e) => setBuyerInfo({ buyerProvince: e.target.value })}
-                            className="min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white"
+                            className="min-w-0 rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white"
                         >
                             <option value="">Province</option>
                             <option value="Punjab">Punjab</option>
@@ -446,7 +447,7 @@ export default function POSPage() {
                         <select
                             value={buyerRegistrationType}
                             onChange={(e) => setBuyerInfo({ buyerRegistrationType: e.target.value as 'Registered' | 'Unregistered' | '' })}
-                            className="min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white"
+                            className="min-w-0 rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white"
                         >
                             <option value="">Reg Type</option>
                             <option value="Registered">Registered</option>
@@ -458,7 +459,7 @@ export default function POSPage() {
                         placeholder="Buyer Address"
                         value={buyerAddress}
                         onChange={(e) => setBuyerInfo({ buyerAddress: e.target.value })}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"
+                        className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white placeholder:text-[#8d897d]"
                     />
                     {(buyerNTN || buyerPhone) && (
                         <div className="space-y-1 text-xs">
@@ -473,7 +474,7 @@ export default function POSPage() {
                     <select
                         value={paymentMethod}
                         onChange={(e) => setPaymentMethod(e.target.value as 'CASH' | 'CARD' | 'BANK_TRANSFER')}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white"
+                        className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white"
                     >
                         <option value="CASH">Cash</option>
                         <option value="CARD">Card</option>
@@ -482,8 +483,8 @@ export default function POSPage() {
                 </div>
 
                 {/* Totals */}
-                <div className="p-4 border-t border-slate-800">
-                    <div className="flex justify-between text-sm text-slate-400 mb-1">
+                <div className="border-t border-white/10 p-4">
+                    <div className="mb-1 flex justify-between text-sm text-[#c1bcaf]">
                         <span>Subtotal</span>
                         <span>PKR {subtotal().toLocaleString()}</span>
                     </div>
@@ -493,7 +494,7 @@ export default function POSPage() {
                             <span>- PKR {discountTotal().toLocaleString()}</span>
                         </div>
                     )}
-                    <div className="flex justify-between text-sm text-slate-400 mb-2">
+                    <div className="mb-2 flex justify-between text-sm text-[#c1bcaf]">
                         <span>Tax (GST)</span>
                         <span>PKR {taxAmount().toLocaleString()}</span>
                     </div>
@@ -516,7 +517,7 @@ export default function POSPage() {
                     <button
                         onClick={handleSubmit}
                         disabled={items.length === 0 || submitting}
-                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium text-lg"
+                        className="w-full rounded-full bg-accent py-3 text-lg font-medium text-primary transition-colors hover:bg-(--accent-soft) disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-[#8d897d]"
                     >
                         {submitting ? 'Processing...' : `Charge PKR ${total().toLocaleString()}`}
                     </button>

@@ -204,12 +204,13 @@ export default function SettingsPage() {
     )
 
     return (
-        <div className="p-6 max-w-2xl">
-            <h1 className="text-2xl font-bold text-white mb-6">Settings</h1>
+        <div className="max-w-3xl p-6 lg:p-8">
+            <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Compliance setup</p>
+            <h1 className="brand-heading mb-6 mt-2 text-3xl font-bold text-white">Settings</h1>
 
             {/* Integration Progress Steps */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6">
-                <h2 className="text-sm font-semibold text-slate-400 mb-3">PRAL DI Integration Progress</h2>
+            <div className="app-panel mb-6 rounded-2xl p-4">
+                <h2 className="mb-3 text-sm font-semibold text-[#c1bcaf]">PRAL DI Integration Progress</h2>
                 <div className="flex items-center gap-1">
                     {[
                         { n: 1, label: 'Business Info' },
@@ -222,33 +223,33 @@ export default function SettingsPage() {
                             <button
                                 onClick={() => setStep(s.n)}
                                 className={`flex-1 text-center py-2 rounded-lg text-xs font-medium transition-colors ${step === s.n
-                                    ? 'bg-blue-600 text-white'
+                                    ? 'bg-accent text-primary'
                                     : step > s.n || (s.n === 1 && diConfig?.configured)
                                         ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
-                                        : 'bg-slate-800 text-slate-500 hover:bg-slate-700'
+                                        : 'bg-white/6 text-[#8d897d] hover:bg-white/10'
                                     }`}
                             >
                                 {step > s.n || (s.n === 1 && diConfig?.configured && step !== s.n) ? '✓ ' : `${s.n}. `}
                                 {s.label}
                             </button>
-                            {i < 4 && <div className="w-2 h-px bg-slate-700 mx-0.5" />}
+                            {i < 4 && <div className="mx-0.5 h-px w-2 bg-white/10" />}
                         </div>
                     ))}
                 </div>
             </div>
 
             {/* PRAL DI Credentials */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6">
+            <div className="app-panel mb-6 rounded-2xl p-6">
                 <h2 className="text-lg font-semibold text-white mb-4">PRAL Digital Invoicing</h2>
-                <p className="text-sm text-slate-400 mb-4">
+                <p className="mb-4 text-sm text-[#c1bcaf]">
                     Configure your PRAL DI credentials obtained from IRIS registration.
                     Tokens are encrypted at rest with AES-256-GCM.
                 </p>
 
                 {loading ? (
                     <div className="animate-pulse space-y-3">
-                        <div className="h-10 bg-slate-800 rounded" />
-                        <div className="h-10 bg-slate-800 rounded" />
+                        <div className="h-10 rounded bg-white/10" />
+                        <div className="h-10 rounded bg-white/10" />
                     </div>
                 ) : (
                     <>
@@ -269,13 +270,13 @@ export default function SettingsPage() {
                         <form onSubmit={handleSaveDI} className="space-y-3">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs text-slate-400 mb-1">Seller NTN / Registration No.</label>
+                                    <label className="mb-1 block text-xs text-[#c1bcaf]">Seller NTN / Registration No.</label>
                                     <input
                                         name="sellerNTN"
                                         required
                                         value={form.sellerNTN}
                                         onChange={(e) => updateFormField('sellerNTN', e.target.value)}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                        className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                         placeholder="1234567 or 6650624-2"
                                     />
                                     {form.sellerNTN && !isValidSellerNtn(form.sellerNTN) && (
@@ -283,12 +284,12 @@ export default function SettingsPage() {
                                     )}
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-slate-400 mb-1">CNIC (optional fallback)</label>
+                                    <label className="mb-1 block text-xs text-[#c1bcaf]">CNIC (optional fallback)</label>
                                     <input
                                         name="sellerCNIC"
                                         value={form.sellerCNIC}
                                         onChange={(e) => updateFormField('sellerCNIC', e.target.value)}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                        className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                         placeholder="3520112345678"
                                     />
                                     {form.sellerCNIC && normalizedSellerCnic.length !== 13 && (
@@ -297,25 +298,25 @@ export default function SettingsPage() {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-xs text-slate-400 mb-1">Business Name</label>
+                                <label className="mb-1 block text-xs text-[#c1bcaf]">Business Name</label>
                                 <input
                                     name="sellerBusinessName"
                                     required
                                     value={form.sellerBusinessName}
                                     onChange={(e) => updateFormField('sellerBusinessName', e.target.value)}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                     placeholder="Your registered business name"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs text-slate-400 mb-1">Province</label>
+                                    <label className="mb-1 block text-xs text-[#c1bcaf]">Province</label>
                                     <select
                                         name="sellerProvince"
                                         required
                                         value={form.sellerProvince}
                                         onChange={(e) => updateFormField('sellerProvince', e.target.value)}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                        className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                     >
                                         <option value="">Select province</option>
                                         <option value="Punjab">Punjab</option>
@@ -328,68 +329,68 @@ export default function SettingsPage() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-slate-400 mb-1">Business Activity</label>
+                                    <label className="mb-1 block text-xs text-[#c1bcaf]">Business Activity</label>
                                     <input
                                         name="businessActivity"
                                         required
                                         value={form.businessActivity}
                                         onChange={(e) => updateFormField('businessActivity', e.target.value)}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                        className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                         placeholder="e.g. Retail, Manufacturing"
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-xs text-slate-400 mb-1">Business Address</label>
+                                <label className="mb-1 block text-xs text-[#c1bcaf]">Business Address</label>
                                 <input
                                     name="sellerAddress"
                                     required
                                     value={form.sellerAddress}
                                     onChange={(e) => updateFormField('sellerAddress', e.target.value)}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                     placeholder="Full business address"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-slate-400 mb-1">Sector</label>
+                                <label className="mb-1 block text-xs text-[#c1bcaf]">Sector</label>
                                 <input
                                     name="sector"
                                     required
                                     value={form.sector}
                                     onChange={(e) => updateFormField('sector', e.target.value)}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                     placeholder="e.g. Tier-1 Retailer"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-slate-400 mb-1">Sandbox Security Token (from IRIS)</label>
+                                <label className="mb-1 block text-xs text-[#c1bcaf]">Sandbox Security Token (from IRIS)</label>
                                 <input
                                     name="sandboxToken"
                                     type="password"
                                     value={form.sandboxToken}
                                     onChange={(e) => updateFormField('sandboxToken', e.target.value)}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono"
+                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm font-mono text-white"
                                     placeholder={diConfig?.hasSandboxToken ? 'A sandbox token is already stored. Enter a new token to replace it.' : 'Paste your sandbox IRIS security token'}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-slate-400 mb-1">Production Security Token (from IRIS)</label>
+                                <label className="mb-1 block text-xs text-[#c1bcaf]">Production Security Token (from IRIS)</label>
                                 <input
                                     name="productionToken"
                                     type="password"
                                     value={form.productionToken}
                                     onChange={(e) => updateFormField('productionToken', e.target.value)}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono"
+                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm font-mono text-white"
                                     placeholder={diConfig?.hasProductionToken ? 'A production token is already stored. Enter a new token to replace it.' : 'Paste your production IRIS security token'}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-slate-400 mb-1">Environment</label>
+                                <label className="mb-1 block text-xs text-[#c1bcaf]">Environment</label>
                                 <select
                                     name="environment"
                                     value={form.environment}
                                     onChange={(e) => updateFormField('environment', e.target.value)}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                 >
                                     <option value="SANDBOX">Sandbox (Testing)</option>
                                     <option value="PRODUCTION">Production</option>
@@ -411,7 +412,7 @@ export default function SettingsPage() {
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                                    className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary disabled:opacity-70"
                                 >
                                     {saving ? 'Saving...' : 'Save Credentials'}
                                 </button>
@@ -420,7 +421,7 @@ export default function SettingsPage() {
                                         type="button"
                                         onClick={handleVerify}
                                         disabled={verifying}
-                                        className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                                        className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-[#d8d0bf] hover:bg-white/10"
                                     >
                                         {verifying ? 'Verifying...' : 'Verify Token'}
                                     </button>
@@ -433,11 +434,11 @@ export default function SettingsPage() {
 
             {/* Sandbox Scenarios Progress */}
             {diConfig?.configured && diConfig.environment === 'SANDBOX' && (
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                <div className="app-panel rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4">
                         <div>
                             <h2 className="text-lg font-semibold text-white">Sandbox Test Scenarios</h2>
-                            <p className="text-sm text-slate-400 mt-0.5">
+                            <p className="mt-0.5 text-sm text-[#c1bcaf]">
                                 Use the dedicated scenarios page to run and review sandbox submissions.
                             </p>
                         </div>
@@ -447,12 +448,12 @@ export default function SettingsPage() {
                             {sortedSandboxScenarios.map((s) => (
                                 <div
                                     key={s.scenarioId}
-                                    className="flex items-center justify-between bg-slate-800 rounded-lg px-4 py-2"
+                                    className="flex items-center justify-between rounded-xl border border-white/10 bg-white/6 px-4 py-2"
                                 >
                                     <div>
                                         <span className="text-sm text-white font-mono">{s.scenarioId}</span>
                                         {s.description && (
-                                            <span className="text-xs text-slate-400 ml-2">{s.description}</span>
+                                            <span className="ml-2 text-xs text-[#8d897d]">{s.description}</span>
                                         )}
                                     </div>
                                     <span
@@ -460,7 +461,7 @@ export default function SettingsPage() {
                                             ? 'bg-green-500/10 text-green-400'
                                             : s.status === 'FAILED'
                                                 ? 'bg-red-500/10 text-red-400'
-                                                : 'bg-slate-700 text-slate-400'
+                                                : 'bg-white/8 text-[#8d897d]'
                                             }`}
                                     >
                                         {s.status}

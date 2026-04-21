@@ -73,11 +73,12 @@ export default function HSCodesPage() {
     const to = Math.min(page * LIMIT, total)
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="space-y-6 p-6 lg:p-8">
             {/* Header */}
             <div>
-                <h1 className="text-2xl font-bold text-white">FBR HS Codes</h1>
-                <p className="text-slate-400 text-sm mt-1">
+                <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Reference library</p>
+                <h1 className="brand-heading mt-2 text-3xl font-bold text-white">FBR HS Codes</h1>
+                <p className="mt-1 text-sm text-[#c1bcaf]">
                     Browse the complete list of FBR-approved Harmonised System codes and applicable tax rates.
                 </p>
             </div>
@@ -89,12 +90,12 @@ export default function HSCodesPage() {
                     placeholder="Search by code, description, or short name…"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="flex-1 px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="flex-1 rounded-xl border border-white/10 bg-white/6 px-4 py-2 text-sm text-white placeholder:text-[#8d897d]"
                 />
                 <select
                     value={category}
                     onChange={(e) => handleCategoryChange(e.target.value)}
-                    className="sm:w-56 px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="sm:w-56 rounded-xl border border-white/10 bg-white/6 px-4 py-2 text-sm text-white"
                 >
                     <option value="">All Categories</option>
                     {categories.map((cat) => (
@@ -106,13 +107,13 @@ export default function HSCodesPage() {
             </div>
 
             {/* Table */}
-            <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
+            <div className="app-panel overflow-hidden rounded-2xl">
                 {loading ? (
-                    <div className="flex items-center justify-center py-20 text-slate-400 text-sm">
+                    <div className="flex items-center justify-center py-20 text-sm text-[#8d897d]">
                         Loading…
                     </div>
                 ) : hsCodes.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+                    <div className="flex flex-col items-center justify-center py-20 text-[#8d897d]">
                         <span className="text-4xl mb-3">🔍</span>
                         <p className="text-sm">No HS codes found matching your filters.</p>
                     </div>
@@ -120,7 +121,7 @@ export default function HSCodesPage() {
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-b border-slate-800 text-slate-400 text-xs uppercase tracking-wider">
+                                <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-[#8d897d]">
                                     <th className="px-4 py-3 text-left">Code</th>
                                     <th className="px-4 py-3 text-left">Description</th>
                                     <th className="px-4 py-3 text-left">Short Name</th>
@@ -129,27 +130,27 @@ export default function HSCodesPage() {
                                     <th className="px-4 py-3 text-right">Tax Rate</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-800">
+                            <tbody className="divide-y divide-white/10">
                                 {hsCodes.map((hs) => (
                                     <tr
                                         key={hs.id}
-                                        className="hover:bg-slate-800/50 transition-colors"
+                                        className="transition-colors hover:bg-white/6"
                                     >
-                                        <td className="px-4 py-3 font-mono text-blue-400 whitespace-nowrap">
+                                        <td className="px-4 py-3 font-mono whitespace-nowrap text-[#f0d9a0]">
                                             {hs.code}
                                         </td>
-                                        <td className="px-4 py-3 text-slate-200 max-w-xs truncate text-xs">
+                                        <td className="max-w-xs truncate px-4 py-3 text-xs text-[#e7e0cf]">
                                             {hs.description}
                                         </td>
-                                        <td className="px-4 py-3 text-slate-400">
+                                        <td className="px-4 py-3 text-[#c1bcaf]">
                                             {hs.shortName ?? '—'}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span className="px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 text-xs">
+                                            <span className="rounded-full bg-white/8 px-2 py-0.5 text-xs text-[#d8d0bf]">
                                                 {hs.category}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-slate-400">{hs.unit}</td>
+                                        <td className="px-4 py-3 text-[#c1bcaf]">{hs.unit}</td>
                                         <td className="px-4 py-3 text-right font-medium text-emerald-400">
                                             {Number(hs.defaultTaxRate).toFixed(0)}%
                                         </td>
@@ -163,7 +164,7 @@ export default function HSCodesPage() {
 
             {/* Pagination */}
             {!loading && total > 0 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-400">
+                <div className="flex flex-col items-center justify-between gap-3 text-sm text-[#8d897d] sm:flex-row">
                     <span>
                         Showing {from}–{to} of {total.toLocaleString()} codes
                     </span>
@@ -171,14 +172,14 @@ export default function HSCodesPage() {
                         <button
                             disabled={page === 1}
                             onClick={() => setPage(1)}
-                            className="px-2 py-1 rounded border border-slate-700 hover:border-slate-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            className="rounded border border-white/10 px-2 py-1 transition-colors hover:bg-white/6 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             «
                         </button>
                         <button
                             disabled={page === 1}
                             onClick={() => setPage((p) => p - 1)}
-                            className="px-3 py-1 rounded border border-slate-700 hover:border-slate-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            className="rounded border border-white/10 px-3 py-1 transition-colors hover:bg-white/6 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             Prev
                         </button>
@@ -192,8 +193,8 @@ export default function HSCodesPage() {
                                     key={p}
                                     onClick={() => setPage(p)}
                                     className={`px-3 py-1 rounded border transition-colors ${p === page
-                                        ? 'border-blue-500 bg-blue-600/20 text-blue-400'
-                                        : 'border-slate-700 hover:border-slate-500'
+                                        ? 'border-[var(--accent)] bg-[rgba(200,164,90,0.18)] text-[#f0d9a0]'
+                                        : 'border-white/10 hover:bg-white/6'
                                         }`}
                                 >
                                     {p}
@@ -204,14 +205,14 @@ export default function HSCodesPage() {
                         <button
                             disabled={page === totalPages}
                             onClick={() => setPage((p) => p + 1)}
-                            className="px-3 py-1 rounded border border-slate-700 hover:border-slate-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            className="rounded border border-white/10 px-3 py-1 transition-colors hover:bg-white/6 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             Next
                         </button>
                         <button
                             disabled={page === totalPages}
                             onClick={() => setPage(totalPages)}
-                            className="px-2 py-1 rounded border border-slate-700 hover:border-slate-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            className="rounded border border-white/10 px-2 py-1 transition-colors hover:bg-white/6 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             »
                         </button>

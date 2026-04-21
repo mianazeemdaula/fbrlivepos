@@ -170,22 +170,23 @@ export default function CustomersPage() {
     }
 
     return (
-        <div className="p-6">
+        <div className="p-6 lg:p-8">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Customers</h1>
-                    <p className="text-sm text-slate-400 mt-1">{total} total customers</p>
+                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Buyer registry</p>
+                    <h1 className="brand-heading mt-2 text-3xl font-bold text-white">Customers</h1>
+                    <p className="mt-1 text-sm text-[#c1bcaf]">{total} total customers</p>
                 </div>
                 <div className="flex gap-3">
                     <button
                         onClick={() => setShowVerifyModal(true)}
-                        className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                        className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-[#d8d0bf] transition-colors hover:bg-white/10"
                     >
                         Verify NTN/CNIC
                     </button>
                     <button
                         onClick={() => setShowForm(!showForm)}
-                        className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                        className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-(--accent-soft)"
                     >
                         {showForm ? 'Cancel' : '+ Add Customer'}
                     </button>
@@ -204,28 +205,28 @@ export default function CustomersPage() {
 
             {/* Add Customer Form */}
             {showForm && (
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6">
+                <div className="app-panel mb-6 rounded-2xl p-6">
                     <h2 className="text-lg font-semibold text-white mb-4">New Customer</h2>
                     <form onSubmit={handleAddCustomer} className="space-y-3">
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-xs text-slate-400 mb-1">Name *</label>
+                                <label className="mb-1 block text-xs text-[#c1bcaf]">Name *</label>
                                 <input
                                     required
                                     value={form.name}
                                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                     placeholder="Business or person name"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-slate-400 mb-1">NTN/CNIC</label>
+                                <label className="mb-1 block text-xs text-[#c1bcaf]">NTN/CNIC</label>
                                 <input
                                     value={form.ntnCnic}
                                     onChange={(e) => setForm({ ...form, ntnCnic: normalizeNtnCnic(e.target.value) })}
                                     inputMode="numeric"
                                     maxLength={13}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                     placeholder="7-digit NTN or 13-digit CNIC"
                                 />
                                 {form.ntnCnic && !isValidNtnCnic(normalizedFormNtnCnic) && (
@@ -235,13 +236,13 @@ export default function CustomersPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-xs text-slate-400 mb-1">Phone</label>
+                                <label className="mb-1 block text-xs text-[#c1bcaf]">Phone</label>
                                 <input
                                     value={form.phone}
                                     onChange={(e) => setForm({ ...form, phone: normalizeMobile(e.target.value) })}
                                     inputMode="numeric"
                                     maxLength={11}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                     placeholder="03001234567"
                                 />
                                 {form.phone && !isValidMobile(normalizedFormPhone) && (
@@ -249,23 +250,23 @@ export default function CustomersPage() {
                                 )}
                             </div>
                             <div>
-                                <label className="block text-xs text-slate-400 mb-1">Email</label>
+                                <label className="mb-1 block text-xs text-[#c1bcaf]">Email</label>
                                 <input
                                     type="email"
                                     value={form.email}
                                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                     placeholder="email@example.com"
                                 />
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-xs text-slate-400 mb-1">Province</label>
+                                <label className="mb-1 block text-xs text-[#c1bcaf]">Province</label>
                                 <select
                                     value={form.province}
                                     onChange={(e) => setForm({ ...form, province: e.target.value })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                 >
                                     <option value="">Select province</option>
                                     <option value="Punjab">Punjab</option>
@@ -278,11 +279,11 @@ export default function CustomersPage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs text-slate-400 mb-1">Address</label>
+                                <label className="mb-1 block text-xs text-[#c1bcaf]">Address</label>
                                 <input
                                     value={form.address}
                                     onChange={(e) => setForm({ ...form, address: e.target.value })}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                     placeholder="Business address"
                                 />
                             </div>
@@ -290,7 +291,7 @@ export default function CustomersPage() {
                         <button
                             type="submit"
                             disabled={saving}
-                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                            className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary disabled:opacity-70"
                         >
                             {saving ? 'Saving...' : 'Add Customer'}
                         </button>
@@ -305,35 +306,35 @@ export default function CustomersPage() {
                     placeholder="Search by name, NTN, or phone..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full max-w-md rounded-xl border border-white/10 bg-white/6 px-4 py-2.5 text-white placeholder:text-[#8d897d]"
                 />
             </div>
 
             {/* Table */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div className="app-panel overflow-hidden rounded-2xl">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="border-b border-slate-800">
-                            <th className="text-left p-3 text-slate-400 font-medium">Name</th>
-                            <th className="text-left p-3 text-slate-400 font-medium">NTN/CNIC</th>
-                            <th className="text-left p-3 text-slate-400 font-medium">Phone</th>
-                            <th className="text-left p-3 text-slate-400 font-medium">Province</th>
-                            <th className="text-left p-3 text-slate-400 font-medium">FBR Status</th>
-                            <th className="text-left p-3 text-slate-400 font-medium">Actions</th>
+                        <tr className="border-b border-white/10">
+                            <th className="p-3 text-left font-medium text-[#8d897d]">Name</th>
+                            <th className="p-3 text-left font-medium text-[#8d897d]">NTN/CNIC</th>
+                            <th className="p-3 text-left font-medium text-[#8d897d]">Phone</th>
+                            <th className="p-3 text-left font-medium text-[#8d897d]">Province</th>
+                            <th className="p-3 text-left font-medium text-[#8d897d]">FBR Status</th>
+                            <th className="p-3 text-left font-medium text-[#8d897d]">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan={6} className="p-8 text-center text-slate-500">Loading...</td></tr>
+                            <tr><td colSpan={6} className="p-8 text-center text-[#8d897d]">Loading...</td></tr>
                         ) : customers.length === 0 ? (
-                            <tr><td colSpan={6} className="p-8 text-center text-slate-500">No customers found</td></tr>
+                            <tr><td colSpan={6} className="p-8 text-center text-[#8d897d]">No customers found</td></tr>
                         ) : (
                             customers.map((c) => (
-                                <tr key={c.id} className="border-b border-slate-800/50 hover:bg-slate-800/30">
+                                <tr key={c.id} className="border-b border-white/10 hover:bg-white/6">
                                     <td className="p-3 text-white">{c.name}</td>
-                                    <td className="p-3 text-slate-300 font-mono text-xs">{c.ntnCnic || '—'}</td>
-                                    <td className="p-3 text-slate-300">{c.phone || '—'}</td>
-                                    <td className="p-3 text-slate-300">{c.province || '—'}</td>
+                                    <td className="p-3 font-mono text-xs text-[#d8d0bf]">{c.ntnCnic || '—'}</td>
+                                    <td className="p-3 text-[#d8d0bf]">{c.phone || '—'}</td>
+                                    <td className="p-3 text-[#d8d0bf]">{c.province || '—'}</td>
                                     <td className="p-3">
                                         {c.fbrVerified ? (
                                             <div className="flex flex-col gap-0.5">
@@ -353,7 +354,7 @@ export default function CustomersPage() {
                                                 )}
                                             </div>
                                         ) : (
-                                            <span className="text-xs text-slate-500">Not verified</span>
+                                            <span className="text-xs text-[#8d897d]">Not verified</span>
                                         )}
                                     </td>
                                     <td className="p-3">
@@ -361,7 +362,7 @@ export default function CustomersPage() {
                                             <button
                                                 onClick={() => handleVerifyBuyer(c.id, c.ntnCnic!)}
                                                 disabled={verifying === c.id}
-                                                className="text-xs bg-slate-800 hover:bg-slate-700 text-blue-400 px-3 py-1 rounded-lg"
+                                                className="rounded-lg border border-white/10 bg-white/6 px-3 py-1 text-xs text-[#f0d9a0] hover:bg-white/10"
                                             >
                                                 {verifying === c.id ? 'Checking...' : c.fbrVerified ? 'Re-verify' : 'Verify FBR'}
                                             </button>
@@ -376,21 +377,21 @@ export default function CustomersPage() {
 
             {/* Pagination */}
             {pages > 1 && (
-                <div className="flex justify-center gap-2 mt-4">
+                <div className="mt-4 flex justify-center gap-2">
                     <button
                         disabled={page <= 1}
                         onClick={() => setPage(page - 1)}
-                        className="px-3 py-1 bg-slate-800 text-white rounded disabled:opacity-50 text-sm"
+                        className="rounded-xl border border-white/10 bg-white/6 px-3 py-1 text-sm text-[#d8d0bf] disabled:opacity-50"
                     >
                         Prev
                     </button>
-                    <span className="px-3 py-1 text-slate-400 text-sm">
+                    <span className="px-3 py-1 text-sm text-[#8d897d]">
                         Page {page} of {pages}
                     </span>
                     <button
                         disabled={page >= pages}
                         onClick={() => setPage(page + 1)}
-                        className="px-3 py-1 bg-slate-800 text-white rounded disabled:opacity-50 text-sm"
+                        className="rounded-xl border border-white/10 bg-white/6 px-3 py-1 text-sm text-[#d8d0bf] disabled:opacity-50"
                     >
                         Next
                     </button>
@@ -399,10 +400,10 @@ export default function CustomersPage() {
 
             {/* Verify NTN/CNIC Modal */}
             {showVerifyModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-md">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+                    <div className="app-panel w-full max-w-md rounded-2xl p-6">
                         <h3 className="text-lg font-semibold text-white mb-4">Verify Buyer NTN/CNIC</h3>
-                        <p className="text-sm text-slate-400 mb-4">
+                        <p className="mb-4 text-sm text-[#c1bcaf]">
                             Check a buyer&apos;s registration status and Active Taxpayer List (ATL) status with FBR.
                         </p>
                         <div className="flex gap-2 mb-4">
@@ -413,28 +414,28 @@ export default function CustomersPage() {
                                 inputMode="numeric"
                                 maxLength={13}
                                 placeholder="Enter 7-digit NTN or 13-digit CNIC"
-                                className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                className="flex-1 rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                             />
                             <button
                                 onClick={handleQuickVerify}
                                 disabled={verifying === 'quick' || !verifyNtn}
-                                className="bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                                className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary disabled:opacity-70"
                             >
                                 {verifying === 'quick' ? 'Checking...' : 'Verify'}
                             </button>
                         </div>
 
                         {verifyResult && (
-                            <div className="bg-slate-800 rounded-lg p-4 mb-4">
+                            <div className="mb-4 rounded-2xl border border-white/10 bg-white/6 p-4">
                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                     <div>
-                                        <span className="text-slate-400">Registration Type:</span>
+                                        <span className="text-[#8d897d]">Registration Type:</span>
                                         <p className={`font-medium ${verifyResult.registrationType === 'Registered' ? 'text-green-400' : 'text-yellow-400'}`}>
                                             {verifyResult.registrationType}
                                         </p>
                                     </div>
                                     <div>
-                                        <span className="text-slate-400">ATL Status:</span>
+                                        <span className="text-[#8d897d]">ATL Status:</span>
                                         <p className={`font-medium ${verifyResult.atlStatus === 'Active' ? 'text-green-400' : 'text-red-400'}`}>
                                             {verifyResult.atlStatus}
                                         </p>
@@ -448,7 +449,7 @@ export default function CustomersPage() {
 
                         <button
                             onClick={() => { setShowVerifyModal(false); setVerifyResult(null); setVerifyNtn('') }}
-                            className="w-full bg-slate-800 hover:bg-slate-700 text-white py-2 rounded-lg text-sm"
+                            className="w-full rounded-xl border border-white/10 bg-white/6 py-2 text-sm text-[#d8d0bf] hover:bg-white/10"
                         >
                             Close
                         </button>
