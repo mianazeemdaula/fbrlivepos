@@ -18,6 +18,14 @@ interface TenantDetail {
         status: string
         currentPeriodEnd: string | null
     }
+    users?: Array<{
+        id: string
+        name: string
+        email: string
+        role: string
+        isActive: boolean
+        createdAt: string
+    }>
     _count?: { invoices: number; users: number; products: number }
 }
 
@@ -34,6 +42,9 @@ export default function TenantDetailPage() {
     const [plans, setPlans] = useState<Plan[]>([])
     const [loading, setLoading] = useState(true)
     const [actionLoading, setActionLoading] = useState('')
+    const [passwordDrafts, setPasswordDrafts] = useState<Record<string, string>>({})
+    const [passwordLoadingFor, setPasswordLoadingFor] = useState<string | null>(null)
+    const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
     useEffect(() => {
         async function load() {
@@ -112,6 +123,37 @@ export default function TenantDetailPage() {
             // Ignore
         } finally {
             setActionLoading('')
+        }
+    }
+
+    async function handleChangeUserPassword(userId: string, userName: string) {
+        const nextPassword = passwordDrafts[userId]?.trim() ?? ''
+        if (nextPassword.length < 8) {
+            setPasswordMessage({ type: 'error', text: `Password for ${userName} must be at least 8 characters.` })
+            return
+        }
+
+        setPasswordMessage(null)
+        setPasswordLoadingFor(userId)
+        try {
+            const res = await fetch(`/api/admin/tenants/${params.tenantId}/users/${userId}/password`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: nextPassword }),
+            })
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({ error: 'Failed to change password.' }))
+                setPasswordMessage({ type: 'error', text: data.error || 'Failed to change password.' })
+                return
+            }
+
+            setPasswordDrafts((current) => ({ ...current, [userId]: '' }))
+            setPasswordMessage({ type: 'success', text: `Password updated for ${userName}.` })
+        } catch {
+            setPasswordMessage({ type: 'error', text: 'Network error while changing password.' })
+        } finally {
+            setPasswordLoadingFor(null)
         }
     }
 
@@ -229,6 +271,57 @@ export default function TenantDetailPage() {
                         >
                             {actionLoading === 'activate' ? 'Activating...' : 'Activate Tenant'}
                         </button>
+                    )}
+                </div>
+            </div>
+
+            <div className="app-panel mt-6 rounded-2xl p-6">
+                <h2 className="text-sm font-semibold text-white mb-2">User Password Management</h2>
+                <p className="mb-4 text-xs text-[#8d897d]">Set a new password for any user under this tenant.</p>
+
+                {passwordMessage && (
+                    <div
+                        className={`mb-4 rounded-lg border px-3 py-2 text-xs ${passwordMessage.type === 'success'
+                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                            : 'border-red-500/30 bg-red-500/10 text-red-300'
+                            }`}
+                    >
+                        {passwordMessage.text}
+                    </div>
+                )}
+
+                <div className="space-y-3">
+                    {(tenant.users ?? []).map((user) => (
+                        <div key={user.id} className="rounded-xl border border-white/10 bg-white/3 p-3">
+                            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <p className="text-sm font-medium text-white">{user.name}</p>
+                                    <p className="text-xs text-[#8d897d]">{user.email} · {user.role}</p>
+                                </div>
+                                <span className={`rounded-full px-2 py-0.5 text-[11px] ${user.isActive ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'}`}>
+                                    {user.isActive ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <input
+                                    type="password"
+                                    value={passwordDrafts[user.id] ?? ''}
+                                    onChange={(e) => setPasswordDrafts((current) => ({ ...current, [user.id]: e.target.value }))}
+                                    placeholder="New password (min 8 chars)"
+                                    className="w-full min-w-55 flex-1 rounded-lg border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
+                                />
+                                <button
+                                    onClick={() => handleChangeUserPassword(user.id, user.name)}
+                                    disabled={passwordLoadingFor !== null}
+                                    className="rounded-lg bg-[#d0a35b] px-3 py-2 text-xs font-semibold text-[#1f1a12] transition-colors hover:bg-[#dcb270] disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    {passwordLoadingFor === user.id ? 'Updating...' : 'Set New Password'}
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                    {(tenant.users?.length ?? 0) === 0 && (
+                        <p className="text-xs text-[#8d897d]">No users found for this tenant.</p>
                     )}
                 </div>
             </div>

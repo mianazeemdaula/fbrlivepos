@@ -12,6 +12,17 @@ export async function GET(
     const tenant = await prisma.tenant.findUnique({
         where: { id: tenantId },
         include: {
+            users: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    isActive: true,
+                    createdAt: true,
+                },
+                orderBy: { createdAt: 'asc' },
+            },
             subscription: { include: { plan: true, billingHistory: { orderBy: { createdAt: 'desc' }, take: 10 } } },
             diCredentials: {
                 select: {
@@ -56,6 +67,14 @@ export async function GET(
                     currentPeriodEnd: tenant.subscription.currentPeriodEnd?.toISOString() ?? null,
                 }
                 : undefined,
+            users: tenant.users.map((user) => ({
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                isActive: user.isActive,
+                createdAt: user.createdAt.toISOString(),
+            })),
             _count: {
                 invoices: tenant._count.invoices,
                 users: tenant._count.users,
