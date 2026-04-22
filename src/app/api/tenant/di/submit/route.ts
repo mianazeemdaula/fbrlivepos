@@ -129,6 +129,7 @@ export async function POST(req: NextRequest) {
         payload = buildDIPayload(invoice, creds, {
             scenarioId: resolvedScenarioId,
             isSandbox: creds.environment === 'SANDBOX',
+            preferredIdType: tenant.preferredIdType === 'CNIC' ? 'CNIC' : 'NTN',
         })
 
         // Check circuit breaker before making any API calls

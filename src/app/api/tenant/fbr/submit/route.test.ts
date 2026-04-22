@@ -59,7 +59,7 @@ describe('POST /api/tenant/fbr/submit', () => {
         vi.resetAllMocks()
 
         getTenantFromSession.mockResolvedValue({
-            tenant: { id: 'tenant-1' },
+            tenant: { id: 'tenant-1', preferredIdType: 'NTN' },
         })
         getNextSubmissionAttempt.mockResolvedValue(1)
         inferSandboxScenario.mockReturnValue({ scenarioId: 'SN026' })
@@ -154,7 +154,7 @@ describe('POST /api/tenant/fbr/submit', () => {
         expect(buildDIPayload).toHaveBeenCalledWith(
             expect.objectContaining({ diScenarioId: 'SN026' }),
             expect.objectContaining({ environment: 'SANDBOX' }),
-            { isSandbox: true, scenarioId: 'SN026' },
+            { isSandbox: true, scenarioId: 'SN026', preferredIdType: 'NTN' },
         )
         expect(updateInvoiceForTenant).toHaveBeenCalledWith(
             'tenant-1',

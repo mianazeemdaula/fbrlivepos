@@ -2,6 +2,8 @@ import type { Invoice, InvoiceItem, DICredentials } from '@/generated/prisma/cli
 import type { DIInvoicePayload } from './types'
 import { getSellerIdentity } from './seller'
 
+type PreferredIdType = 'NTN' | 'CNIC'
+
 type InvoiceWithItems = Invoice & { items: InvoiceItem[] }
 
 function normalize(value: string | null | undefined) {
@@ -33,9 +35,12 @@ export function buildDIPayload(
     options?: {
         scenarioId?: string // Required for sandbox
         isSandbox?: boolean
+        preferredIdType?: PreferredIdType
     },
 ): DIInvoicePayload {
-    const seller = getSellerIdentity(creds)
+    const seller = getSellerIdentity(creds, {
+        preferredIdType: options?.preferredIdType,
+    })
 
     return {
         invoiceType: (invoice.invoiceType as 'Sale Invoice' | 'Debit Note') ?? 'Sale Invoice',

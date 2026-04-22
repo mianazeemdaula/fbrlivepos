@@ -125,6 +125,7 @@ export async function POST(req: NextRequest) {
         payload = buildDIPayload(invoice, creds, {
             isSandbox,
             scenarioId: resolvedScenarioId ?? undefined,
+            preferredIdType: tenant.preferredIdType === 'CNIC' ? 'CNIC' : 'NTN',
         })
 
         console.log('[FBR-SUBMIT] ========== START SUBMISSION ==========')

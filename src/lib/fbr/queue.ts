@@ -399,6 +399,7 @@ async function processSubmissionJob(jobData: SubmissionJobData, attemptsMade: nu
     const payload = buildDIPayload(invoice, creds, {
         isSandbox,
         scenarioId: invoice.diScenarioId ?? undefined,
+        preferredIdType: invoice.tenant.preferredIdType === 'CNIC' ? 'CNIC' : 'NTN',
     })
 
     const start = Date.now()
