@@ -4,6 +4,7 @@ const getTenantFromSession = vi.fn()
 const getDIClientForTenant = vi.fn()
 const buildSandboxScenarioPayload = vi.fn()
 const getSellerIdentity = vi.fn()
+const appendDIDebugLog = vi.fn()
 
 const prisma = {
     dICredentials: {
@@ -22,6 +23,9 @@ vi.mock('@/lib/db/prisma', () => ({
 
 vi.mock('@/lib/di/client', () => ({
     getDIClientForTenant,
+    DIAuthError: class DIAuthError extends Error { },
+    DIHttpError: class DIHttpError extends Error { },
+    DIServerError: class DIServerError extends Error { },
 }))
 
 vi.mock('@/lib/di/scenario-catalog', () => ({
@@ -30,6 +34,10 @@ vi.mock('@/lib/di/scenario-catalog', () => ({
 
 vi.mock('@/lib/di/seller', () => ({
     getSellerIdentity,
+}))
+
+vi.mock('@/lib/di/debug-log', () => ({
+    appendDIDebugLog,
 }))
 
 describe('POST /api/tenant/fbr-credentials/verify', () => {
@@ -60,6 +68,7 @@ describe('POST /api/tenant/fbr-credentials/verify', () => {
             },
         })
         prisma.dICredentials.update.mockResolvedValue(undefined)
+        appendDIDebugLog.mockResolvedValue('logs/di-debug/tenant-1/2026-04-22.jsonl')
     })
 
     it('verifies against the DI validate endpoint and resets the DI circuit breaker', async () => {
@@ -82,5 +91,9 @@ describe('POST /api/tenant/fbr-credentials/verify', () => {
                 verificationError: null,
             }),
         })
+        expect(appendDIDebugLog).toHaveBeenCalledWith(expect.objectContaining({
+            tenantId: 'tenant-1',
+            event: 'VERIFY_SUCCESS',
+        }))
     })
 })

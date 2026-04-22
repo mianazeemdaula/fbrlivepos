@@ -10,9 +10,24 @@ const DI_VAL_URL_SB = 'https://gw.fbr.gov.pk/di_data/v1/di/validateinvoicedata_s
 
 const circuitRegistry = DICircuitBreakerRegistry.getInstance()
 
-async function readDIResponse<T>(res: Response, operation: 'postInvoice' | 'validateInvoice'): Promise<T> {
-    const rawBody = await res.text()
+export interface DIErrorContext {
+    operation: 'postInvoice' | 'validateInvoice'
+    endpoint: string
+    status?: number
+    responseBody?: string
+}
 
+function responsePreview(responseBody?: string): string | undefined {
+    if (!responseBody) {
+        return undefined
+    }
+
+    return responseBody.length > 700
+        ? `${responseBody.slice(0, 700)}...`
+        : responseBody
+}
+
+function parseDIResponse<T>(rawBody: string, operation: 'postInvoice' | 'validateInvoice'): T {
     if (!rawBody.trim()) {
         throw new Error(`PRAL DI ${operation} returned an empty response body.`)
     }
@@ -89,15 +104,35 @@ export async function getDIClientForTenant(tenantId: string) {
                         signal: controller.signal,
                     })
                     clearTimeout(timer)
+                    const rawBody = await res.text()
                     console.log(`[DI-CLIENT] postInvoice HTTP status: ${res.status} ${res.statusText} | url: ${postUrl}`)
-                    if (res.status === 401) throw new DIAuthError(tenantId)
-                    if (res.status >= 500) throw new DIServerError(tenantId)
-
-                    if (!res.ok) {
-                        throw new Error(`PRAL DI post failed with status ${res.status}: ${await res.text()}`)
+                    if (res.status === 401) {
+                        throw new DIAuthError(tenantId, {
+                            operation: 'postInvoice',
+                            endpoint: postUrl,
+                            status: res.status,
+                            responseBody: rawBody,
+                        })
+                    }
+                    if (res.status >= 500) {
+                        throw new DIServerError(tenantId, {
+                            operation: 'postInvoice',
+                            endpoint: postUrl,
+                            status: res.status,
+                            responseBody: rawBody,
+                        })
                     }
 
-                    return readDIResponse<DIResponse>(res, 'postInvoice')
+                    if (!res.ok) {
+                        throw new DIHttpError(tenantId, {
+                            operation: 'postInvoice',
+                            endpoint: postUrl,
+                            status: res.status,
+                            responseBody: rawBody,
+                        })
+                    }
+
+                    return parseDIResponse<DIResponse>(rawBody, 'postInvoice')
                 } catch (err) {
                     clearTimeout(timer)
                     throw err
@@ -120,15 +155,35 @@ export async function getDIClientForTenant(tenantId: string) {
                     signal: controller.signal,
                 })
                 clearTimeout(timer)
+                const rawBody = await res.text()
                 console.log(`[DI-CLIENT] validateInvoice HTTP status: ${res.status} ${res.statusText} | url: ${validateUrl}`)
-                if (res.status === 401) throw new DIAuthError(tenantId)
-                if (res.status >= 500) throw new DIServerError(tenantId)
-
-                if (!res.ok) {
-                    throw new Error(`PRAL DI validation failed with status ${res.status}: ${await res.text()}`)
+                if (res.status === 401) {
+                    throw new DIAuthError(tenantId, {
+                        operation: 'validateInvoice',
+                        endpoint: validateUrl,
+                        status: res.status,
+                        responseBody: rawBody,
+                    })
+                }
+                if (res.status >= 500) {
+                    throw new DIServerError(tenantId, {
+                        operation: 'validateInvoice',
+                        endpoint: validateUrl,
+                        status: res.status,
+                        responseBody: rawBody,
+                    })
                 }
 
-                return readDIResponse<DIValidationResponse>(res, 'validateInvoice')
+                if (!res.ok) {
+                    throw new DIHttpError(tenantId, {
+                        operation: 'validateInvoice',
+                        endpoint: validateUrl,
+                        status: res.status,
+                        responseBody: rawBody,
+                    })
+                }
+
+                return parseDIResponse<DIValidationResponse>(rawBody, 'validateInvoice')
             } catch (err) {
                 clearTimeout(timer)
                 throw err
@@ -141,16 +196,34 @@ export async function getDIClientForTenant(tenantId: string) {
 }
 
 export class DIAuthError extends Error {
-    constructor(public tenantId: string) {
-        super(`PRAL DI token unauthorized for tenant ${tenantId}. Token may be expired or not yet whitelisted.`)
+    constructor(public tenantId: string, public context?: DIErrorContext) {
+        const preview = responsePreview(context?.responseBody)
+        const status = context?.status != null ? ` [HTTP ${context.status}]` : ''
+        const endpoint = context?.endpoint ? ` (${context.endpoint})` : ''
+        const raw = preview ? ` Response: ${preview}` : ''
+        super(`PRAL DI token unauthorized for tenant ${tenantId}${status}${endpoint}. Token may be expired, wrong environment, or not yet whitelisted.${raw}`)
         this.name = 'DIAuthError'
     }
 }
 
 export class DIServerError extends Error {
-    constructor(public tenantId: string) {
-        super(`PRAL DI server error for tenant ${tenantId}. Contact PRAL support via dicrm.pral.com.pk`)
+    constructor(public tenantId: string, public context?: DIErrorContext) {
+        const preview = responsePreview(context?.responseBody)
+        const status = context?.status != null ? ` [HTTP ${context.status}]` : ''
+        const endpoint = context?.endpoint ? ` (${context.endpoint})` : ''
+        const raw = preview ? ` Response: ${preview}` : ''
+        super(`PRAL DI server error for tenant ${tenantId}${status}${endpoint}. Contact PRAL support via dicrm.pral.com.pk.${raw}`)
         this.name = 'DIServerError'
+    }
+}
+
+export class DIHttpError extends Error {
+    constructor(public tenantId: string, public context: DIErrorContext) {
+        const preview = responsePreview(context.responseBody)
+        const status = context.status ?? 'unknown'
+        const raw = preview ? ` Response: ${preview}` : ''
+        super(`PRAL DI ${context.operation} failed for tenant ${tenantId} [HTTP ${status}] (${context.endpoint}).${raw}`)
+        this.name = 'DIHttpError'
     }
 }
 
