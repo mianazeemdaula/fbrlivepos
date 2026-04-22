@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import { ArrowRight, BadgeCheck, Building2, ChartColumnBig, FileCheck2, ShieldCheck, Sparkles } from 'lucide-react'
-import { featureHighlights, testimonials, trustStats, defaultMarketingPlans } from '@/lib/marketing'
+import { featureHighlights, testimonials, trustStats } from '@/lib/marketing'
+import { getPublicMarketingPlans } from '@/lib/marketing-plans.server'
 
-export default function HomePage() {
-  const featuredPlans = defaultMarketingPlans.slice(0, 4)
+export default async function HomePage() {
+  const featuredPlans = (await getPublicMarketingPlans()).slice(0, 4)
 
   return (
     <div className="min-h-screen text-[var(--foreground)]">
@@ -139,29 +140,35 @@ export default function HomePage() {
             </div>
             <Link href="/pricing" className="hidden text-sm font-semibold text-[var(--primary)] md:block">See full pricing</Link>
           </div>
-          <div className="grid gap-5 lg:grid-cols-4">
-            {featuredPlans.map((plan) => (
-              <div key={plan.id} className={`rounded-[1.75rem] p-6 ${plan.highlight ? 'brand-gradient text-white shadow-[var(--shadow-hover)]' : 'brand-panel'}`}>
-                {plan.badge && (
-                  <div className={`mb-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${plan.highlight ? 'bg-white/15 text-white' : 'brand-chip'}`}>
-                    {plan.badge}
+          {featuredPlans.length > 0 ? (
+            <div className="grid gap-5 lg:grid-cols-4">
+              {featuredPlans.map((plan) => (
+                <div key={plan.id} className={`rounded-[1.75rem] p-6 ${plan.highlight ? 'brand-gradient text-white shadow-[var(--shadow-hover)]' : 'brand-panel'}`}>
+                  {plan.badge && (
+                    <div className={`mb-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${plan.highlight ? 'bg-white/15 text-white' : 'brand-chip'}`}>
+                      {plan.badge}
+                    </div>
+                  )}
+                  <h3 className={`text-2xl font-semibold ${plan.highlight ? 'text-white' : 'text-[var(--primary)]'}`}>{plan.name}</h3>
+                  <p className={`mt-2 text-sm leading-7 ${plan.highlight ? 'text-white/80' : 'brand-muted'}`}>{plan.tagline}</p>
+                  <p className={`mt-5 text-4xl font-bold ${plan.highlight ? 'text-white' : 'text-[var(--primary)]'}`}>
+                    {plan.monthlyPrice ? `PKR ${plan.monthlyPrice.toLocaleString()}` : 'Custom'}
+                  </p>
+                  <p className={`mt-1 text-sm ${plan.highlight ? 'text-white/70' : 'brand-muted'}`}>
+                    {plan.monthlyPrice ? `PKR ${plan.annualPrice?.toLocaleString()} yearly` : 'Talk to sales'}
+                  </p>
+                  <div className={`mt-5 space-y-2 text-sm ${plan.highlight ? 'text-white/90' : 'text-[var(--foreground)]'}`}>
+                    <p>Invoices: {plan.invoicesPerMonth === 'unlimited' ? 'Unlimited' : plan.invoicesPerMonth}</p>
+                    <p>Users: {plan.users === 'unlimited' ? 'Unlimited' : plan.users}</p>
                   </div>
-                )}
-                <h3 className={`text-2xl font-semibold ${plan.highlight ? 'text-white' : 'text-[var(--primary)]'}`}>{plan.name}</h3>
-                <p className={`mt-2 text-sm leading-7 ${plan.highlight ? 'text-white/80' : 'brand-muted'}`}>{plan.tagline}</p>
-                <p className={`mt-5 text-4xl font-bold ${plan.highlight ? 'text-white' : 'text-[var(--primary)]'}`}>
-                  {plan.monthlyPrice ? `PKR ${plan.monthlyPrice.toLocaleString()}` : 'Custom'}
-                </p>
-                <p className={`mt-1 text-sm ${plan.highlight ? 'text-white/70' : 'brand-muted'}`}>
-                  {plan.monthlyPrice ? `PKR ${plan.annualPrice?.toLocaleString()} yearly` : 'Talk to sales'}
-                </p>
-                <div className={`mt-5 space-y-2 text-sm ${plan.highlight ? 'text-white/90' : 'text-[var(--foreground)]'}`}>
-                  <p>Invoices: {plan.invoicesPerMonth === 'unlimited' ? 'Unlimited' : plan.invoicesPerMonth}</p>
-                  <p>Users: {plan.users === 'unlimited' ? 'Unlimited' : plan.users}</p>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="brand-panel rounded-3xl p-6 text-sm brand-muted">
+              Subscription plans are not configured yet. Visit pricing after your super-admin publishes active public plans.
+            </div>
+          )}
         </section>
 
         <section className="mx-auto max-w-7xl px-6 py-12 lg:py-16">

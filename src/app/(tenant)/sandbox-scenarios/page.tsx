@@ -68,11 +68,11 @@ export default function SandboxScenariosPage() {
                     Loading sandbox configuration...
                 </div>
             ) : !config?.configured ? (
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-6 text-sm text-amber-300">
+                <div className="rounded-xl border border-[rgba(200,164,90,0.3)] bg-[rgba(200,164,90,0.12)] p-6 text-sm text-[#f0d9a0]">
                     Configure PRAL DI credentials in Settings before running sandbox scenarios.
                 </div>
             ) : config.environment !== 'SANDBOX' ? (
-                <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-6 text-sm text-sky-300">
+                <div className="rounded-xl border border-[rgba(1,107,48,0.35)] bg-[rgba(1,107,48,0.12)] p-6 text-sm text-[#9fd9b0]">
                     This tenant is currently set to Production. Switch the DI environment back to Sandbox in Settings if you want to run scenario tests.
                 </div>
             ) : (

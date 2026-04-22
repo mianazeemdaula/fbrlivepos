@@ -92,6 +92,25 @@ function parseNullableInteger(value: string) {
     return trimmed ? Number.parseInt(trimmed, 10) : null
 }
 
+function parseRequiredNumber(value: string) {
+    const parsed = Number.parseFloat(value)
+    return Number.isFinite(parsed) ? parsed : null
+}
+
+function parseRequiredInteger(value: string) {
+    const parsed = Number.parseInt(value, 10)
+    return Number.isFinite(parsed) ? parsed : null
+}
+
+function normalizeSlug(value: string) {
+    return value
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+}
+
 export default function SubscriptionsPage() {
     const [plans, setPlans] = useState<Plan[]>([])
     const [loading, setLoading] = useState(true)
@@ -148,24 +167,40 @@ export default function SubscriptionsPage() {
         setError('')
 
         try {
+            const monthlyPrice = parseRequiredNumber(form.monthlyPrice)
+            const yearlyPrice = parseRequiredNumber(form.yearlyPrice)
+            const dataRetentionDays = parseRequiredInteger(form.dataRetentionDays)
+            const trialDays = parseRequiredInteger(form.trialDays)
+            const sortOrder = parseRequiredInteger(form.sortOrder)
+
+            if (monthlyPrice == null || yearlyPrice == null) {
+                setError('Monthly and yearly price must be valid numbers')
+                return
+            }
+
+            if (dataRetentionDays == null || trialDays == null || sortOrder == null) {
+                setError('Retention days, trial days, and sort order must be valid integers')
+                return
+            }
+
             const res = await fetch(editingPlanId ? `/api/admin/subscriptions/${editingPlanId}` : '/api/admin/subscriptions', {
                 method: editingPlanId ? 'PATCH' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: form.name.trim(),
-                    slug: form.slug.trim(),
+                    slug: normalizeSlug(form.slug),
                     description: form.description.trim(),
-                    priceMonthly: Number.parseFloat(form.monthlyPrice),
-                    priceYearly: Number.parseFloat(form.yearlyPrice),
+                    priceMonthly: monthlyPrice,
+                    priceYearly: yearlyPrice,
                     currency: form.currency.trim().toUpperCase(),
                     maxPosTerminals: parseNullableInteger(form.maxPosTerminals),
                     maxUsers: parseNullableInteger(form.maxUsers),
                     maxProducts: parseNullableInteger(form.maxProducts),
                     maxInvoicesMonth: parseNullableInteger(form.maxInvoicesMonth),
                     maxHsCodesAccess: parseNullableInteger(form.maxHsCodesAccess),
-                    dataRetentionDays: Number.parseInt(form.dataRetentionDays, 10),
-                    trialDays: Number.parseInt(form.trialDays, 10),
-                    sortOrder: Number.parseInt(form.sortOrder, 10),
+                    dataRetentionDays,
+                    trialDays,
+                    sortOrder,
                     isActive: form.isActive,
                     isPublic: form.isPublic,
                 }),
@@ -227,7 +262,7 @@ export default function SubscriptionsPage() {
                 </div>
                 <button
                     onClick={() => (showForm && !editingPlanId ? resetForm() : openCreateForm())}
-                    className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-(--accent-soft)"
+                    className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-[var(--accent-soft)]"
                 >
                     {showForm && !editingPlanId ? 'Cancel' : '+ New Plan'}
                 </button>
@@ -324,7 +359,7 @@ export default function SubscriptionsPage() {
                         <button
                             type="submit"
                             disabled={formLoading}
-                            className="rounded-full bg-accent px-6 py-2 text-sm font-medium text-primary transition-colors hover:bg-(--accent-soft) disabled:cursor-not-allowed disabled:opacity-70"
+                            className="rounded-full bg-accent px-6 py-2 text-sm font-medium text-primary transition-colors hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {submitLabel}
                         </button>

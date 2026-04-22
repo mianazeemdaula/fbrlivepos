@@ -51,7 +51,7 @@ function StatusBadge({ status }: { status: string }) {
     }
 
     return (
-        <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">
+        <span className="text-xs px-2 py-0.5 rounded-full border border-[rgba(200,164,90,0.25)] bg-[rgba(200,164,90,0.12)] text-[#f0d9a0]">
             PENDING
         </span>
     )
@@ -111,8 +111,8 @@ export function SandboxScenariosModal({ open = false, onClose, diConfig, onScena
         : 'fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm'
 
     const containerClassName = embedded
-        ? 'flex flex-col rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl'
-        : 'flex max-h-[90vh] w-full max-w-4xl flex-col rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl'
+        ? 'app-panel flex flex-col rounded-2xl border border-white/10 shadow-2xl'
+        : 'app-panel flex max-h-[90vh] w-full max-w-4xl flex-col rounded-2xl border border-white/10 shadow-2xl'
 
     async function runScenario(scenarioId: string) {
         setRunningScenarioId(scenarioId)
@@ -175,50 +175,50 @@ export function SandboxScenariosModal({ open = false, onClose, diConfig, onScena
     return (
         <div className={wrapperClassName}>
             <div className={containerClassName}>
-                <div className="flex items-start justify-between p-6 border-b border-slate-800">
+                <div className="flex items-start justify-between border-b border-white/10 p-6">
                     <div>
                         <h2 className="text-lg font-semibold text-white">Sandbox Test Scenarios</h2>
-                        <p className="text-sm text-slate-400 mt-0.5">
+                        <p className="mt-0.5 text-sm text-[#c1bcaf]">
                             Guide-backed buyer and item examples are preloaded for sandbox only.
                         </p>
                     </div>
                     {!embedded && onClose && (
                         <button
                             onClick={onClose}
-                            className="ml-4 mt-0.5 text-slate-400 hover:text-white"
+                            className="ml-4 mt-0.5 text-[#c1bcaf] transition-colors hover:text-white"
                         >
                             ✕
                         </button>
                     )}
                 </div>
 
-                <div className="px-6 py-4 border-b border-slate-800 space-y-3">
+                <div className="space-y-3 border-b border-white/10 px-6 py-4">
                     <div className="flex items-center justify-between gap-4">
                         <div>
-                            <p className="text-sm text-slate-300">
+                            <p className="text-sm text-[#e7e0cf]">
                                 {passed} / {total} required scenarios passed
                             </p>
-                            <p className="text-xs text-slate-500 mt-1">
+                            <p className="mt-1 text-xs text-[#8d897d]">
                                 Seller details come from the logged-in tenant configuration. Buyer details use the FBR guide test examples.
                             </p>
                         </div>
                         <button
                             onClick={runAllRequired}
                             disabled={runningAll || !!runningScenarioId || total === 0}
-                            className="bg-blue-600 hover:bg-blue-500 disabled:bg-blue-900 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            className="rounded-lg bg-[var(--primary-strong)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--primary)] disabled:cursor-not-allowed disabled:bg-[rgba(1,65,28,0.35)]"
                         >
                             {runningAll ? 'Submitting required scenarios...' : 'Run Remaining Required'}
                         </button>
                     </div>
-                    <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-2 overflow-hidden rounded-full bg-[rgba(240,217,160,0.12)]">
                         <div
-                            className="h-full bg-green-500 rounded-full transition-all duration-500"
+                            className="h-full rounded-full bg-[var(--accent)] transition-all duration-500"
                             style={{ width: `${progressPct}%` }}
                         />
                     </div>
                 </div>
 
-                <div className="overflow-y-auto flex-1 px-4 py-3 space-y-2">
+                <div className="flex-1 space-y-2 overflow-y-auto px-4 py-3">
                     {allScenarioIds.map((scenarioId) => {
                         const status = statuses[scenarioId] ?? 'PENDING'
                         const description = SCENARIO_DESCRIPTIONS[scenarioId] ?? scenarioId
@@ -231,17 +231,17 @@ export function SandboxScenariosModal({ open = false, onClose, diConfig, onScena
                         return (
                             <div
                                 key={scenarioId}
-                                className="bg-slate-800/60 border border-slate-700/50 rounded-xl overflow-hidden"
+                                className="overflow-hidden rounded-xl border border-white/10 bg-[rgba(29,44,34,0.72)]"
                             >
                                 <div className="flex items-center justify-between px-4 py-3 gap-3">
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <span className="font-mono text-xs text-slate-400 shrink-0 bg-slate-700 px-2 py-0.5 rounded">
+                                        <span className="shrink-0 rounded bg-[rgba(240,217,160,0.12)] px-2 py-0.5 font-mono text-xs text-[#f0d9a0]">
                                             {scenarioId}
                                         </span>
                                         <span
                                             className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full shrink-0 ${isRequired
                                                 ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/20'
-                                                : 'bg-slate-700 text-slate-400 border border-slate-600'
+                                                : 'border border-white/10 bg-[rgba(255,255,255,0.06)] text-[#c1bcaf]'
                                                 }`}
                                         >
                                             {isRequired ? 'Required' : 'Optional'}
@@ -256,14 +256,14 @@ export function SandboxScenariosModal({ open = false, onClose, diConfig, onScena
                                                     current === scenarioId ? null : scenarioId,
                                                 )
                                             }
-                                            className="text-xs px-3 py-1.5 rounded-lg font-medium bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors"
+                                            className="rounded-lg border border-white/10 bg-white/6 px-3 py-1.5 text-xs font-medium text-[#d8d0bf] transition-colors hover:bg-white/10 hover:text-white"
                                         >
                                             {isActive ? 'Hide' : 'Preview'}
                                         </button>
                                         <button
                                             onClick={() => runScenario(scenarioId)}
                                             disabled={runningAll || !!runningScenarioId}
-                                            className="text-xs px-3 py-1.5 rounded-lg font-medium bg-blue-600 hover:bg-blue-500 disabled:bg-blue-900 disabled:cursor-not-allowed text-white transition-colors"
+                                            className="rounded-lg bg-[var(--primary-strong)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[var(--primary)] disabled:cursor-not-allowed disabled:bg-[rgba(1,65,28,0.35)]"
                                         >
                                             {isRunning ? 'Submitting...' : status === 'PASSED' ? 'Re-run' : 'Run'}
                                         </button>
@@ -271,64 +271,64 @@ export function SandboxScenariosModal({ open = false, onClose, diConfig, onScena
                                 </div>
 
                                 {isActive && (
-                                    <div className="border-t border-slate-700 px-4 py-4 space-y-4">
+                                    <div className="space-y-4 border-t border-white/10 px-4 py-4">
                                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                            <div className="bg-slate-900/60 border border-slate-700 rounded-xl p-4">
-                                                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">
+                                            <div className="rounded-xl border border-white/10 bg-[rgba(10,18,13,0.4)] p-4">
+                                                <p className="mb-3 text-xs font-medium uppercase tracking-wider text-[#c1bcaf]">
                                                     Buyer Example
                                                 </p>
                                                 <div className="space-y-2 text-sm">
                                                     <div>
-                                                        <span className="text-slate-500">Name:</span>{' '}
+                                                        <span className="text-[#8d897d]">Name:</span>{' '}
                                                         <span className="text-white">{preview.buyer.businessName}</span>
                                                     </div>
                                                     <div>
-                                                        <span className="text-slate-500">NTN/CNIC:</span>{' '}
+                                                        <span className="text-[#8d897d]">NTN/CNIC:</span>{' '}
                                                         <span className="text-white font-mono">
                                                             {preview.buyer.ntcnic ?? 'Not provided'}
                                                         </span>
                                                     </div>
                                                     <div>
-                                                        <span className="text-slate-500">Registration:</span>{' '}
+                                                        <span className="text-[#8d897d]">Registration:</span>{' '}
                                                         <span className="text-white">{preview.buyer.registrationType}</span>
                                                     </div>
                                                     <div>
-                                                        <span className="text-slate-500">Province:</span>{' '}
+                                                        <span className="text-[#8d897d]">Province:</span>{' '}
                                                         <span className="text-white">{preview.buyer.province}</span>
                                                     </div>
                                                     <div>
-                                                        <span className="text-slate-500">Address:</span>{' '}
+                                                        <span className="text-[#8d897d]">Address:</span>{' '}
                                                         <span className="text-white">{preview.buyer.address}</span>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="bg-slate-900/60 border border-slate-700 rounded-xl p-4">
-                                                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">
+                                            <div className="rounded-xl border border-white/10 bg-[rgba(10,18,13,0.4)] p-4">
+                                                <p className="mb-3 text-xs font-medium uppercase tracking-wider text-[#c1bcaf]">
                                                     Scenario Items
                                                 </p>
                                                 <div className="space-y-3">
                                                     {preview.items.map((item, index) => (
-                                                        <div key={`${scenarioId}-${index}`} className="border border-slate-700 rounded-lg p-3 space-y-2">
+                                                        <div key={`${scenarioId}-${index}`} className="space-y-2 rounded-lg border border-white/10 p-3">
                                                             <div className="flex items-center justify-between gap-3">
                                                                 <span className="text-sm text-white truncate">
                                                                     {item.productDescription || 'No description'}
                                                                 </span>
-                                                                <span className="text-xs text-slate-400 font-mono">
+                                                                <span className="font-mono text-xs text-[#c1bcaf]">
                                                                     {item.hsCode}
                                                                 </span>
                                                             </div>
-                                                            <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
-                                                                <div>Rate: <span className="text-slate-200">{item.rate}</span></div>
-                                                                <div>Sale type: <span className="text-slate-200">{item.saleType}</span></div>
-                                                                <div>Quantity: <span className="text-slate-200">{item.quantity}</span></div>
-                                                                <div>UOM: <span className="text-slate-200">{item.uoM}</span></div>
-                                                                <div>Value excl. ST: <span className="text-slate-200">{item.valueSalesExcludingST}</span></div>
-                                                                <div>Sales tax: <span className="text-slate-200">{item.salesTaxApplicable}</span></div>
-                                                                <div>Total values: <span className="text-slate-200">{item.totalValues}</span></div>
-                                                                <div>Fixed value/MRP: <span className="text-slate-200">{item.fixedNotifiedValueOrRetailPrice}</span></div>
-                                                                <div>SRO schedule: <span className="text-slate-200">{item.sroScheduleNo || 'N/A'}</span></div>
-                                                                <div>SRO serial: <span className="text-slate-200">{item.sroItemSerialNo || 'N/A'}</span></div>
+                                                            <div className="grid grid-cols-2 gap-2 text-xs text-[#8d897d]">
+                                                                <div>Rate: <span className="text-[#e7e0cf]">{item.rate}</span></div>
+                                                                <div>Sale type: <span className="text-[#e7e0cf]">{item.saleType}</span></div>
+                                                                <div>Quantity: <span className="text-[#e7e0cf]">{item.quantity}</span></div>
+                                                                <div>UOM: <span className="text-[#e7e0cf]">{item.uoM}</span></div>
+                                                                <div>Value excl. ST: <span className="text-[#e7e0cf]">{item.valueSalesExcludingST}</span></div>
+                                                                <div>Sales tax: <span className="text-[#e7e0cf]">{item.salesTaxApplicable}</span></div>
+                                                                <div>Total values: <span className="text-[#e7e0cf]">{item.totalValues}</span></div>
+                                                                <div>Fixed value/MRP: <span className="text-[#e7e0cf]">{item.fixedNotifiedValueOrRetailPrice}</span></div>
+                                                                <div>SRO schedule: <span className="text-[#e7e0cf]">{item.sroScheduleNo || 'N/A'}</span></div>
+                                                                <div>SRO serial: <span className="text-[#e7e0cf]">{item.sroItemSerialNo || 'N/A'}</span></div>
                                                             </div>
                                                         </div>
                                                     ))}
@@ -374,7 +374,7 @@ export function SandboxScenariosModal({ open = false, onClose, diConfig, onScena
                                                                             </span>
                                                                         )}
                                                                         {error.action && (
-                                                                            <span className="block text-slate-400 pl-2">
+                                                                            <span className="block pl-2 text-[#c1bcaf]">
                                                                                 {error.action}
                                                                             </span>
                                                                         )}
@@ -393,20 +393,20 @@ export function SandboxScenariosModal({ open = false, onClose, diConfig, onScena
                     })}
 
                     {allScenarioIds.length === 0 && (
-                        <p className="text-sm text-slate-400 text-center py-8">
+                        <p className="py-8 text-center text-sm text-[#c1bcaf]">
                             No scenarios found for your business type. Update your business activity and sector in Settings.
                         </p>
                     )}
                 </div>
 
-                <div className="px-6 py-4 border-t border-slate-800 flex items-center justify-between gap-4">
-                    <p className="text-xs text-slate-500">
+                <div className="flex items-center justify-between gap-4 border-t border-white/10 px-6 py-4">
+                    <p className="text-xs text-[#8d897d]">
                         Sandbox examples are taken from the FBR guide and should be replaced with actual buyer data during real invoicing.
                     </p>
                     {!embedded && onClose && (
                         <button
                             onClick={onClose}
-                            className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm"
+                            className="rounded-lg border border-white/10 bg-white/6 px-4 py-2 text-sm text-white transition-colors hover:bg-white/10"
                         >
                             Close
                         </button>
