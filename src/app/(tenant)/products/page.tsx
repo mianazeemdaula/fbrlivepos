@@ -48,6 +48,11 @@ interface SROScheduleOption {
     description: string
 }
 
+interface SROItemOption {
+    id: number
+    description: string
+}
+
 interface ProductFormState {
     name: string
     sku: string
@@ -134,6 +139,25 @@ function requiresSRODetails(saleType: string, sroScheduleNo: string, sroItemSeri
     return normalizedSaleType.includes('sro') || Boolean(sroScheduleNo.trim()) || Boolean(sroItemSerialNo.trim())
 }
 
+function saleTypeNeedsSROReferenceData(saleType: string) {
+    const normalizedSaleType = saleType.trim().toLowerCase()
+
+    if (!normalizedSaleType) {
+        return false
+    }
+
+    return [
+        'reduced rate',
+        'zero-rate',
+        'exempt',
+        'sro',
+        'cng',
+        'mobile phones',
+        'non-adjustable supplies',
+        'electric vehicle',
+    ].some((token) => normalizedSaleType.includes(token))
+}
+
 function isNonDefaultAdvancedValue(value: string) {
     const trimmed = value.trim()
     return trimmed !== '' && trimmed !== '0' && trimmed !== '0.00'
@@ -160,6 +184,7 @@ export default function ProductsPage() {
     const [validUOMs, setValidUOMs] = useState<{ id: number; description: string }[]>([])
     const [uomsLoading, setUomsLoading] = useState(false)
     const [sroSchedules, setSroSchedules] = useState<SROScheduleOption[]>([])
+    const [sroItems, setSroItems] = useState<SROItemOption[]>([])
 
     const selectedHSCode = hsCodes.find((item) => item.id === form.hsCodeId)
     const hsPresetOptions = selectedHSCode ? getProductDIAutofillOptions(selectedHSCode.code) : []
@@ -329,6 +354,23 @@ export default function ProductsPage() {
         }
     }
 
+    async function loadSroItems(query = '') {
+        try {
+            const params = new URLSearchParams({ limit: '100' })
+            if (query.trim()) {
+                params.set('q', query.trim())
+            }
+
+            const res = await fetch(`/api/tenant/fbr/sro-items?${params.toString()}`)
+            if (res.ok) {
+                const data = await res.json()
+                setSroItems(data.data || [])
+            }
+        } catch {
+            // Ignore
+        }
+    }
+
     async function hydrateHSCodeSelection(code: string) {
         try {
             const res = await fetch(`/api/hs-codes/search?q=${encodeURIComponent(code)}`)
@@ -379,6 +421,7 @@ export default function ProductsPage() {
         if (!showForm) return
 
         loadSroSchedules()
+        loadSroItems()
     }, [showForm])
 
     function handleFormToggle() {
@@ -393,6 +436,7 @@ export default function ProductsPage() {
             setHsCodeSearch('')
             setHsCodeCategory('')
             setValidUOMs([])
+            setSroItems([])
             return
         }
 
@@ -441,6 +485,14 @@ export default function ProductsPage() {
             hydrateHSCodeSelection(product.hsCode)
         }
 
+        if (product.sroScheduleNo) {
+            void loadSroSchedules(product.sroScheduleNo)
+        }
+
+        if (product.sroItemSerialNo) {
+            void loadSroItems(product.sroItemSerialNo)
+        }
+
         fetchValidUOMs(product.hsCode)
     }
 
@@ -479,10 +531,20 @@ export default function ProductsPage() {
         const preset = hsPresetOptions.find((option) => option.diSaleType === diSaleType)
         if (!preset) {
             handleFormChange('diSaleType', diSaleType)
+            if (saleTypeNeedsSROReferenceData(diSaleType)) {
+                setShowAdvancedDI(true)
+                void loadSroSchedules()
+                void loadSroItems()
+            }
             return
         }
 
         applyHSPreset(selectedHSCode, preset)
+        if (saleTypeNeedsSROReferenceData(preset.diSaleType) || preset.sroScheduleNo || preset.sroItemSerialNo) {
+            setShowAdvancedDI(true)
+            void loadSroSchedules(preset.sroScheduleNo)
+            void loadSroItems(preset.sroItemSerialNo)
+        }
     }
 
     async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
@@ -735,7 +797,7 @@ export default function ProductsPage() {
                                         ))}
                                 </optgroup>
                             </select>
-                            <p className="mt-1 text-xs text-[#8d897d]">Selecting a type auto-fills the rate descriptor and SRO fields from the FBR guide when available.</p>
+                            <p className="mt-1 text-xs text-[#8d897d]">Selecting a type auto-fills the rate descriptor and loads SRO reference values from the cached PRAL database when that sale type needs them.</p>
                         </div>
                         <div className="col-span-2">
                             <label className="block text-xs text-[#c1bcaf] mb-1">PRAL Rate Descriptor</label>
@@ -776,7 +838,7 @@ export default function ProductsPage() {
 
                         {showAdvancedDI && (
                             <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-5">
-                                <div className="col-span-2 md:col-span-3">
+                                <div className="">
                                     <label className="block text-xs text-[#c1bcaf] mb-1">Rate Descriptor Override</label>
                                     <input value={form.diRate} onChange={(e) => handleFormChange('diRate', e.target.value)} className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]" placeholder="18% along with rupees 60 per kilogram" />
                                 </div>
@@ -811,11 +873,17 @@ export default function ProductsPage() {
                                             <option key={schedule.id} value={schedule.description}>{`${schedule.id} - ${schedule.description}`}</option>
                                         ))}
                                     </datalist>
-                                    <p className="mt-1 text-xs text-[#8d897d]">Required for Reduced Rate, Exempt, Zero-Rated, SRO.297, CNG, Mobile Phones and similar sale types.</p>
+                                    <p className="mt-1 text-xs text-[#8d897d]">Loaded from cached PRAL SRO schedule data in the database. Required for Reduced Rate, Exempt, Zero-Rated, SRO.297, CNG, Mobile Phones and similar sale types.</p>
                                 </div>
                                 <div className="col-span-2">
                                     <label className="block text-xs text-[#c1bcaf] mb-1">SRO Item Serial No.</label>
-                                    <input value={form.sroItemSerialNo} onChange={(e) => handleFormChange('sroItemSerialNo', e.target.value)} className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]" placeholder="e.g. 82, 12, Region-I" />
+                                    <input list="sro-item-options" value={form.sroItemSerialNo} onChange={(e) => { handleFormChange('sroItemSerialNo', e.target.value); loadSroItems(e.target.value) }} className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]" placeholder="e.g. 82, 12, Region-I" />
+                                    <datalist id="sro-item-options">
+                                        {sroItems.map((item) => (
+                                            <option key={item.id} value={item.description}>{`${item.id} - ${item.description}`}</option>
+                                        ))}
+                                    </datalist>
+                                    <p className="mt-1 text-xs text-[#8d897d]">Loaded from cached PRAL SRO item data in the database.</p>
                                 </div>
                             </div>
                         )}
