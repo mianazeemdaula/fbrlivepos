@@ -155,7 +155,7 @@ export default function FeatureFlagsPage() {
                                         onClick={() => handleToggle(flag.id, flag.isEnabled)}
                                         className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${flag.isEnabled
                                             ? 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/20'
-                                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-700'
+                                            : 'bg-white/10 text-[#c1bcaf] hover:bg-white/12 border border-white/10'
                                             }`}
                                     >
                                         {flag.isEnabled ? 'Enabled' : 'Disabled'}

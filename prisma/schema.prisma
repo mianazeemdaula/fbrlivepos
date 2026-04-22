@@ -100,6 +100,8 @@ model Tenant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  preferredIdType String? // 'NTN' | 'CNIC' — default buyer ID type for invoices (NTN = first 7 digits)
+
   diCredentials    DICredentials?
   sandboxScenarios SandboxScenario[]
   subscription     TenantSubscription?

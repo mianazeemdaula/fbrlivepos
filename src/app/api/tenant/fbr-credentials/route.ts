@@ -26,8 +26,55 @@ export async function POST(req: NextRequest) {
     const { tenant } = await getTenantFromSession()
     const body = DICredentialsSchema.parse(await req.json())
 
+    const existingCreds = await prisma.dICredentials.findUnique({
+        where: { tenantId: tenant.id },
+    })
+
+    const isSandboxLocked = existingCreds?.sandboxCompleted === true
+    if (isSandboxLocked) {
+        const businessFieldsChanged =
+            existingCreds.sellerNTN !== body.sellerNTN ||
+            (existingCreds.sellerCNIC ?? null) !== (body.sellerCNIC ?? null) ||
+            existingCreds.sellerBusinessName !== body.sellerBusinessName ||
+            existingCreds.sellerProvince !== body.sellerProvince ||
+            existingCreds.sellerAddress !== body.sellerAddress ||
+            existingCreds.businessActivity !== body.businessActivity ||
+            existingCreds.sector !== body.sector
+
+        if (businessFieldsChanged) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'Business setup is locked after sandbox scenarios are completed. Only token and environment updates are allowed.',
+                },
+                { status: 423 },
+            )
+        }
+    }
+
     const encryptedSandboxToken = body.sandboxToken ? encryptCredential(body.sandboxToken) : undefined
     const encryptedProductionToken = body.productionToken ? encryptCredential(body.productionToken) : undefined
+
+    const updateData = {
+        ...(isSandboxLocked ? {} : {
+            sellerNTN: body.sellerNTN,
+            sellerCNIC: body.sellerCNIC ?? null,
+            sellerBusinessName: body.sellerBusinessName,
+            sellerProvince: body.sellerProvince,
+            sellerAddress: body.sellerAddress,
+            businessActivity: body.businessActivity,
+            sector: body.sector,
+        }),
+        ...(encryptedSandboxToken ? { encryptedSandboxToken } : {}),
+        ...(encryptedProductionToken ? {
+            encryptedProductionToken,
+            isProductionReady: true,
+            environment: 'PRODUCTION' as const,
+            productionTokenIssuedAt: new Date(),
+        } : {}),
+        ...(body.environment ? { environment: body.environment } : {}),
+        verificationError: null,
+    }
 
     await prisma.dICredentials.upsert({
         where: { tenantId: tenant.id },
@@ -45,24 +92,7 @@ export async function POST(req: NextRequest) {
             environment: body.environment ?? 'SANDBOX',
             irisRegistrationStatus: encryptedSandboxToken ? 'SANDBOX_ACCESS' : 'PENDING',
         },
-        update: {
-            sellerNTN: body.sellerNTN,
-            sellerCNIC: body.sellerCNIC ?? null,
-            sellerBusinessName: body.sellerBusinessName,
-            sellerProvince: body.sellerProvince,
-            sellerAddress: body.sellerAddress,
-            businessActivity: body.businessActivity,
-            sector: body.sector,
-            ...(encryptedSandboxToken ? { encryptedSandboxToken } : {}),
-            ...(encryptedProductionToken ? {
-                encryptedProductionToken,
-                isProductionReady: true,
-                environment: 'PRODUCTION' as const,
-                productionTokenIssuedAt: new Date(),
-            } : {}),
-            ...(body.environment ? { environment: body.environment } : {}),
-            verificationError: null,
-        },
+        update: updateData,
     })
 
     return NextResponse.json({ success: true })

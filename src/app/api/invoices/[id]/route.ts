@@ -25,7 +25,20 @@ export async function GET(
                 },
                 user: { select: { name: true, email: true } },
                 terminal: { select: { name: true } },
-                tenant: { select: { name: true, address: true, logoUrl: true } },
+                tenant: {
+                    select: {
+                        name: true,
+                        address: true,
+                        logoUrl: true,
+                        diCredentials: {
+                            select: {
+                                sellerNTN: true,
+                                sellerBusinessName: true,
+                                sellerProvince: true,
+                            },
+                        },
+                    },
+                },
                 customer: {
                     select: {
                         id: true,
@@ -89,11 +102,23 @@ export async function GET(
             qrCodeData: invoice.qrCodeData,
             createdAt: invoice.createdAt,
             latestSubmissionLog,
+            seller: {
+                name: invoice.tenant.name,
+                address: invoice.tenant.address,
+                ntn: invoice.tenant.diCredentials?.sellerNTN ?? null,
+                businessName: invoice.tenant.diCredentials?.sellerBusinessName ?? null,
+                province: invoice.tenant.diCredentials?.sellerProvince ?? null,
+            },
             items: invoice.items.map((item) => ({
                 id: item.id,
+                hsCode: item.hsCode,
+                name: item.name,
                 quantity: Number(item.quantity),
+                unit: item.unit,
                 unitPrice: Number(item.unitPrice),
                 gstRate: Number(item.taxRate),
+                discount: item.discount != null ? Number(item.discount) : 0,
+                taxAmount: Number(item.taxAmount),
                 totalPrice: Number(item.lineTotal),
                 product: {
                     name: item.product.name,

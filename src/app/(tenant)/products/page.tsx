@@ -91,6 +91,34 @@ const initialFormState: ProductFormState = {
 const PRODUCT_LIMIT = 25
 const DEFAULT_PRAL_SALE_TYPE = 'Goods at standard rate (default)'
 
+// Complete list of all PRAL-supported sale types (from FBR DI Guide)
+const ALL_PRAL_SALE_TYPES = [
+    'Goods at standard rate (default)',
+    '3rd Schedule Goods',
+    'Goods at Reduced Rate',
+    'Goods at zero-rate',
+    'Exempt goods',
+    'Non-Adjustable Supplies',
+    'Goods as per SRO.297(|)/2023',
+    'Electric Vehicle',
+    'CNG Sales',
+    'Cement /Concrete Block',
+    'Potassium Chlorate',
+    'Steel melting and re-rolling',
+    'Ship breaking',
+    'Toll Manufacturing',
+    'Cotton ginners',
+    'Petroleum Products',
+    'Electricity Supply to Retailers',
+    'Gas to CNG stations',
+    'Mobile Phones',
+    'Processing/Conversion of Goods',
+    'Telecommunication services',
+    'Goods (FED in ST Mode)',
+    'Services (FED in ST Mode)',
+    'Services',
+]
+
 function numberOrUndefined(value: string) {
     const trimmed = value.trim()
     return trimmed === '' ? undefined : parseFloat(trimmed)
@@ -136,7 +164,6 @@ export default function ProductsPage() {
     const selectedHSCode = hsCodes.find((item) => item.id === form.hsCodeId)
     const hsPresetOptions = selectedHSCode ? getProductDIAutofillOptions(selectedHSCode.code) : []
     const shouldShowFixedValue = requiresFixedValue(form.diRate)
-    const shouldShowSRO = requiresSRODetails(form.diSaleType, form.sroScheduleNo, form.sroItemSerialNo)
 
     function buildFallbackPreset(hsCode: HSCodeOption | undefined): ProductDIAutofillPreset {
         const defaultRate = hsCode ? String(hsCode.defaultTaxRate) : '18'
@@ -183,9 +210,9 @@ export default function ProductsPage() {
             const nextForm = {
                 ...current,
                 hsCodeId: selected?.id || current.hsCodeId,
-                name: preserveIdentityFields && current.name.trim()
-                    ? current.name
-                    : (selected?.shortName || selected?.description || current.name),
+                // name: preserveIdentityFields && current.name.trim()
+                //     ? current.name
+                //     : (selected?.shortName || selected?.description || current.name),
                 description: preserveIdentityFields && current.description.trim()
                     ? current.description
                     : (selected?.description || current.description),
@@ -611,28 +638,28 @@ export default function ProductsPage() {
                     )}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
-                            <label className="block text-xs text-slate-400 mb-1">Name</label>
+                            <label className="block text-xs text-[#c1bcaf] mb-1">Name</label>
                             <input
                                 name="name"
                                 required
                                 value={form.name}
                                 onChange={(e) => handleFormChange('name', e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]"
                                 placeholder="Product name"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-slate-400 mb-1">SKU</label>
+                            <label className="block text-xs text-[#c1bcaf] mb-1">SKU</label>
                             <input
                                 name="sku"
                                 value={form.sku}
                                 onChange={(e) => handleFormChange('sku', e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]"
                                 placeholder="SKU-001"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-slate-400 mb-1">Price (PKR)</label>
+                            <label className="block text-xs text-[#c1bcaf] mb-1">Price (PKR)</label>
                             <input
                                 name="price"
                                 type="number"
@@ -641,11 +668,11 @@ export default function ProductsPage() {
                                 required
                                 value={form.price}
                                 onChange={(e) => handleFormChange('price', e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-slate-400 mb-1">Tax Rate (%)</label>
+                            <label className="block text-xs text-[#c1bcaf] mb-1">Tax Rate (%)</label>
                             <input
                                 name="taxRate"
                                 type="number"
@@ -655,17 +682,17 @@ export default function ProductsPage() {
                                 required
                                 value={form.taxRate}
                                 onChange={(e) => handleFormChange('taxRate', e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-slate-400 mb-1">Unit of Measure</label>
+                            <label className="block text-xs text-[#c1bcaf] mb-1">Unit of Measure</label>
                             {validUOMs.length > 0 ? (
                                 <select
                                     name="unit"
                                     value={form.unit}
                                     onChange={(e) => handleSharedUOMChange(e.target.value)}
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                                     required={!!form.hsCodeId}
                                 >
                                     <option value="">Select UOM</option>
@@ -677,61 +704,71 @@ export default function ProductsPage() {
                                 <input
                                     value={uomsLoading ? '' : (form.unit || form.diUOM)}
                                     readOnly
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300"
+                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-[#d8d0bf]"
                                     placeholder={uomsLoading ? 'Loading UOMs...' : 'Select an HS code first'}
                                 />
                             )}
-                            <p className="mt-1 text-xs text-slate-500">The local unit and PRAL UOM stay identical and are loaded from seeded PRAL reference data.</p>
+                            <p className="mt-1 text-xs text-[#8d897d]">The local unit and PRAL UOM stay identical and are loaded from PRAL reference data.</p>
                         </div>
                         <div>
-                            <label className="block text-xs text-slate-400 mb-1">PRAL Sale Type</label>
+                            <label className="block text-xs text-[#c1bcaf] mb-1">PRAL Sale Type</label>
                             <select
                                 value={form.diSaleType}
                                 onChange={(e) => handleSaleTypeChange(e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
-                                disabled={!form.hsCodeId}
+                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
                             >
-                                <option value="">{form.hsCodeId ? 'Select PRAL sale type' : 'Select an HS code first'}</option>
-                                {hsPresetOptions.length === 0 && form.hsCodeId && (
-                                    <option value={DEFAULT_PRAL_SALE_TYPE}>{DEFAULT_PRAL_SALE_TYPE}</option>
+                                <option value="">Select PRAL sale type</option>
+                                {/* HS-code-specific presets first (autofill UOM/rate) */}
+                                {hsPresetOptions.length > 0 && (
+                                    <optgroup label="Suggested for this HS code">
+                                        {hsPresetOptions.map((preset) => (
+                                            <option key={preset.diSaleType} value={preset.diSaleType}>{preset.diSaleType}</option>
+                                        ))}
+                                    </optgroup>
                                 )}
-                                {hsPresetOptions.map((preset) => (
-                                    <option key={preset.diSaleType} value={preset.diSaleType}>{preset.diSaleType}</option>
-                                ))}
+                                {/* All supported PRAL sale types */}
+                                <optgroup label="All PRAL Sale Types">
+                                    {ALL_PRAL_SALE_TYPES
+                                        .filter((t) => !hsPresetOptions.some((p) => p.diSaleType === t))
+                                        .map((t) => (
+                                            <option key={t} value={t}>{t}</option>
+                                        ))}
+                                </optgroup>
                             </select>
+                            <p className="mt-1 text-xs text-[#8d897d]">Selecting a type auto-fills the rate descriptor and SRO fields from the FBR guide when available.</p>
                         </div>
                         <div className="col-span-2">
-                            <label className="block text-xs text-slate-400 mb-1">PRAL Rate Descriptor</label>
+                            <label className="block text-xs text-[#c1bcaf] mb-1">PRAL Rate Descriptor</label>
                             <input
                                 value={form.diRate}
                                 readOnly
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300"
-                                placeholder="Choose an HS code and sale type"
+                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-[#d8d0bf]"
+                                placeholder="Autofilled from sale type — override in Advanced fields"
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="block text-xs text-slate-400 mb-1">Description (optional)</label>
+                            <label className="block text-xs text-[#c1bcaf] mb-1">Description (optional)</label>
                             <input
                                 name="description"
                                 value={form.description}
                                 onChange={(e) => handleFormChange('description', e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
+                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]"
                                 placeholder="Product description"
                             />
                         </div>
                     </div>
-                    <div className="mt-4 border-t border-slate-800 pt-4">
+                    <div className="mt-4 border-t border-white/10 pt-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
-                                <p className="text-xs font-semibold tracking-wide text-slate-400 uppercase">Advanced PRAL Overrides</p>
-                                <p className="mt-1 text-xs text-slate-500">
+                                <p className="text-xs font-semibold tracking-wide text-[#c1bcaf] uppercase">Advanced PRAL Overrides</p>
+                                <p className="mt-1 text-xs text-[#8d897d]">
                                     Use these only when FBR documentation for the selected HS code and sale type requires a non-default value.
                                 </p>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setShowAdvancedDI((current) => !current)}
-                                className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800"
+                                className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-[#d8d0bf] hover:bg-white/6"
                             >
                                 {showAdvancedDI ? 'Hide Advanced Fields' : 'Show Advanced Fields'}
                             </button>
@@ -740,55 +777,53 @@ export default function ProductsPage() {
                         {showAdvancedDI && (
                             <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-5">
                                 <div className="col-span-2 md:col-span-3">
-                                    <label className="block text-xs text-slate-400 mb-1">Rate Descriptor Override</label>
-                                    <input value={form.diRate} onChange={(e) => handleFormChange('diRate', e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" placeholder="18% along with rupees 60 per kilogram" />
+                                    <label className="block text-xs text-[#c1bcaf] mb-1">Rate Descriptor Override</label>
+                                    <input value={form.diRate} onChange={(e) => handleFormChange('diRate', e.target.value)} className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]" placeholder="18% along with rupees 60 per kilogram" />
                                 </div>
                                 {shouldShowFixedValue && (
                                     <div>
-                                        <label className="block text-xs text-slate-400 mb-1">Fixed Value / Retail Price</label>
-                                        <input value={form.diFixedNotifiedValueOrRetailPrice} onChange={(e) => handleFormChange('diFixedNotifiedValueOrRetailPrice', e.target.value)} type="number" step="0.01" min="0" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+                                        <label className="block text-xs text-[#c1bcaf] mb-1">Fixed Value / Retail Price</label>
+                                        <input value={form.diFixedNotifiedValueOrRetailPrice} onChange={(e) => handleFormChange('diFixedNotifiedValueOrRetailPrice', e.target.value)} type="number" step="0.01" min="0" className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" />
                                     </div>
                                 )}
                                 <div>
-                                    <label className="block text-xs text-slate-400 mb-1">ST Withheld at Source</label>
-                                    <input value={form.diSalesTaxWithheldAtSource} onChange={(e) => handleFormChange('diSalesTaxWithheldAtSource', e.target.value)} type="number" step="0.01" min="0" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+                                    <label className="block text-xs text-[#c1bcaf] mb-1">ST Withheld at Source</label>
+                                    <input value={form.diSalesTaxWithheldAtSource} onChange={(e) => handleFormChange('diSalesTaxWithheldAtSource', e.target.value)} type="number" step="0.01" min="0" className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-slate-400 mb-1">Extra Tax</label>
-                                    <input value={form.extraTax} onChange={(e) => handleFormChange('extraTax', e.target.value)} type="number" step="0.01" min="0" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+                                    <label className="block text-xs text-[#c1bcaf] mb-1">Extra Tax</label>
+                                    <input value={form.extraTax} onChange={(e) => handleFormChange('extraTax', e.target.value)} type="number" step="0.01" min="0" className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-slate-400 mb-1">Further Tax</label>
-                                    <input value={form.furtherTax} onChange={(e) => handleFormChange('furtherTax', e.target.value)} type="number" step="0.01" min="0" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+                                    <label className="block text-xs text-[#c1bcaf] mb-1">Further Tax</label>
+                                    <input value={form.furtherTax} onChange={(e) => handleFormChange('furtherTax', e.target.value)} type="number" step="0.01" min="0" className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-slate-400 mb-1">FED Payable</label>
-                                    <input value={form.fedPayable} onChange={(e) => handleFormChange('fedPayable', e.target.value)} type="number" step="0.01" min="0" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+                                    <label className="block text-xs text-[#c1bcaf] mb-1">FED Payable</label>
+                                    <input value={form.fedPayable} onChange={(e) => handleFormChange('fedPayable', e.target.value)} type="number" step="0.01" min="0" className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" />
                                 </div>
-                                {shouldShowSRO && (
-                                    <>
-                                        <div className="col-span-2 md:col-span-3">
-                                            <label className="block text-xs text-slate-400 mb-1">SRO Schedule</label>
-                                            <input list="sro-schedule-options" value={form.sroScheduleNo} onChange={(e) => { handleFormChange('sroScheduleNo', e.target.value); loadSroSchedules(e.target.value) }} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" placeholder="297(I)/2023-Table-I" />
-                                            <datalist id="sro-schedule-options">
-                                                {sroSchedules.map((schedule) => (
-                                                    <option key={schedule.id} value={schedule.description}>{`${schedule.id} - ${schedule.description}`}</option>
-                                                ))}
-                                            </datalist>
-                                        </div>
-                                        <div className="col-span-2">
-                                            <label className="block text-xs text-slate-400 mb-1">SRO Item Serial</label>
-                                            <input value={form.sroItemSerialNo} onChange={(e) => handleFormChange('sroItemSerialNo', e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" placeholder="12" />
-                                        </div>
-                                    </>
-                                )}
+                                {/* SRO fields — shown for sale types that require schedule reference */}
+                                <div className="col-span-2 md:col-span-3">
+                                    <label className="block text-xs text-[#c1bcaf] mb-1">SRO Schedule No.</label>
+                                    <input list="sro-schedule-options" value={form.sroScheduleNo} onChange={(e) => { handleFormChange('sroScheduleNo', e.target.value); loadSroSchedules(e.target.value) }} className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]" placeholder="e.g. EIGHTH SCHEDULE Table 1, 297(I)/2023-Table-I" />
+                                    <datalist id="sro-schedule-options">
+                                        {sroSchedules.map((schedule) => (
+                                            <option key={schedule.id} value={schedule.description}>{`${schedule.id} - ${schedule.description}`}</option>
+                                        ))}
+                                    </datalist>
+                                    <p className="mt-1 text-xs text-[#8d897d]">Required for Reduced Rate, Exempt, Zero-Rated, SRO.297, CNG, Mobile Phones and similar sale types.</p>
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="block text-xs text-[#c1bcaf] mb-1">SRO Item Serial No.</label>
+                                    <input value={form.sroItemSerialNo} onChange={(e) => handleFormChange('sroItemSerialNo', e.target.value)} className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]" placeholder="e.g. 82, 12, Region-I" />
+                                </div>
                             </div>
                         )}
                     </div>
                     <button
                         type="submit"
                         disabled={formLoading}
-                        className="mt-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white px-6 py-2 rounded-lg text-sm font-medium"
+                        className="mt-4 rounded-full bg-accent px-6 py-2 text-sm font-medium text-primary hover:bg-(--accent-soft) disabled:opacity-70"
                     >
                         {formLoading ? (editingProductId ? 'Saving...' : 'Creating...') : (editingProductId ? 'Save Product' : 'Create Product')}
                     </button>
@@ -804,49 +839,49 @@ export default function ProductsPage() {
                         setSearch(e.target.value)
                         setPage(1)
                     }}
-                    className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500"
+                    className="w-full max-w-md rounded-xl border border-white/10 bg-white/6 px-4 py-2 text-sm text-white placeholder:text-[#8d897d]"
                 />
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div className="app-panel rounded-xl overflow-hidden">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-slate-800">
-                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Name</th>
-                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">SKU</th>
-                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">HS Code</th>
-                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Price</th>
-                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Tax %</th>
-                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Unit</th>
-                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">DI Ready</th>
-                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Status</th>
-                            <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Actions</th>
+                        <tr className="border-b border-white/10">
+                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">Name</th>
+                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">SKU</th>
+                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">HS Code</th>
+                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">Price</th>
+                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">Tax %</th>
+                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">Unit</th>
+                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">DI Ready</th>
+                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">Status</th>
+                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             Array.from({ length: 3 }).map((_, i) => (
-                                <tr key={i} className="border-b border-slate-800/50">
+                                <tr key={i} className="border-b border-white/8">
                                     <td colSpan={9} className="px-4 py-3">
-                                        <div className="h-4 bg-slate-800 rounded animate-pulse" />
+                                        <div className="h-4 bg-white/10 rounded animate-pulse" />
                                     </td>
                                 </tr>
                             ))
                         ) : products.length === 0 ? (
                             <tr>
-                                <td colSpan={9} className="px-4 py-12 text-center text-slate-500">
+                                <td colSpan={9} className="px-4 py-12 text-center text-[#8d897d]">
                                     No products. Add your first product above.
                                 </td>
                             </tr>
                         ) : (
                             products.map((p) => (
-                                <tr key={p.id} className="border-b border-slate-800/50 hover:bg-slate-800/30">
+                                <tr key={p.id} className="border-b border-white/8 hover:bg-white/4">
                                     <td className="px-4 py-3 text-sm text-white">{p.name}</td>
-                                    <td className="px-4 py-3 text-sm text-slate-400 font-mono">{p.sku || '—'}</td>
-                                    <td className="px-4 py-3 text-sm text-slate-400 font-mono">{p.hsCode}</td>
+                                    <td className="px-4 py-3 text-sm text-[#c1bcaf] font-mono">{p.sku || '—'}</td>
+                                    <td className="px-4 py-3 text-sm text-[#c1bcaf] font-mono">{p.hsCode}</td>
                                     <td className="px-4 py-3 text-sm text-white">PKR {Number(p.price).toLocaleString()}</td>
-                                    <td className="px-4 py-3 text-sm text-slate-400">{Number(p.taxRate)}%</td>
-                                    <td className="px-4 py-3 text-sm text-slate-400">{p.unit}</td>
+                                    <td className="px-4 py-3 text-sm text-[#c1bcaf]">{Number(p.taxRate)}%</td>
+                                    <td className="px-4 py-3 text-sm text-[#c1bcaf]">{p.unit}</td>
                                     <td className="px-4 py-3 align-top">
                                         <span className={`text-xs px-2 py-0.5 rounded-full ${p.diReady ? 'bg-green-500/10 text-green-400' : 'bg-amber-500/10 text-amber-300'}`}>
                                             {p.diReady ? 'Ready' : 'Needs PRAL fields'}
@@ -872,7 +907,7 @@ export default function ProductsPage() {
                                     <td className="px-4 py-3">
                                         <button
                                             onClick={() => handleEditProduct(p)}
-                                            className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200"
+                                            className="text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-white/6 text-[#d8d0bf] hover:bg-white/12"
                                         >
                                             Edit
                                         </button>

@@ -154,3 +154,45 @@ a {
   color: var(--accent-soft);
 }
 
+/* ── App-shell form elements ─────────────────────────────────────────────
+   Select / option elements rendered inside .app-shell or .app-panel must
+   always show dark backgrounds and light text regardless of OS/browser
+   light-mode defaults.  This also fixes the white-bg + invisible text bug
+   that appears in production builds on Chromium (Windows / macOS).
+   ─────────────────────────────────────────────────────────────────────── */
+.app-shell select,
+.app-panel select,
+.app-panel-soft select {
+  background-color: rgba(19, 32, 24, 0.92);
+  color: #f0ece3;
+  color-scheme: dark;
+}
+
+.app-shell select option,
+.app-panel select option,
+.app-panel-soft select option {
+  background-color: #0e1d17;
+  color: #f0ece3;
+}
+
+/* Generic dark-input utility used on POS, Products, Settings forms */
+select.app-input,
+input.app-input,
+textarea.app-input {
+  background: rgba(19, 32, 24, 0.72);
+  border: 1px solid rgba(240, 217, 160, 0.12);
+  color: #f0ece3;
+  color-scheme: dark;
+}
+
+select.app-input option {
+  background-color: #0e1d17;
+  color: #f0ece3;
+}
+
+/* Tailwind bg-white/6 selects inside dark shells — force dark rendering */
+.app-shell select[class*="bg-white"],
+.app-shell input[class*="bg-white"] {
+  color-scheme: dark;
+}
+

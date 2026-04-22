@@ -193,7 +193,7 @@ export default function HSCodesPage() {
                                     key={p}
                                     onClick={() => setPage(p)}
                                     className={`px-3 py-1 rounded border transition-colors ${p === page
-                                        ? 'border-[var(--accent)] bg-[rgba(200,164,90,0.18)] text-[#f0d9a0]'
+                                        ? 'border-accent bg-[rgba(200,164,90,0.18)] text-[#f0d9a0]'
                                         : 'border-white/10 hover:bg-white/6'
                                         }`}
                                 >

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getTenantFromSession } from '@/lib/tenant/context'
 import { prisma } from '@/lib/db/prisma'
-import { decryptCredential } from '@/lib/crypto/credentials'
-
-const FBR_BASE = 'https://gw.fbr.gov.pk'
+import { getDIClientForTenant } from '@/lib/di/client'
+import { buildSandboxScenarioPayload } from '@/lib/di/scenario-catalog'
+import { getSellerIdentity } from '@/lib/di/seller'
 
 export async function POST(req: NextRequest) {
     const { tenant } = await getTenantFromSession()
@@ -31,23 +31,16 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        const token = decryptCredential(tokenField);
-        // Test the token by calling the provinces reference API
+        const diClient = await getDIClientForTenant(tenant.id)
+        const probePayload = buildSandboxScenarioPayload('SN001', getSellerIdentity(creds, tenant))
+
+        // Verify against the actual DI validate endpoint used by sandbox submissions.
         const start = Date.now()
-        const res = await fetch(`${FBR_BASE}/pdi/v1/provinces`, {
-            headers: { 'Authorization': `Bearer ${token}` },
-            signal: AbortSignal.timeout(10_000),
-        })
+        await diClient.validateInvoice(probePayload)
 
         const latencyMs = Date.now() - start
 
-        if (res.status === 401) {
-            throw new Error('Token is unauthorized. Please check your IRIS security token.')
-        }
-
-        if (!res.ok) {
-            throw new Error(`PRAL DI endpoint returned ${res.status}`)
-        }
+        diClient.resetCircuit()
 
         await prisma.dICredentials.update({
             where: { tenantId: tenant.id },

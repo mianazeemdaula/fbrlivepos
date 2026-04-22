@@ -147,7 +147,7 @@ export default function HSCodesPage() {
                     </label>
                     <button
                         onClick={() => setShowForm(!showForm)}
-                        className="flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)]"
+                        className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-(--accent-soft)"
                     >
                         {showForm ? 'Cancel' : '+ Add HS Code'}
                     </button>
@@ -206,7 +206,7 @@ export default function HSCodesPage() {
                         <button
                             type="submit"
                             disabled={formLoading}
-                            className="rounded-full bg-[var(--accent)] px-6 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
+                            className="rounded-full bg-accent px-6 py-2 text-sm font-medium text-primary transition-colors hover:bg-(--accent-soft) disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {formLoading ? 'Creating...' : 'Create HS Code'}
                         </button>
@@ -230,38 +230,38 @@ export default function HSCodesPage() {
             <div className="app-panel overflow-hidden rounded-2xl">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-slate-800">
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Code</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Description</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Tax %</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Unit</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Category</th>
-                            <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3">Status</th>
+                        <tr className="border-b border-white/10">
+                            <th className="text-left text-xs font-semibold text-[#8d897d] uppercase tracking-wider px-4 py-3">Code</th>
+                            <th className="text-left text-xs font-semibold text-[#8d897d] uppercase tracking-wider px-4 py-3">Description</th>
+                            <th className="text-left text-xs font-semibold text-[#8d897d] uppercase tracking-wider px-4 py-3">Tax %</th>
+                            <th className="text-left text-xs font-semibold text-[#8d897d] uppercase tracking-wider px-4 py-3">Unit</th>
+                            <th className="text-left text-xs font-semibold text-[#8d897d] uppercase tracking-wider px-4 py-3">Category</th>
+                            <th className="text-left text-xs font-semibold text-[#8d897d] uppercase tracking-wider px-4 py-3">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             Array.from({ length: 5 }).map((_, i) => (
-                                <tr key={i} className="border-b border-slate-800/50">
+                                <tr key={i} className="border-b border-white/8">
                                     <td colSpan={6} className="px-4 py-3">
-                                        <div className="h-4 bg-slate-800 rounded animate-pulse" />
+                                        <div className="h-4 bg-white/10 rounded animate-pulse" />
                                     </td>
                                 </tr>
                             ))
                         ) : codes.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">
+                                <td colSpan={6} className="px-4 py-12 text-center text-[#8d897d] text-sm">
                                     No HS codes found. Add codes manually or import a CSV.
                                 </td>
                             </tr>
                         ) : (
                             codes.map((code) => (
-                                <tr key={code.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                                <tr key={code.id} className="border-b border-white/8 hover:bg-white/10/30 transition-colors">
                                     <td className="px-4 py-3 text-sm text-white font-mono">{code.code}</td>
-                                    <td className="px-4 py-3 text-sm text-slate-300">{code.description}</td>
-                                    <td className="px-4 py-3 text-sm text-slate-400">{code.defaultTaxRate}%</td>
-                                    <td className="px-4 py-3 text-sm text-slate-400">{code.unit}</td>
-                                    <td className="px-4 py-3 text-sm text-slate-400">{code.category || '—'}</td>
+                                    <td className="px-4 py-3 text-sm text-[#d8d0bf]">{code.description}</td>
+                                    <td className="px-4 py-3 text-sm text-[#c1bcaf]">{code.defaultTaxRate}%</td>
+                                    <td className="px-4 py-3 text-sm text-[#c1bcaf]">{code.unit}</td>
+                                    <td className="px-4 py-3 text-sm text-[#c1bcaf]">{code.category || '—'}</td>
                                     <td className="px-4 py-3">
                                         <span
                                             className={`text-xs px-2 py-0.5 rounded-full font-medium ${code.isFBRActive

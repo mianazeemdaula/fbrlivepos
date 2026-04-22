@@ -242,7 +242,7 @@ export default function InvoiceDetailPage() {
 
                     <div>
                         <p className="mb-2 text-xs text-[#8d897d]">Per-item DI Statuses</p>
-                        <pre className="max-h-64 overflow-auto rounded-lg border border-white/10 bg-[#0b1510] p-3 text-xs text-[#d8d0bf] whitespace-pre-wrap break-words">
+                        <pre className="max-h-64 overflow-auto rounded-lg border border-white/10 bg-[#0b1510] p-3 text-xs text-[#d8d0bf] whitespace-pre-wrap wrap-break-word">
                             {formatJson(invoice.diItemStatuses)}
                         </pre>
                     </div>
@@ -254,7 +254,7 @@ export default function InvoiceDetailPage() {
                                 {invoice.latestSubmissionLog.responseCode ? ` (${invoice.latestSubmissionLog.responseCode})` : ''}
                                 {invoice.latestSubmissionLog.durationMs != null ? ` · ${invoice.latestSubmissionLog.durationMs} ms` : ''}
                             </p>
-                            <pre className="max-h-80 overflow-auto rounded-lg border border-white/10 bg-[#0b1510] p-3 text-xs text-[#d8d0bf] whitespace-pre-wrap break-words">
+                            <pre className="max-h-80 overflow-auto rounded-lg border border-white/10 bg-[#0b1510] p-3 text-xs text-[#d8d0bf] whitespace-pre-wrap wrap-break-word">
                                 {formatJson(invoice.latestSubmissionLog.responseBody)}
                             </pre>
                         </div>

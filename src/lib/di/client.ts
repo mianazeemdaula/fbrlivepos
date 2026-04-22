@@ -136,6 +136,7 @@ export async function getDIClientForTenant(tenantId: string) {
         },
 
         getCircuitState: () => breaker.getState(),
+        resetCircuit: () => breaker.reset(),
     }
 }
 

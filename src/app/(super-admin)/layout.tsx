@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
+import { useState, useEffect } from 'react'
 
 const navItems = [
     {
@@ -88,13 +89,17 @@ const navItems = [
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
     const { data: session } = useSession()
+    const [sidebarOpen, setSidebarOpen] = useState(false)
 
-    return (
-        <div className="app-shell flex min-h-screen">
-            {/* Sidebar */}
-            <aside className="app-sidebar flex w-64 shrink-0 flex-col">
-                {/* Brand */}
-                <div className="border-b border-white/10 px-5 py-5">
+    useEffect(() => {
+        setSidebarOpen(false)
+    }, [pathname])
+
+    const sidebarContent = (
+        <aside className="app-sidebar flex h-full w-64 shrink-0 flex-col">
+            {/* Brand */}
+            <div className="border-b border-white/10 px-5 py-5">
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5 mb-0.5">
                         <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-primary">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -104,70 +109,113 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                         </div>
                         <span className="brand-heading text-sm font-semibold text-white">Platform Admin</span>
                     </div>
-                    <p className="truncate pl-10 text-xs text-[#c1bcaf]">{session?.user?.email}</p>
-                </div>
-
-                {/* Nav */}
-                <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
-                    <p className="px-2 pb-1.5 pt-1 text-xs font-semibold uppercase tracking-widest text-[#8d897d]">Management</p>
-                    {navItems.slice(0, 4).map((item) => {
-                        const isActive =
-                            item.href === '/super-admin'
-                                ? pathname === '/super-admin'
-                                : pathname.startsWith(item.href)
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive
-                                    ? 'app-nav-active'
-                                    : 'text-[#c1bcaf] hover:bg-white/6 hover:text-white'
-                                    }`}
-                            >
-                                <span className={isActive ? 'text-[#f0d9a0]' : 'text-[#8d897d]'}>{item.icon}</span>
-                                {item.label}
-                            </Link>
-                        )
-                    })}
-
-                    <p className="px-2 pb-1.5 pt-3 text-xs font-semibold uppercase tracking-widest text-[#8d897d]">Platform</p>
-                    {navItems.slice(4).map((item) => {
-                        const isActive = pathname.startsWith(item.href)
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive
-                                    ? 'app-nav-active'
-                                    : 'text-[#c1bcaf] hover:bg-white/6 hover:text-white'
-                                    }`}
-                            >
-                                <span className={isActive ? 'text-[#f0d9a0]' : 'text-[#8d897d]'}>{item.icon}</span>
-                                {item.label}
-                            </Link>
-                        )
-                    })}
-                </nav>
-
-                {/* Footer */}
-                <div className="space-y-0.5 border-t border-white/10 px-3 py-3">
                     <button
-                        onClick={() => signOut({ callbackUrl: '/login' })}
-                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#c1bcaf] transition-all hover:bg-white/6 hover:text-[#f0d9a0]"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-[#c1bcaf] hover:bg-white/10 lg:hidden"
+                        onClick={() => setSidebarOpen(false)}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                            <polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
-                        </svg>
-                        Sign Out
+                        ✕
                     </button>
                 </div>
-            </aside>
+                <p className="truncate pl-10 text-xs text-[#c1bcaf]">{session?.user?.email}</p>
+            </div>
+
+            {/* Nav */}
+            <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
+                <p className="px-2 pb-1.5 pt-1 text-xs font-semibold uppercase tracking-widest text-[#8d897d]">Management</p>
+                {navItems.slice(0, 4).map((item) => {
+                    const isActive =
+                        item.href === '/super-admin'
+                            ? pathname === '/super-admin'
+                            : pathname.startsWith(item.href)
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive
+                                ? 'app-nav-active'
+                                : 'text-[#c1bcaf] hover:bg-white/6 hover:text-white'
+                                }`}
+                        >
+                            <span className={isActive ? 'text-[#f0d9a0]' : 'text-[#8d897d]'}>{item.icon}</span>
+                            {item.label}
+                        </Link>
+                    )
+                })}
+
+                <p className="px-2 pb-1.5 pt-3 text-xs font-semibold uppercase tracking-widest text-[#8d897d]">Platform</p>
+                {navItems.slice(4).map((item) => {
+                    const isActive = pathname.startsWith(item.href)
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive
+                                ? 'app-nav-active'
+                                : 'text-[#c1bcaf] hover:bg-white/6 hover:text-white'
+                                }`}
+                        >
+                            <span className={isActive ? 'text-[#f0d9a0]' : 'text-[#8d897d]'}>{item.icon}</span>
+                            {item.label}
+                        </Link>
+                    )
+                })}
+            </nav>
+
+            {/* Footer */}
+            <div className="space-y-0.5 border-t border-white/10 px-3 py-3">
+                <button
+                    onClick={() => signOut({ callbackUrl: '/login' })}
+                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#c1bcaf] transition-all hover:bg-white/6 hover:text-[#f0d9a0]"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    Sign Out
+                </button>
+            </div>
+        </aside>
+    )
+
+    return (
+        <div className="app-shell flex h-screen overflow-hidden">
+            {/* Desktop sidebar */}
+            <div className="hidden lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:sticky lg:top-0">
+                {sidebarContent}
+            </div>
+
+            {/* Mobile sidebar overlay */}
+            {sidebarOpen && (
+                <div className="fixed inset-0 z-40 lg:hidden">
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setSidebarOpen(false)}
+                    />
+                    <div className="absolute left-0 top-0 h-full w-64">
+                        {sidebarContent}
+                    </div>
+                </div>
+            )}
 
             {/* Main content */}
-            <main className="min-w-0 flex-1 overflow-auto bg-[radial-gradient(circle_at_top_right,rgba(200,164,90,0.08),transparent_24%)]">
-                {children}
-            </main>
+            <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                {/* Mobile header */}
+                <div className="flex h-14 items-center gap-3 border-b border-white/10 bg-[rgba(10,18,13,0.95)] px-4 lg:hidden">
+                    <button
+                        onClick={() => setSidebarOpen(true)}
+                        className="flex h-9 w-9 items-center justify-center rounded-lg text-[#c1bcaf] hover:bg-white/10"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+                        </svg>
+                    </button>
+                    <span className="brand-heading text-lg font-bold text-[#f6f0e4]">Platform Admin</span>
+                </div>
+
+                <main className="min-w-0 flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top_right,rgba(200,164,90,0.08),transparent_24%)]">
+                    {children}
+                </main>
+            </div>
         </div>
     )
 }

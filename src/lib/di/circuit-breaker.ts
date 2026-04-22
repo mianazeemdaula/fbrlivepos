@@ -5,9 +5,10 @@ class TenantDICircuitBreaker {
     private failureCount = 0
     private successCount = 0
     private nextAttempt = 0
-    private readonly FAILURE_THRESHOLD = 3
+    private readonly FAILURE_THRESHOLD = 5
     private readonly SUCCESS_THRESHOLD = 2
-    private readonly OPEN_TIMEOUT_MS = 30_000
+    // Shorter open timeout so a transient failure on cold deploy recovers quickly
+    private readonly OPEN_TIMEOUT_MS = 10_000
 
     async execute<T>(fn: () => Promise<T>): Promise<T> {
         if (this.state === 'OPEN') {
@@ -42,6 +43,11 @@ class TenantDICircuitBreaker {
     }
 
     getState() {
+        // Auto-expire OPEN state so callers see HALF_OPEN after timeout
+        if (this.state === 'OPEN' && Date.now() >= this.nextAttempt) {
+            this.state = 'HALF_OPEN'
+            this.successCount = 0
+        }
         return {
             state: this.state,
             failureCount: this.failureCount,
@@ -52,6 +58,8 @@ class TenantDICircuitBreaker {
     reset() {
         this.state = 'CLOSED'
         this.failureCount = 0
+        this.successCount = 0
+        this.nextAttempt = 0
     }
 }
 
@@ -70,6 +78,10 @@ export class DICircuitBreakerRegistry {
             this.breakers.set(tenantId, new TenantDICircuitBreaker())
         }
         return this.breakers.get(tenantId)!
+    }
+
+    reset(tenantId: string) {
+        this.breakers.get(tenantId)?.reset()
     }
 
     getAllStates() {

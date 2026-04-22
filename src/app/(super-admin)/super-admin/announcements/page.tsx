@@ -245,21 +245,21 @@ export default function AnnouncementsPage() {
                     {Array.from({ length: 3 }).map((_, i) => (
                         <div key={i} className="app-panel rounded-2xl p-5 animate-pulse">
                             <div className="flex gap-3 mb-3">
-                                <div className="h-5 w-20 bg-slate-800 rounded-full" />
-                                <div className="h-5 w-40 bg-slate-800 rounded" />
+                                <div className="h-5 w-20 bg-white/10 rounded-full" />
+                                <div className="h-5 w-40 bg-white/10 rounded" />
                             </div>
-                            <div className="h-4 bg-slate-800 rounded w-3/4 mb-2" />
-                            <div className="h-3 bg-slate-800 rounded w-1/2" />
+                            <div className="h-4 bg-white/10 rounded w-3/4 mb-2" />
+                            <div className="h-3 bg-white/10 rounded w-1/2" />
                         </div>
                     ))}
                 </div>
             ) : announcements.length === 0 ? (
                 <div className="app-panel rounded-2xl p-12 text-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-slate-700 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-[#8d897d] mb-4">
                         <path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0" />
                     </svg>
-                    <p className="text-slate-500 text-sm">No announcements yet.</p>
-                    <p className="text-slate-600 text-xs mt-1">Create one to notify your tenants.</p>
+                    <p className="text-[#8d897d] text-sm">No announcements yet.</p>
+                    <p className="text-[#8d897d] text-xs mt-1">Create one to notify your tenants.</p>
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -278,15 +278,15 @@ export default function AnnouncementsPage() {
                                             {active ? (
                                                 <span className="text-xs text-emerald-400 font-medium">● Active</span>
                                             ) : (
-                                                <span className="text-xs text-slate-600 font-medium">Inactive</span>
+                                                <span className="text-xs text-[#8d897d] font-medium">Inactive</span>
                                             )}
                                             {!a.isDismissable && (
-                                                <span className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">Persistent</span>
+                                                <span className="text-xs text-[#8d897d] bg-white/10 px-2 py-0.5 rounded-full">Persistent</span>
                                             )}
                                         </div>
                                         <h3 className="text-sm font-semibold text-white mb-1">{a.title}</h3>
-                                        <p className="text-xs text-slate-400 leading-relaxed">{a.body}</p>
-                                        <div className="flex items-center gap-3 mt-3 text-xs text-slate-600">
+                                        <p className="text-xs text-[#c1bcaf] leading-relaxed">{a.body}</p>
+                                        <div className="flex items-center gap-3 mt-3 text-xs text-[#8d897d]">
                                             <span>Starts {new Date(a.startsAt).toLocaleString()}</span>
                                             {a.endsAt && <span>· Ends {new Date(a.endsAt).toLocaleString()}</span>}
                                         </div>
@@ -294,7 +294,7 @@ export default function AnnouncementsPage() {
                                     <button
                                         onClick={() => handleDelete(a.id)}
                                         disabled={deleteId === a.id}
-                                        className="shrink-0 p-1.5 rounded-lg text-slate-600 hover:text-red-400 hover:bg-slate-800 transition-colors disabled:opacity-50"
+                                        className="shrink-0 p-1.5 rounded-lg text-[#8d897d] hover:text-red-400 hover:bg-white/10 transition-colors disabled:opacity-50"
                                         title="Delete announcement"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -227,7 +227,7 @@ export default function SubscriptionsPage() {
                 </div>
                 <button
                     onClick={() => (showForm && !editingPlanId ? resetForm() : openCreateForm())}
-                    className="flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)]"
+                    className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-(--accent-soft)"
                 >
                     {showForm && !editingPlanId ? 'Cancel' : '+ New Plan'}
                 </button>
@@ -312,11 +312,11 @@ export default function SubscriptionsPage() {
                         </div>
                         <label className="flex items-center justify-between rounded-xl border border-white/10 bg-white/6 px-3 py-2.5 text-sm text-[#d8d0bf]">
                             <span>Plan is active</span>
-                            <input checked={form.isActive} onChange={(e) => setForm((current) => ({ ...current, isActive: e.target.checked }))} type="checkbox" className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-indigo-500 focus:ring-indigo-500/50" />
+                            <input checked={form.isActive} onChange={(e) => setForm((current) => ({ ...current, isActive: e.target.checked }))} type="checkbox" className="h-4 w-4 rounded border-white/10 bg-[rgba(10,18,13,0.96)] text-indigo-500 focus:ring-indigo-500/50" />
                         </label>
                         <label className="flex items-center justify-between rounded-xl border border-white/10 bg-white/6 px-3 py-2.5 text-sm text-[#d8d0bf]">
                             <span>Visible on public pricing</span>
-                            <input checked={form.isPublic} onChange={(e) => setForm((current) => ({ ...current, isPublic: e.target.checked }))} type="checkbox" className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-indigo-500 focus:ring-indigo-500/50" />
+                            <input checked={form.isPublic} onChange={(e) => setForm((current) => ({ ...current, isPublic: e.target.checked }))} type="checkbox" className="h-4 w-4 rounded border-white/10 bg-[rgba(10,18,13,0.96)] text-indigo-500 focus:ring-indigo-500/50" />
                         </label>
                     </div>
                     <div className="flex justify-end gap-3">
@@ -324,7 +324,7 @@ export default function SubscriptionsPage() {
                         <button
                             type="submit"
                             disabled={formLoading}
-                            className="rounded-full bg-[var(--accent)] px-6 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
+                            className="rounded-full bg-accent px-6 py-2 text-sm font-medium text-primary transition-colors hover:bg-(--accent-soft) disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {submitLabel}
                         </button>
