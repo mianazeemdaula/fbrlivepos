@@ -42,6 +42,7 @@ interface InvoiceDetail {
         attempt: number
         responseCode: number | null
         responseBody: unknown
+        requestBody: unknown
         error: string | null
         durationMs: number | null
         createdAt: string
@@ -95,6 +96,7 @@ export default function InvoiceDetailPage() {
                 const res = await fetch(`/api/invoices/${params.id}`)
                 if (res.ok) {
                     const data = await res.json()
+                    console.log(data);
                     setInvoice(data.invoice)
                 }
             } catch {
@@ -247,6 +249,18 @@ export default function InvoiceDetailPage() {
                         </pre>
                     </div>
 
+                    {invoice.latestSubmissionLog?.requestBody != null && (
+                        <div>
+                            <p className="mb-2 text-xs text-[#8d897d]">
+                                Latest PRAL Response
+                                {invoice.latestSubmissionLog.responseCode ? ` (${invoice.latestSubmissionLog.responseCode})` : ''}
+                                {invoice.latestSubmissionLog.durationMs != null ? ` · ${invoice.latestSubmissionLog.durationMs} ms` : ''}
+                            </p>
+                            <pre className="max-h-80 overflow-auto rounded-lg border border-white/10 bg-[#0b1510] p-3 text-xs text-[#d8d0bf] whitespace-pre-wrap wrap-break-word">
+                                {formatJson(invoice.latestSubmissionLog.requestBody)}
+                            </pre>
+                        </div>
+                    )}
                     {invoice.latestSubmissionLog?.responseBody != null && (
                         <div>
                             <p className="mb-2 text-xs text-[#8d897d]">

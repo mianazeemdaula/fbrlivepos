@@ -63,6 +63,7 @@ export async function GET(
                 attempt: true,
                 responseCode: true,
                 responseBody: true,
+                requestBody:true,
                 error: true,
                 durationMs: true,
                 createdAt: true,

@@ -1173,6 +1173,41 @@ export function getProductDIAutofillOptions(hsCode: string): ProductDIAutofillPr
     return PRODUCT_DI_AUTOFILL_PRESET_OPTIONS.get(hsCode) ?? []
 }
 
+export function getPresetBySaleType(saleType: string): ProductDIAutofillPreset | null {
+    for (const template of Object.values(SCENARIO_TEMPLATES)) {
+        for (const item of template.items) {
+            if (item.saleType.trim().toLowerCase() === saleType.trim().toLowerCase()) {
+                return createPresetFromItem(item)
+            }
+        }
+    }
+    return null
+}
+
+export function getScenarioIdBySaleType(saleType: string, buyerRegistrationType?: string | null): string | null {
+    const normalizedSaleType = saleType.trim().toLowerCase()
+    
+    // First pass: try to match both saleType and buyerRegistrationType
+    for (const [scenarioId, template] of Object.entries(SCENARIO_TEMPLATES)) {
+        if (buyerRegistrationType && template.buyer.registrationType !== buyerRegistrationType) continue;
+        for (const item of template.items) {
+            if (item.saleType.trim().toLowerCase() === normalizedSaleType) {
+                return scenarioId
+            }
+        }
+    }
+    
+    // Second pass: fallback without registration type constraint
+    for (const [scenarioId, template] of Object.entries(SCENARIO_TEMPLATES)) {
+        for (const item of template.items) {
+            if (item.saleType.trim().toLowerCase() === normalizedSaleType) {
+                return scenarioId
+            }
+        }
+    }
+    return null
+}
+
 export function inferSandboxScenario(params: {
     buyerRegistrationType?: string | null
     items: SandboxScenarioMatchItem[]

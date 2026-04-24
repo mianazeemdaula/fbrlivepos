@@ -7,9 +7,13 @@ export async function getTenantFromSession() {
         throw new Error('UNAUTHORIZED')
     }
 
-    const tenant = await prisma.tenant.findUniqueOrThrow({
-        where: { id: session.user.tenantId, isActive: true },
+    const tenant = await prisma.tenant.findUnique({
+        where: { id: session.user.tenantId },
     })
+
+    if (!tenant) {
+        throw new Error('UNAUTHORIZED')
+    }
 
     return {
         tenant,

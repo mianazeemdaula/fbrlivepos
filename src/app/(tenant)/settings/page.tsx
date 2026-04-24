@@ -82,7 +82,6 @@ export default function SettingsPage() {
     const [verifying, setVerifying] = useState(false)
     const [resettingCircuit, setResettingCircuit] = useState(false)
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-    const [step, setStep] = useState(1) // Wizard step: 1=Business Info, 2=Token, 3=Verify, 4=Sandbox, 5=Production
     const [preferredIdType, setPreferredIdType] = useState<'NTN' | 'CNIC'>('NTN')
     const [activeTab, setActiveTab] = useState<'business' | 'sandbox'>('business')
 
@@ -100,17 +99,6 @@ export default function SettingsPage() {
                 const config: DIConfig = await res.json()
                 setDiConfig(config)
                 setForm(createFormStateFromConfig(config))
-                if (!config.configured) {
-                    setStep(1)
-                } else if (!config.hasSandboxToken && !config.hasProductionToken) {
-                    setStep(2)
-                } else if (!config.sandboxScenarios || config.sandboxScenarios.length === 0 || config.sandboxScenarios.some(s => s.status !== 'PASSED')) {
-                    setStep(config.environment === 'SANDBOX' ? 4 : 5)
-                } else if (config.isProductionReady) {
-                    setStep(5)
-                } else {
-                    setStep(3)
-                }
             }
         } catch {
             // Ignore
@@ -244,11 +232,11 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="max-w-3xl p-6 lg:p-8">
+        <div className="p-6 lg:p-8">
             <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Compliance setup</p>
             <h1 className="brand-heading mb-6 mt-2 text-3xl font-bold text-white">Settings</h1>
 
-            <div className="mb-6 grid grid-cols-1 gap-2 rounded-2xl border border-white/10 bg-white/4 p-2 sm:grid-cols-2">
+            {/* <div className="mb-6 grid grid-cols-1 gap-2 rounded-2xl border border-white/10 bg-white/4 p-2 sm:grid-cols-2">
                 <button
                     type="button"
                     onClick={() => setActiveTab('business')}
@@ -269,40 +257,10 @@ export default function SettingsPage() {
                 >
                     2. Sandbox Test Scenarios
                 </button>
-            </div>
+            </div> */}
 
             {activeTab === 'business' && (
                 <>
-
-                    {/* Integration Progress Steps */}
-                    <div className="app-panel mb-6 rounded-2xl p-4">
-                        <h2 className="mb-3 text-sm font-semibold text-[#c1bcaf]">PRAL DI Integration Progress</h2>
-                        <div className="flex items-center gap-1">
-                            {[
-                                { n: 1, label: 'Business Info' },
-                                { n: 2, label: 'Token Setup' },
-                                { n: 3, label: 'Verify Token' },
-                                { n: 4, label: 'Sandbox Tests' },
-                                { n: 5, label: 'Production' },
-                            ].map((s, i) => (
-                                <div key={s.n} className="flex items-center flex-1">
-                                    <button
-                                        onClick={() => setStep(s.n)}
-                                        className={`flex-1 text-center py-2 rounded-lg text-xs font-medium transition-colors ${step === s.n
-                                            ? 'bg-accent text-primary'
-                                            : step > s.n || (s.n === 1 && diConfig?.configured)
-                                                ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
-                                                : 'bg-white/6 text-[#8d897d] hover:bg-white/10'
-                                            }`}
-                                    >
-                                        {step > s.n || (s.n === 1 && diConfig?.configured && step !== s.n) ? '✓ ' : `${s.n}. `}
-                                        {s.label}
-                                    </button>
-                                    {i < 4 && <div className="mx-0.5 h-px w-2 bg-white/10" />}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
 
                     {/* PRAL DI Credentials */}
                     <div className="app-panel mb-6 rounded-2xl p-6">

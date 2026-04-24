@@ -4,6 +4,11 @@ import { getTenantFromSession } from '@/lib/tenant/context'
 import { prisma } from '@/lib/db/prisma'
 import { checkPlanLimit } from '@/lib/features/flags'
 import { evaluateDIItemReadiness } from '@/lib/di/eligibility'
+import { SALE_TYPE_LIST } from '@/lib/di/sale-type-config'
+
+// Derive valid sale types from SALE_TYPE_CONFIG to stay always in sync
+const rawLabels = [...new Set(SALE_TYPE_LIST.map(t => t.label))]
+const validSaleTypes = rawLabels as [string, ...string[]]
 
 const CreateProductSchema = z.object({
     name: z.string().min(1),
@@ -104,8 +109,8 @@ export async function POST(req: NextRequest) {
         select: { uomDesc: true },
     })
 
-    if (validUOMs.length > 0 && !validUOMs.some((entry) => entry.uomDesc === sharedUnit)) {
-        return NextResponse.json({ error: 'Selected unit of measure is not valid for the chosen HS code.' }, { status: 400 })
+    if (validUOMs.length > 0 && !validUOMs.some((entry) => entry.uomDesc.trim().toLowerCase() === sharedUnit.trim().toLowerCase())) {
+        return NextResponse.json({ error: `Selected unit of measure (${sharedUnit}) is not valid for the chosen HS code. Valid options are: ${validUOMs.map(v => v.uomDesc).join(', ')}` }, { status: 400 })
     }
 
     const product = await prisma.$transaction(async (tx) => {
@@ -118,7 +123,17 @@ export async function POST(req: NextRequest) {
                 description: body.description,
                 price: body.price,
                 taxRate: body.taxRate,
-                ...buildProductDIFields(body, sharedUnit),
+                diSaleType: body.diSaleType,
+                diRate: body.diRate,
+                diUOM: sharedUnit,
+                diFixedNotifiedValueOrRetailPrice: body.diFixedNotifiedValueOrRetailPrice,
+                diSalesTaxWithheldAtSource: body.diSalesTaxWithheldAtSource,
+                extraTax: body.extraTax,
+                furtherTax: body.furtherTax,
+                fedPayable: body.fedPayable,
+                sroScheduleNo: body.sroScheduleNo,
+                sroItemSerialNo: body.sroItemSerialNo,
+                unit: sharedUnit,
             },
         })
 

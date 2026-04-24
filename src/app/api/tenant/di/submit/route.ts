@@ -6,6 +6,7 @@ import { mapDIErrorCodes } from '@/lib/di/error-codes'
 import { evaluateDISubmissionEligibility } from '@/lib/di/eligibility'
 import { inferSandboxScenario } from '@/lib/di/scenario-catalog'
 import { SCENARIO_DESCRIPTIONS, getRequiredScenarios } from '@/lib/di/scenarios'
+import { getScenarioId, getSaleTypeIdFromLabel } from '@/lib/di/sale-type-config'
 import { enqueueInvoiceSubmission } from '@/lib/fbr/queue'
 import { prisma } from '@/lib/db/prisma'
 import { Prisma } from '@/generated/prisma/client'
@@ -76,14 +77,35 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        resolvedScenarioId = creds.environment === 'SANDBOX'
-            ? (scenarioId ?? invoice.diScenarioId ?? inferSandboxScenario({
-                buyerRegistrationType: invoice.buyerRegistrationType,
-                items: invoice.items,
-                businessActivity: creds.businessActivity,
-                sector: creds.sector,
-            }).scenarioId)
-            : undefined
+        if (creds.environment === 'SANDBOX') {
+            if (scenarioId) {
+                // Caller explicitly passed scenarioId (e.g. sandbox test page)
+                resolvedScenarioId = scenarioId
+            } else if (invoice.diScenarioId) {
+                // Already stored on invoice
+                resolvedScenarioId = invoice.diScenarioId
+            } else {
+                // Derive from the first item's diSaleType + buyer registration type (spec §9)
+                const firstItemSaleType = invoice.items[0]?.diSaleType ?? null
+                const saleTypeId = firstItemSaleType ? getSaleTypeIdFromLabel(firstItemSaleType) : null
+                if (saleTypeId) {
+                    resolvedScenarioId = getScenarioId(
+                        saleTypeId,
+                        invoice.buyerRegistrationType ?? 'Unregistered',
+                    )
+                } else {
+                    // Legacy fallback — infer from scenario catalog
+                    resolvedScenarioId = inferSandboxScenario({
+                        buyerRegistrationType: invoice.buyerRegistrationType,
+                        items: invoice.items,
+                        businessActivity: creds.businessActivity,
+                        sector: creds.sector,
+                    }).scenarioId ?? undefined
+                }
+            }
+        } else {
+            resolvedScenarioId = undefined  // Production: never send scenarioId
+        }
 
         if (resolvedScenarioId && resolvedScenarioId !== invoice.diScenarioId) {
             await prisma.invoice.updateMany({
@@ -257,7 +279,7 @@ export async function POST(req: NextRequest) {
 
         if (err instanceof DIAuthError) {
             const authErrorMessage =
-                'Your PRAL DI token was rejected by PRAL (401 Unauthorized). Most common causes: (1) Your server IP is not yet whitelisted by PRAL — submit your IP in Settings and allow ~2 working hours for approval. (2) Token pasted with extra whitespace — re-save it in Settings → PRAL DI Setup to auto-trim. (3) Token expired or belongs to a different environment.'
+                'Your PRAL DI token was rejected by PRAL (401 Unauthorized).'
 
             await Promise.allSettled([
                 updateInvoiceForTenant(tenant.id, invoiceId, {

@@ -17,7 +17,6 @@ type TransactionTypeEntry = { transactioN_TYPE_ID: number; transactioN_DESC: str
 type SROItemEntry = { srO_ITEM_ID: number; srO_ITEM_DESC: string }
 type RateEntry = { ratE_ID: number; ratE_DESC: string; ratE_VALUE: number }
 type SROScheduleEntry = { srO_ID: number; srO_DESC: string }
-
 async function fetchWithToken<T>(url: string): Promise<T> {
     const res = await fetch(url, {
         headers: { Authorization: `Bearer ${PLATFORM_TOKEN}` },
@@ -91,6 +90,7 @@ async function syncHSCodeUOMReference(hsCode: string, annexureId = 3) {
 
 async function syncSaleTypeToRateReference(referenceDate: string) {
     const transactionTypes = await prisma.dITransactionType.findMany({ orderBy: { id: 'asc' } })
+    const provinces = await prisma.dIProvince.findMany({ orderBy: { code: 'asc' } })
     const rateIds = new Set<number>()
     let syncedRates = 0
 
@@ -106,10 +106,10 @@ async function syncSaleTypeToRateReference(referenceDate: string) {
             },
         })
 
-        for (const originationSupplier of [false, true]) {
+        for (const province of provinces) {
             try {
                 const rates = await fetchWithToken<RateEntry[]>(
-                    `${FBR_BASE}/pdi/v2/SaleTypeToRate?date=${referenceDate}&transTypeId=${transactionType.id}&originationSupplier=${originationSupplier}`,
+                    `${FBR_BASE}/pdi/v2/SaleTypeToRate?date=${referenceDate}&transTypeId=${transactionType.id}&originationSupplier=${province.code}`,
                 )
 
                 if (!Array.isArray(rates) || rates.length === 0) {
@@ -139,8 +139,7 @@ async function syncSaleTypeToRateReference(referenceDate: string) {
                 syncedRates += rates.length
             } catch (err) {
                 console.warn(
-                    `[DI Sync] SaleTypeToRate skipped for transTypeId=${transactionType.id}, originationSupplier=${originationSupplier}:`,
-                    err,
+                    `[DI Sync] SaleTypeToRate skipped for transTypeId=${transactionType.id}, province=${province.code}: ${err instanceof Error ? err.message : String(err)}`
                 )
             }
         }
@@ -151,14 +150,15 @@ async function syncSaleTypeToRateReference(referenceDate: string) {
 }
 
 async function syncSroScheduleReference(referenceDate: string, rateIds: number[]) {
+    const provinces = await prisma.dIProvince.findMany({ orderBy: { code: 'asc' } })
     const sroIds = new Set<number>()
     let syncedSchedules = 0
 
     for (const rateId of rateIds) {
-        for (const originationSupplier of [false, true]) {
+        for (const province of provinces) {
             try {
                 const schedules = await fetchWithToken<SROScheduleEntry[]>(
-                    `${FBR_BASE}/pdi/v1/SroSchedule?rate_id=${rateId}&date=${referenceDate}&origination_supplier_csv=${originationSupplier}`,
+                    `${FBR_BASE}/pdi/v1/SroSchedule?rate_id=${rateId}&date=${referenceDate}&origination_supplier_csv=${province.code}`,
                 )
 
                 if (!Array.isArray(schedules) || schedules.length === 0) {
@@ -186,8 +186,7 @@ async function syncSroScheduleReference(referenceDate: string, rateIds: number[]
                 syncedSchedules += schedules.length
             } catch (err) {
                 console.warn(
-                    `[DI Sync] SroSchedule skipped for rate_id=${rateId}, origination_supplier_csv=${originationSupplier}:`,
-                    err,
+                    `[DI Sync] Schedule sync skipped for rateId=${rateId}, province=${province.code}: ${err instanceof Error ? err.message : String(err)}`
                 )
             }
         }

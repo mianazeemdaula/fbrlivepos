@@ -23,10 +23,14 @@ enum PaymentMethod {
 }
 
 enum InvoiceStatus {
+  DRAFT
+  VALIDATED
+  CONFIRMED
   PENDING
   QUEUED
   SUBMITTED
   FAILED
+  CANCELLED
 }
 
 enum SubStatus {
@@ -160,9 +164,12 @@ model Product {
   price                             Decimal        @db.Decimal(10, 2)
   taxRate                           Decimal        @db.Decimal(5, 2)
   unit                              String
+  // DI scenario classification
+  diScenarioId                      String?        // e.g. "SN001" — which scenario this product uses
+  diScenario                        DIScenario?    @relation(fields: [diScenarioId], references: [id])
+  diSaleType                        String?
   diRate                            String?
   diUOM                             String?
-  diSaleType                        String?
   diFixedNotifiedValueOrRetailPrice Decimal?       @db.Decimal(10, 2)
   diSalesTaxWithheldAtSource        Decimal?       @db.Decimal(10, 2)
   extraTax                          Decimal?       @db.Decimal(10, 2)
@@ -201,16 +208,21 @@ model Invoice {
   discountAmount  Decimal       @default(0) @db.Decimal(12, 2)
   totalAmount     Decimal       @db.Decimal(12, 2)
   paymentMethod   PaymentMethod
-  status          InvoiceStatus @default(PENDING)
+  status          InvoiceStatus @default(DRAFT)
   submissionError String?
   retryCount      Int           @default(0)
   queuedAt        DateTime?
+  confirmedAt     DateTime?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   items           InvoiceItem[]
 
+  // Invoice type: Sale Invoice or Debit Note
+  invoiceType           String?   @default("Sale Invoice")
+  // For Debit Notes — reference to original FBR invoice number
+  invoiceRefNo          String?
+
   // PRAL DI specific fields
-  invoiceType           String? // "Sale Invoice" or "Debit Note"
   buyerProvince         String?
   buyerAddress          String?
   buyerRegistrationType String? // "Registered" or "Unregistered"
@@ -223,8 +235,12 @@ model Invoice {
   diItemStatuses        Json? // Array of per-item validation statuses
   diErrorCode           String? // Error code from FBR if invalid
   diErrorMessage        String? // Error message from FBR
+  lastValidatedAt       DateTime? // When validateinvoicedata last ran
+  lastValidationResult  Json? // Full validation response stored
   qrCodeData            String? // Data to encode in QR (version 2.0, 25×25, 1×1 inch)
   qrCodePrinted         Boolean   @default(false)
+
+  submissionLogs FBRSubmissionLog[]
 
   @@unique([tenantId, invoiceNumber])
   @@index([tenantId])
@@ -268,6 +284,7 @@ model FBRSubmissionLog {
   tenant       Tenant   @relation(fields: [tenantId], references: [id])
   tenantId     String
   invoiceId    String
+  invoice      Invoice  @relation(fields: [invoiceId], references: [id])
   attempt      Int
   requestBody  Json
   responseCode Int?
@@ -587,6 +604,33 @@ model DIItemDescription {
   id          String @id @default(cuid())
   hsCode      String @unique // hS_CODE
   description String // description
+}
+
+// ─── DI SCENARIO CATALOGUE (from FBR documentation section 5 & 6) ───────────
+
+// All 28 scenarios with their saleType strings — seeded from documentation
+model DIScenario {
+  id          String @id // "SN001", "SN002", etc.
+  description String // Human-readable description
+  saleType    String // Exact string to pass as saleType in invoice payload
+  notes       String? // Additional rules/notes
+
+  businessScenarios DIBusinessScenario[]
+  products          Product[]
+
+  @@map("di_scenarios")
+}
+
+// Business Activity + Sector → applicable scenarios matrix
+model DIBusinessScenario {
+  id               String    @id @default(cuid())
+  businessActivity String    // "Manufacturer", "Retailer", etc.
+  sector           String    // "Steel", "FMCG", etc.
+  scenarioId       String
+  scenario         DIScenario @relation(fields: [scenarioId], references: [id])
+
+  @@unique([businessActivity, sector, scenarioId])
+  @@map("di_business_scenarios")
 }
 
 // ─── CUSTOMERS (BUYERS) ─────────────────────────────────────────────────────

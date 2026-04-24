@@ -90,8 +90,8 @@ export async function PATCH(
         select: { uomDesc: true },
     })
 
-    if (validUOMs.length > 0 && !validUOMs.some((entry) => entry.uomDesc === sharedUnit)) {
-        return NextResponse.json({ error: 'Selected unit of measure is not valid for the chosen HS code.' }, { status: 400 })
+    if (validUOMs.length > 0 && !validUOMs.some((entry) => entry.uomDesc.trim().toLowerCase() === sharedUnit.trim().toLowerCase())) {
+        return NextResponse.json({ error: `Selected unit of measure (${sharedUnit}) is not valid for the chosen HS code. Valid options are: ${validUOMs.map(v => v.uomDesc).join(', ')}` }, { status: 400 })
     }
 
     const existingProduct = await prisma.product.findFirst({

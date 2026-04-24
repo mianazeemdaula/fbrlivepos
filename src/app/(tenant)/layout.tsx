@@ -5,6 +5,18 @@ import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 
+// Helper to fetch DI config
+function useTenantEnvironment() {
+    const [environment, setEnvironment] = useState<string | null>(null)
+    useEffect(() => {
+        fetch('/api/tenant/fbr-credentials')
+            .then(r => r.ok ? r.json() : null)
+            .then(data => setEnvironment(data?.environment || null))
+            .catch(() => setEnvironment(null))
+    }, [])
+    return environment
+}
+
 const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: '📊' },
     { href: '/pos', label: 'POS Terminal', icon: '🖥️' },
@@ -13,13 +25,16 @@ const navItems = [
     { href: '/customers', label: 'Customers', icon: '👥' },
     { href: '/hs-codes', label: 'HS Codes', icon: '🏷️' },
     { href: '/sandbox-scenarios', label: 'Sandbox Scenarios', icon: '🧪' },
+    { href: '/onboarding', label: 'FBR Setup', icon: '🔑' },
     { href: '/settings', label: 'Settings', icon: '⚙️' },
 ]
+
 
 export default function TenantLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
     const { data: session } = useSession()
     const [sidebarOpen, setSidebarOpen] = useState(false)
+    const environment = useTenantEnvironment()
 
     // Close sidebar on route change (mobile)
     useEffect(() => {
@@ -112,6 +127,16 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                     </button>
                     <span className="brand-heading text-lg font-bold text-[#f6f0e4]">FBR Live POS</span>
                 </div>
+
+                {/* Environment hint banner */}
+                {environment && (
+                    <div
+                        className={`text-xs font-semibold text-center py-2 ${environment === 'SANDBOX' ? 'bg-yellow-500/20 text-yellow-700' : 'bg-green-500/20 text-green-700'}`}
+                        style={{ letterSpacing: '0.12em' }}
+                    >
+                        {environment === 'SANDBOX' ? 'SANDBOX MODE — Test submissions only' : 'LIVE MODE — Production submissions enabled'}
+                    </div>
+                )}
 
                 <main className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top_right,rgba(200,164,90,0.08),transparent_24%)]">
                     {children}

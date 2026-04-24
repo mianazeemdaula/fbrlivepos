@@ -6,7 +6,7 @@ import { compare } from '@/lib/crypto/password'
 import { authConfig } from './auth.config'
 
 const loginSchema = z.object({
-    email: z.string().email(),
+    email: z.email(),
     password: z.string().min(1),
 })
 

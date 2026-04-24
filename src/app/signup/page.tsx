@@ -38,7 +38,7 @@ export default function SignupPage() {
                 return
             }
 
-            router.push('/login?registered=true')
+            router.push('/onboarding')
         } catch {
             setError('Network error. Please try again.')
         } finally {

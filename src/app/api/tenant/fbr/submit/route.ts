@@ -4,7 +4,6 @@ import { getDIClientForTenant, DIAuthError, DIConfigError, DIServerError } from 
 import { buildDIPayload } from '@/lib/di/payload-builder'
 import { mapDIErrorCodes } from '@/lib/di/error-codes'
 import { evaluateDISubmissionEligibility } from '@/lib/di/eligibility'
-import { inferSandboxScenario } from '@/lib/di/scenario-catalog'
 import { enqueueInvoiceSubmission } from '@/lib/fbr/queue'
 import { prisma } from '@/lib/db/prisma'
 import { Prisma } from '@/generated/prisma/client'
@@ -71,19 +70,21 @@ export async function POST(req: NextRequest) {
 
         const isSandbox = creds.environment === 'SANDBOX'
         if (isSandbox) {
-            const inferredScenarioId = inferSandboxScenario({
-                buyerRegistrationType: invoice.buyerRegistrationType,
-                items: invoice.items,
-                businessActivity: creds.businessActivity,
-                sector: creds.sector,
-            }).scenarioId
-            // Fallback: if inference fails (product DI fields not fully configured),
-            // default to SN001 (registered buyer) or SN002 (unregistered) so the
-            // sandbox submission always includes a scenarioId.
+            let dbScenarioId: string | undefined = undefined;
+            if (invoice.items.length > 0 && invoice.items[0].diSaleType) {
+                const dbScenario = await prisma.dIScenario.findFirst({
+                    where: { saleType: invoice.items[0].diSaleType },
+                    select: { id: true }
+                });
+                if (dbScenario) {
+                    dbScenarioId = dbScenario.id;
+                }
+            }
+
             const fallbackScenarioId = invoice.buyerRegistrationType === 'Registered'
                 ? 'SN001'
                 : 'SN002'
-            resolvedScenarioId = scenarioId ?? invoice.diScenarioId ?? inferredScenarioId ?? fallbackScenarioId
+            resolvedScenarioId = scenarioId ?? invoice.diScenarioId ?? dbScenarioId ?? fallbackScenarioId
         } else {
             resolvedScenarioId = undefined
         }
@@ -128,25 +129,13 @@ export async function POST(req: NextRequest) {
             preferredIdType: tenant.preferredIdType === 'CNIC' ? 'CNIC' : 'NTN',
         })
 
-        console.log('[FBR-SUBMIT] ========== START SUBMISSION ==========')
-        console.log('[FBR-SUBMIT] tenantId:', tenant.id)
-        console.log('[FBR-SUBMIT] invoiceId:', invoiceId)
-        console.log('[FBR-SUBMIT] attempt:', attempt)
-        console.log('[FBR-SUBMIT] environment:', creds.environment)
-        console.log('[FBR-SUBMIT] isSandbox:', isSandbox)
-        console.log('[FBR-SUBMIT] scenarioId on invoice:', invoice.diScenarioId)
-        console.log('[FBR-SUBMIT] resolved scenarioId:', resolvedScenarioId)
-        console.log('[FBR-SUBMIT] invoiceType:', invoice.invoiceType)
-        console.log('[FBR-SUBMIT] circuitBreakerState:', diClient.getCircuitState().state)
-        console.log('[FBR-SUBMIT] FULL PAYLOAD:', JSON.stringify(payload, null, 2))
+
 
         // NOTE: Circuit breaker queue bypass disabled for direct testing.
         // Re-enable by restoring the circuit state check block.
         // if (diClient.getCircuitState().state === 'OPEN') { ... }
 
-        console.log('[FBR-SUBMIT] Calling validateInvoice...')
         const validation = await diClient.validateInvoice(payload)
-        console.log('[FBR-SUBMIT] validateInvoice raw response:', JSON.stringify(validation, null, 2))
         if (validation.validationResponse.statusCode === '01') {
             const errors = mapDIErrorCodes(validation.validationResponse)
 
@@ -181,9 +170,7 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        console.log('[FBR-SUBMIT] Validation passed (statusCode 00). Calling postInvoice...')
         const response = await diClient.postInvoice(payload)
-        console.log('[FBR-SUBMIT] postInvoice raw response:', JSON.stringify(response, null, 2))
         const isValid = response.validationResponse.statusCode === '00'
 
         await Promise.all([

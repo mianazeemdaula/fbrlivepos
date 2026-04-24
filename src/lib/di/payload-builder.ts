@@ -53,7 +53,7 @@ export function buildDIPayload(
         sellerAddress: seller.sellerAddress,
 
         // Buyer details from the invoice
-        buyerNTNCNIC: invoice.buyerNTN ?? undefined,
+        buyerNTNCNIC: invoice.buyerNTN ?? '',
         buyerBusinessName: invoice.buyerName ?? 'Walk-in Customer',
         buyerProvince: invoice.buyerProvince ?? creds.sellerProvince,
         buyerAddress: invoice.buyerAddress ?? invoice.buyerName ?? 'N/A',
@@ -83,7 +83,7 @@ export function buildDIPayload(
                 fixedNotifiedValueOrRetailPrice: Number(Number(item.diFixedNotifiedValueOrRetailPrice ?? 0).toFixed(2)),
                 salesTaxApplicable,
                 salesTaxWithheldAtSource: Number(Number(item.diSalesTaxWithheldAtSource ?? 0).toFixed(2)),
-                extraTax: normalizeExtraTax(item.diSaleType, item.extraTax),
+                extraTax: normalizeExtraTax(item.diSaleType, item.extraTax) == 0 ? '' : normalizeExtraTax(item.diSaleType, item.extraTax),
                 furtherTax: Number(Number(item.furtherTax ?? 0).toFixed(2)),
                 sroScheduleNo: item.sroScheduleNo ?? '',
                 fedPayable: Number(Number(item.fedPayable ?? 0).toFixed(2)),

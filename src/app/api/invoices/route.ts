@@ -131,6 +131,8 @@ export async function POST(req: NextRequest) {
             discountAmount,
             totalAmount,
             paymentMethod: body.paymentMethod,
+            status: 'DRAFT',
+            invoiceType: 'Sale Invoice',
             items: { create: invoiceItems },
         },
         include: { items: true },

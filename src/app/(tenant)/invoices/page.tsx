@@ -24,36 +24,62 @@ export default function InvoicesPage() {
     const [loading, setLoading] = useState(true)
     const [page, setPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
+    const [actionLoading, setActionLoading] = useState<string | null>(null)
+    const [actionError, setActionError] = useState<string | null>(null)
 
     // Modals
     const [viewDIId, setViewDIId] = useState<string | null>(null)
 
-    useEffect(() => {
-        async function load() {
-            setLoading(true)
-            try {
-                const res = await fetch(`/api/invoices?page=${page}&limit=20`)
-                if (res.ok) {
-                    const data = await res.json()
-                    setInvoices(data.invoices ?? data.data ?? [])
-                    setTotalPages(data.pages ?? data.meta?.totalPages ?? 1)
-                }
-            } catch {
-                // Ignore
-            } finally {
-                setLoading(false)
+    async function loadInvoices() {
+        setLoading(true)
+        try {
+            const res = await fetch(`/api/invoices?page=${page}&limit=20`)
+            if (res.ok) {
+                const data = await res.json()
+                setInvoices(data.invoices ?? data.data ?? [])
+                setTotalPages(data.pages ?? data.meta?.totalPages ?? 1)
             }
+        } catch {
+            // Ignore
+        } finally {
+            setLoading(false)
         }
-        load()
-    }, [page])
+    }
+
+    useEffect(() => { loadInvoices() }, [page]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const statusBadge = (status: string) => {
         const colors: Record<string, string> = {
+            DRAFT: 'bg-white/8 text-[#c1bcaf] border-white/10',
+            VALIDATED: 'bg-blue-500/10 text-blue-300 border-blue-500/30',
+            CONFIRMED: 'bg-green-500/10 text-green-400 border-green-500/30',
             PENDING: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
             SUBMITTED: 'bg-green-500/10 text-green-400 border-green-500/30',
             FAILED: 'bg-red-500/10 text-red-400 border-red-500/30',
         }
         return colors[status] || 'bg-white/8 text-[#c1bcaf] border-white/10'
+    }
+
+    async function handleAction(invoiceId: string, action: 'validate' | 'confirm') {
+        setActionLoading(invoiceId + action)
+        setActionError(null)
+        try {
+            const res = await fetch(`/api/invoices/${invoiceId}/action`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action }),
+            })
+            const data = await res.json()
+            if (!res.ok) {
+                setActionError(data.error || `Action failed (${res.status})`)
+            } else {
+                await loadInvoices()
+            }
+        } catch {
+            setActionError('Network error. Please try again.')
+        } finally {
+            setActionLoading(null)
+        }
     }
 
     async function handlePrint(invoiceId: string) {
@@ -75,17 +101,24 @@ export default function InvoicesPage() {
                 </Link>
             </div>
 
+            {actionError && (
+                <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                    {actionError}
+                    <button onClick={() => setActionError(null)} className="ml-3 text-red-400 hover:text-red-300">✕</button>
+                </div>
+            )}
+
             <div className="app-panel overflow-hidden rounded-2xl">
                 <table className="w-full">
                     <thead>
                         <tr className="border-b border-white/10">
-                            <th className="px-4 py-3 text-left text-xs font-medium text-[#8d897d]">Invoice #</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-[#8d897d]">Buyer</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-[#8d897d]">Amount</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-[#8d897d]">Payment</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-[#8d897d]">DI Status</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-[#8d897d]">Date</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-[#8d897d]">Actions</th>
+                            <th className="px-2 py-3 text-left text-xs font-medium text-[#8d897d]">Invoice #</th>
+                            <th className="px-2 py-3 text-left text-xs font-medium text-[#8d897d]">Buyer</th>
+                            <th className="px-2 py-3 text-left text-xs font-medium text-[#8d897d]">Amount</th>
+                            <th className="px-2 py-3 text-left text-xs font-medium text-[#8d897d]">Payment</th>
+                            <th className="px-2 py-3 text-left text-xs font-medium text-[#8d897d]">DI Status</th>
+                            <th className="px-2 py-3 text-left text-xs font-medium text-[#8d897d]">Date</th>
+                            <th className="px-2 py-3 text-right text-xs font-medium text-[#8d897d]">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -106,28 +139,62 @@ export default function InvoicesPage() {
                         ) : (
                             invoices.map((inv) => (
                                 <tr key={inv.id} className="border-b border-white/10 transition-colors hover:bg-white/6">
-                                    <td className="px-4 py-3">
-                                        <Link href={`/invoices/${inv.id}`} className="text-sm text-[#f0d9a0] hover:underline">
+                                    <td className="px-2 py-3">
+                                        <Link href={`/invoices/${inv.id}`} className="text-xs text-[#f0d9a0] hover:underline">
                                             {inv.invoiceNumber}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-[#d8d0bf]">
+                                    <td className="px-2 py-3 text-sm text-[#d8d0bf]">
                                         {inv.buyerName || '—'}
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-white font-medium">
+                                    <td className="px-2 py-3 text-xs text-white font-medium">
                                         PKR {inv.totalAmount.toLocaleString()}
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-[#c1bcaf]">{inv.paymentMethod}</td>
-                                    <td className="px-4 py-3">
-                                        <span className={`text-xs px-2 py-0.5 rounded-full border ${statusBadge(inv.status)}`}>
+                                    <td className="px-2 py-3 text-xs text-[#c1bcaf]">{inv.paymentMethod}</td>
+                                    <td className="px-2 py-3">
+                                        <span className={`text-xs px-1 py-0.5 rounded-full border ${statusBadge(inv.status)}`}>
                                             {inv.status}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-[#c1bcaf]">
+                                    <td className="px-2 py-3 text-xs text-[#c1bcaf]">
                                         {new Date(inv.createdAt).toLocaleDateString() + ' ' + new Date(inv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center justify-end gap-2">
+                                    <td className="px-2 py-3">
+                                        <div className="flex items-center justify-end gap-2 flex-wrap">
+                                            {/* Lifecycle action buttons */}
+                                            {inv.status === 'DRAFT' && (
+                                                <button
+                                                    onClick={() => handleAction(inv.id, 'validate')}
+                                                    disabled={actionLoading === inv.id + 'validate'}
+                                                    title="Validate with PRAL DI"
+                                                    className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-300 hover:bg-blue-500/20 disabled:opacity-50"
+                                                >
+                                                    {actionLoading === inv.id + 'validate' ? '...' : 'Validate'}
+                                                </button>
+                                            )}
+                                            {inv.status === 'VALIDATED' && (
+                                                <button
+                                                    onClick={() => handleAction(inv.id, 'confirm')}
+                                                    disabled={actionLoading === inv.id + 'confirm'}
+                                                    title="Confirm & submit to FBR"
+                                                    className="rounded-lg border border-green-500/30 bg-green-500/10 px-2.5 py-1 text-xs font-medium text-green-400 hover:bg-green-500/20 disabled:opacity-50"
+                                                >
+                                                    {actionLoading === inv.id + 'confirm' ? '...' : 'Confirm to FBR'}
+                                                </button>
+                                            )}
+                                            {(inv.status === 'FAILED') && (
+                                                <button
+                                                    onClick={() => handleAction(inv.id, 'validate')}
+                                                    disabled={actionLoading === inv.id + 'validate'}
+                                                    title="Retry submission"
+                                                    className="rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1 text-xs font-medium text-red-400 hover:bg-red-500/20 disabled:opacity-50"
+                                                >
+                                                    {actionLoading === inv.id + 'validate' ? '...' : 'Retry'}
+                                                </button>
+                                            )}
+                                            {/* {(inv.status === 'CONFIRMED' || inv.status === 'SUBMITTED') && inv.diInvoiceNumber && (
+                                                <span className="text-xs text-[#8d897d]" title="FBR Invoice Number">{inv.diInvoiceNumber}</span>
+                                            )} */}
                                             {/* View DI response */}
                                             <button
                                                 onClick={() => setViewDIId(inv.id)}

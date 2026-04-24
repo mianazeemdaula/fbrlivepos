@@ -156,6 +156,7 @@ export async function getDIClientForTenant(tenantId: string) {
                 })
                 clearTimeout(timer)
                 const rawBody = await res.text()
+                console.log('[DI-Client] Payload', payload)
                 console.log(`[DI-CLIENT] validateInvoice HTTP status: ${res.status} ${res.statusText} | url: ${validateUrl}`)
                 if (res.status === 401) {
                     throw new DIAuthError(tenantId, {
