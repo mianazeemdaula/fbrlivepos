@@ -264,29 +264,28 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
         } catch { setError('Network error') } finally { setFormLoading(false) }
     }
 
-    const inputCls = 'w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d] focus:border-[#f0d9a0]/40 focus:outline-none'
-    const labelCls = 'mb-1 block text-xs text-[#c1bcaf]'
-    const sectionLabelCls = 'block text-xs font-semibold uppercase tracking-wider text-[#f0d9a0] mb-2'
+    const inputCls = 'w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/20'
+    const labelCls = 'mb-1 block text-xs font-medium text-muted'
 
     return (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 backdrop-blur-sm p-4">
-            <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(7,20,15,0.99),rgba(5,13,10,0.99))] my-8 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 backdrop-blur-sm p-4">
+            <div className="w-full max-w-3xl rounded-2xl border border-border bg-white my-8 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-border px-6 py-4">
                     <div>
-                        <p className="text-xs uppercase tracking-caps-xl text-[#f0d9a0]">Catalog</p>
-                        <h2 className="brand-heading mt-0.5 text-xl font-bold text-white">
+                        <p className="text-xs font-medium uppercase tracking-wider text-muted">Catalog</p>
+                        <h2 className="mt-0.5 text-xl font-bold text-ink">
                             {editingProductId ? 'Edit Product' : 'Add New Product'}
                         </h2>
                     </div>
-                    <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#8d897d] hover:bg-white/10 hover:text-white">✖</button>
+                    <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface text-muted hover:bg-canvas hover:text-ink transition-colors">✕</button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-                    {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">{error}</div>}
+                    {error && <div className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-600">{error}</div>}
 
                     {/* ── DI Cascade ── */}
-                    <div className="rounded-xl border border-white/8 bg-white/3 p-4 space-y-3">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-[#f0d9a0]">FBR Digital Invoicing Cascade</p>
+                    <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-accent">FBR Digital Invoicing Cascade</p>
 
                         {/* Row 1: Sale Type + Rate (2-col) */}
                         <div className="grid grid-cols-2 gap-3">
@@ -304,11 +303,11 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                     ))}
                                 </select>
                                 {cfg && (
-                                    <p className="mt-1 text-xs text-[#8d897d] leading-tight">
-                                        Base: <span className="text-[#c1bcaf]">{cfg.taxBase}</span>
-                                        {cfg.uomLocked && <> · UOM: <span className="text-[#f0d9a0]">{cfg.uomLocked}</span></>}
+                                    <p className="mt-1 text-xs text-muted leading-tight">
+                                        Base: <span className="text-ink-secondary">{cfg.taxBase}</span>
+                                        {cfg.uomLocked && <> · UOM: <span className="text-accent font-medium">{cfg.uomLocked}</span></>}
                                         {cfg.requiresSRO && <> · SRO</>}
-                                        {cfg.requiresSR && <span className="text-[#f0d9a0]"> + SR#</span>}
+                                        {cfg.requiresSR && <span className="text-accent font-medium"> + SR#</span>}
                                     </p>
                                 )}
                             </div>
@@ -332,7 +331,7 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                         <p className="mt-1 text-xs text-yellow-400 leading-tight">⚠ Using local rate presets — PRAL API unavailable</p>
                                     )}
                                     {form.diRate && rateSource === 'pral' && (
-                                        <p className="mt-1 text-xs text-[#8d897d]">FBR value: <span className="text-[#f0d9a0] font-mono">{form.diRate}</span></p>
+                                        <p className="mt-1 text-xs text-muted">FBR value: <span className="text-accent font-mono">{form.diRate}</span></p>
                                     )}
                                 </div>
                             ) : <div />}
@@ -340,7 +339,7 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
 
                         {/* Row 2: SRO Schedule + SR# (2-col, only when needed) */}
                         {cfg?.requiresSRO && (
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-2 gap-3 pt-1">
                                 {/* SRO Schedule */}
                                 <div>
                                     <label className={labelCls}>SRO Schedule <span className="text-red-400">*</span></label>
@@ -387,16 +386,16 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                     type="checkbox" id="isExempt"
                                     checked={form.isExempt}
                                     onChange={e => setForm(c => ({ ...c, isExempt: e.target.checked }))}
-                                    className="h-4 w-4 rounded border-white/20 bg-white/6 accent-[#f0d9a0]"
+                                    className="h-4 w-4 rounded border-border accent-accent"
                                 />
-                                <label htmlFor="isExempt" className="text-xs text-[#c1bcaf]">EXMT — Mark as Exempt (zero tax)</label>
+                                <label htmlFor="isExempt" className="text-xs text-ink-secondary">EXMT — Mark as Exempt (zero tax)</label>
                             </div>
                         )}
                     </div>
 
                     {/* ── HS Code ── */}
-                    <div className="rounded-xl border border-white/8 bg-white/3 p-4 space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-[#f0d9a0]">HS Code</p>
+                    <div className="rounded-xl border border-border bg-surface p-4 space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-accent">HS Code</p>
                         <div className="flex items-end gap-2">
                             <div className="flex-1">
                                 <label className={labelCls}>Search HS Code</label>
@@ -404,7 +403,7 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                     className={inputCls} placeholder="Enter code or keyword…" />
                             </div>
                             <button type="button" onClick={() => loadHS(hsSearch)} disabled={hsLoading}
-                                className="flex h-9 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white hover:bg-white/10 disabled:opacity-50">
+                                className="flex h-9 w-10 items-center justify-center rounded-xl border border-border bg-surface text-ink hover:bg-canvas disabled:opacity-50">↺
                                 ↺
                             </button>
                         </div>
@@ -413,17 +412,17 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                             {hsCodes.map(h => <option key={h.id} value={h.id}>{h.code} — {h.shortName || h.description}</option>)}
                         </select>
                         {selectedHS && (
-                            <div className="flex gap-4 rounded-lg bg-code-bg px-3 py-2 text-xs text-[#c1bcaf]">
-                                <span><span className="text-[#8d897d]">Category: </span>{selectedHS.category}</span>
-                                <span><span className="text-[#8d897d]">Default Tax: </span>{selectedHS.defaultTaxRate}%</span>
-                                <span><span className="text-[#8d897d]">Default UOM: </span>{selectedHS.unit}</span>
+                            <div className="flex flex-wrap gap-4 rounded-lg bg-canvas px-3 py-2 text-xs text-ink-secondary">
+                                <span><span className="text-muted">Category: </span>{selectedHS.category}</span>
+                                <span><span className="text-muted">Default Tax: </span>{selectedHS.defaultTaxRate}%</span>
+                                <span><span className="text-muted">Default UOM: </span>{selectedHS.unit}</span>
                             </div>
                         )}
                     </div>
 
                     {/* ── Product Details ── */}
-                    <div className="rounded-xl border border-white/8 bg-white/3 p-4 space-y-3">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-[#f0d9a0]">Product Details</p>
+                    <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-accent">Product Details</p>
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                             <div>
                                 <label className={labelCls}>Name <span className="text-red-400">*</span></label>
@@ -447,8 +446,8 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                 <label className={labelCls}>Unit of Measure <span className="text-red-400">*</span></label>
                                 {form.isUOMLocked ? (
                                     <div className="flex items-center gap-2">
-                                        <input readOnly value={form.unit || form.diUOM} className={`${inputCls} bg-white/3 cursor-not-allowed`} />
-                                        <span className="text-xs text-[#f0d9a0] whitespace-nowrap">🔒 FBR locked</span>
+                                        <input readOnly value={form.unit || form.diUOM} className={`${inputCls} bg-canvas cursor-not-allowed`} />
+                                        <span className="text-xs text-accent font-medium whitespace-nowrap">🔒 FBR locked</span>
                                     </div>
                                 ) : validUOMs.length > 0 ? (
                                     <select value={form.unit} onChange={e => handleUOM(e.target.value)} className={inputCls} required={!!form.hsCodeId}>
@@ -457,7 +456,7 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                     </select>
                                 ) : (
                                     <input value={uomLoading ? '' : (form.unit || form.diUOM)} readOnly
-                                        className={`${inputCls} cursor-not-allowed`}
+                                        className={`${inputCls} bg-canvas cursor-not-allowed`}
                                         placeholder={uomLoading ? 'Loading UOMs…' : 'Select HS code first'} />
                                 )}
                             </div>
@@ -470,7 +469,7 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                         value={form.diFixedNotifiedValueOrRetailPrice}
                                         onChange={e => setForm(c => ({ ...c, diFixedNotifiedValueOrRetailPrice: e.target.value }))}
                                         className={inputCls} placeholder="Printed retail price" />
-                                    <p className="mt-1 text-xs text-[#8d897d]">3rd Schedule: GST is calculated on this price × qty, not on taxable value.</p>
+                                    <p className="mt-1 text-xs text-muted">3rd Schedule: GST is calculated on this price × qty, not on taxable value.</p>
                                 </div>
                             )}
 
@@ -484,16 +483,16 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
 
                     {/* Conditional FT / FED / EXT fields */}
                     {(cfg?.showFT || cfg?.showFED || cfg?.showEXT) && (
-                        <div className="rounded-xl border border-white/8 bg-white/3 p-4 space-y-3">
-                            <p className="text-xs font-semibold uppercase tracking-wider text-[#f0d9a0]">Advanced Tax Fields</p>
+                        <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-accent">Advanced Tax Fields</p>
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                                 {cfg.showFT && (
                                     <div>
-                                        <label className={labelCls}>Further Tax % <span className="text-[#8d897d] font-normal">(default 3%)</span></label>
+                                        <label className={labelCls}>Further Tax % <span className="text-muted font-normal">(default 3%)</span></label>
                                         <input type="number" step="0.01" min="0" value={form.furtherTax}
                                             onChange={e => setForm(c => ({ ...c, furtherTax: e.target.value }))}
                                             className={inputCls} placeholder="3" />
-                                        <p className="mt-1 text-xs text-[#8d897d]">Unregistered buyers only</p>
+                                        <p className="mt-1 text-xs text-muted">Unregistered buyers only</p>
                                     </div>
                                 )}
                                 {cfg.showFED && (
@@ -523,13 +522,13 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                     )}
 
                     {/* Actions */}
-                    <div className="flex gap-3 border-t border-white/10 pt-4">
+                    <div className="flex gap-3 border-t border-border pt-4">
                         <button type="button" onClick={onClose}
-                            className="flex-1 rounded-full border border-white/10 py-2.5 text-sm text-[#c1bcaf] hover:bg-white/6">
+                            className="flex-1 rounded-full border border-border py-2.5 text-sm text-ink-secondary hover:bg-canvas transition-colors">
                             Cancel
                         </button>
                         <button type="submit" disabled={formLoading}
-                            className="flex-1 rounded-full bg-accent py-2.5 text-sm font-medium text-primary hover:bg-[--accent-soft] disabled:opacity-50">
+                            className="flex-1 rounded-full bg-accent py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 transition-opacity">
                             {formLoading ? 'Saving…' : (editingProductId ? 'Save Changes' : 'Add Product')}
                         </button>
                     </div>

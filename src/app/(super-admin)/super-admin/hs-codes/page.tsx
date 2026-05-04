@@ -161,7 +161,7 @@ export default function HSCodesPage() {
             )}
 
             {showForm && (
-                <form onSubmit={handleCreate} className="bg-white rounded-card shadow-card mb-6 rounded-2xl p-6">
+                <form onSubmit={handleCreate} className="bg-white rounded-2xl shadow-card mb-6 p-6">
                     {error && (
                         <div className="bg-error-bg border border-error-bg text-error text-sm rounded-lg p-3 mb-4">
                             {error}
@@ -227,7 +227,7 @@ export default function HSCodesPage() {
                 />
             </div>
 
-            <div className="bg-white rounded-card shadow-card overflow-hidden rounded-2xl">
+            <div className="bg-white rounded-2xl shadow-card overflow-hidden">
                 <table className="w-full">
                     <thead>
                         <tr className="border-b border-border">

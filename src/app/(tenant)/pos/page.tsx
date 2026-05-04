@@ -297,7 +297,7 @@ export default function POSPage() {
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="w-full min-w-[720px] border-collapse text-sm">
+                            <table className="w-full min-w-180 border-collapse text-sm">
                                 <thead>
                                     <tr className="border-b border-border bg-surface sticky top-0 z-10">
                                         <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted">Product</th>
@@ -318,7 +318,7 @@ export default function POSPage() {
                                             <tr key={item.productId} className={`border-b border-border-muted transition-colors hover:bg-surface-subtle ${idx % 2 === 0 ? '' : 'bg-surface-subtle/40'}`}>
                                                 {/* Product */}
                                                 <td className="px-4 py-2.5">
-                                                    <p className="font-medium text-ink truncate max-w-[180px]">{item.name}</p>
+                                                    <p className="font-medium text-ink truncate max-w-45">{item.name}</p>
                                                     <p className="text-xs text-muted font-mono">{item.hsCode}</p>
                                                 </td>
 

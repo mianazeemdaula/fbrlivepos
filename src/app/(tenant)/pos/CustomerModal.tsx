@@ -155,7 +155,7 @@ export default function CustomerModal({
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
             onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
         >
-            <div className="bg-white rounded-card shadow-card flex w-full max-w-md flex-col overflow-hidden rounded-2xl shadow-2xl">
+            <div className="bg-white flex w-full max-w-md flex-col overflow-hidden rounded-2xl shadow-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-5 py-4">
                     <div>

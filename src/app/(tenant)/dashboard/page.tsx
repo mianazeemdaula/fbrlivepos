@@ -148,7 +148,7 @@ function StatCard({ label, value, sub, style = 'outlined' }: { label: string; va
         <div className={`rounded-card p-5 shadow-card ${styles[style]}`}>
             <p className={`mb-1 text-xs font-medium uppercase tracking-caps-xs ${style === 'black' ? 'text-white' : style === 'yellow' ? 'text-ink/60' : style === 'green' ? 'text-success/70' : 'text-muted'}`}>{label}</p>
             <p className="text-2xl font-semibold">{value}</p>
-            <p className={`mt-1 text-xs ${style === 'black' ? 'text-muted' : 'text-current opacity-60'}`}>{sub}</p>
+            <p className={`mt-1 text-xs ${style === 'black' ? 'text-white' : 'text-current opacity-60'}`}>{sub}</p>
         </div>
     )
 }

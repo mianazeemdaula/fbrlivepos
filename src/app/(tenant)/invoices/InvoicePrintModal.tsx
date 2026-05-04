@@ -99,7 +99,7 @@ export default function InvoicePrintModal({ invoice, onClose, standalone = false
                     className="no-print fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
                     onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
                 >
-                    <div className="bg-white rounded-card shadow-card flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl">
+                    <div className="bg-white flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl shadow-card">
                         <div className="flex items-center justify-between border-b border-border px-6 py-4">
                             <div>
                                 <p className="text-xs font-medium uppercase tracking-caps text-muted">Print Invoice</p>

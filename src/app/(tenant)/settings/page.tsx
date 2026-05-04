@@ -263,7 +263,7 @@ export default function SettingsPage() {
                 <>
 
                     {/* PRAL DI Credentials */}
-                    <div className="bg-white rounded-card shadow-card mb-6 rounded-2xl p-6">
+                    <div className="bg-white rounded-2xl shadow-card mb-6 p-6">
                         <h2 className="text-lg font-semibold text-ink mb-4">PRAL Digital Invoicing</h2>
                         <p className="mb-4 text-sm text-muted">
                             Configure your PRAL DI credentials obtained from IRIS registration.
@@ -499,7 +499,7 @@ export default function SettingsPage() {
             )}
 
             {activeTab === 'sandbox' && (
-                <div className="bg-white rounded-card shadow-card rounded-2xl p-4 sm:p-6">
+                <div className="bg-white rounded-2xl shadow-card p-4 sm:p-6">
                     {loading ? (
                         <p className="text-sm text-muted">Loading sandbox configuration...</p>
                     ) : !diConfig?.configured ? (

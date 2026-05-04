@@ -238,7 +238,7 @@ function StatusBadge({ status }: { status: string }) {
     const s = styles[status] || 'bg-surface-subtle text-muted'
     return (
         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${s}`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
             {status}
         </span>
     )

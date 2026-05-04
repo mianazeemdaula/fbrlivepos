@@ -129,16 +129,16 @@ export default function FeatureFlagsPage() {
             <div className="space-y-2">
                 {loading
                     ? Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="bg-white rounded-card shadow-card rounded-2xl p-5 animate-pulse">
+                        <div key={i} className="bg-white rounded-2xl shadow-card p-5 animate-pulse">
                             <div className="h-5 w-32 rounded bg-border" />
                         </div>
                     ))
                     : flags.length === 0
                         ? (
-                            <div className="bg-white rounded-card shadow-card rounded-2xl p-12 text-center text-sm text-muted">No feature flags configured.</div>
+                            <div className="bg-white rounded-2xl shadow-card p-12 text-center text-sm text-muted">No feature flags configured.</div>
                         )
                         : flags.map((flag) => (
-                            <div key={flag.id} className="bg-white rounded-card shadow-card rounded-2xl px-5 py-4">
+                            <div key={flag.id} className="bg-white rounded-2xl shadow-card px-5 py-4">
                                 <div className="flex justify-between items-center">
                                     <div>
                                         <h3 className="text-sm font-semibold text-ink font-mono">{flag.key}</h3>

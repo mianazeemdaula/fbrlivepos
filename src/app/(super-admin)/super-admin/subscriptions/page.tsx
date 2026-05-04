@@ -398,7 +398,7 @@ export default function SubscriptionsPage() {
                                 </span>
                             </div>
 
-                            <p className="mb-3 min-h-[40px] text-ui-xs text-muted">{plan.description}</p>
+                            <p className="mb-3 min-h-10 text-ui-xs text-muted">{plan.description}</p>
 
                             {/* Price */}
                             <p className="text-2xl font-semibold text-ink">

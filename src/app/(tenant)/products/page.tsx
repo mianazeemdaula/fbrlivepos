@@ -187,7 +187,7 @@ export default function ProductsPage() {
                                     <td className="px-4 py-3 text-ui-xs text-muted">{p.unit}</td>
                                     <td className="px-4 py-3 align-top">
                                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${p.diReady ? 'bg-success-bg text-success' : 'bg-accent-light text-warning'}`}>
-                                            <span className="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0" />
+                                            <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
                                             {p.diReady ? 'Ready' : 'Needs fields'}
                                         </span>
                                         {!p.diReady && p.diIssues.length > 0 && (
@@ -198,7 +198,7 @@ export default function ProductsPage() {
                                     </td>
                                     <td className="px-4 py-3">
                                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${p.isActive ? 'bg-success-bg text-success' : 'bg-error-bg text-error'}`}>
-                                            <span className="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0" />
+                                            <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
                                             {p.isActive ? 'Active' : 'Inactive'}
                                         </span>
                                     </td>

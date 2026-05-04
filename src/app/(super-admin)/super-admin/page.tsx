@@ -57,7 +57,7 @@ export default function AdminOverviewPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
                 {loading ? (
                     Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="bg-white rounded-card shadow-card rounded-2xl p-5 animate-pulse">
+                        <div key={i} className="bg-white rounded-2xl shadow-card p-5 animate-pulse">
                             <div className="mb-4 h-3.5 w-24 rounded bg-border" />
                             <div className="mb-2 h-7 w-20 rounded bg-border" />
                             <div className="h-3 w-16 rounded bg-border" />
