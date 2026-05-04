@@ -124,7 +124,6 @@ export default function HSCodesPage() {
                                 <tr className="border-b border-border text-xs uppercase tracking-wider text-muted">
                                     <th className="px-4 py-3 text-left">Code</th>
                                     <th className="px-4 py-3 text-left">Description</th>
-                                    <th className="px-4 py-3 text-left">Short Name</th>
                                     <th className="px-4 py-3 text-left">Category</th>
                                     <th className="px-4 py-3 text-left">Unit</th>
                                     <th className="px-4 py-3 text-right">Tax Rate</th>
@@ -142,16 +141,13 @@ export default function HSCodesPage() {
                                         <td className="max-w-xs truncate px-4 py-3 text-xs text-ink">
                                             {hs.description}
                                         </td>
-                                        <td className="px-4 py-3 text-muted">
-                                            {hs.shortName ?? '—'}
-                                        </td>
                                         <td className="px-4 py-3">
                                             <span className="rounded-full bg-surface px-2 py-0.5 text-xs text-ink">
                                                 {hs.category}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-muted">{hs.unit}</td>
-                                        <td className="px-4 py-3 text-right font-medium text-emerald-400">
+                                        <td className="px-4 py-3">{hs.unit}</td>
+                                        <td className="px-4 py-3 text-right font-medium">
                                             {Number(hs.defaultTaxRate).toFixed(0)}%
                                         </td>
                                     </tr>

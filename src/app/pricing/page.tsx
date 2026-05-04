@@ -55,7 +55,7 @@ export default async function PricingPage() {
                                         <p className={`mt-2 text-sm leading-7 ${plan.highlight ? 'text-white/80' : 'brand-muted'}`}>{plan.tagline}</p>
                                     </div>
                                     {plan.badge && (
-                                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${plan.highlight ? 'bg-white/16 text-white' : 'brand-chip'}`}>
+                                        <span className={`rounded-full px-3 py-1 text-xs font-semibold text-nowrap ${plan.highlight ? 'bg-white/16 text-white' : 'brand-chip'}`}>
                                             {plan.badge}
                                         </span>
                                     )}

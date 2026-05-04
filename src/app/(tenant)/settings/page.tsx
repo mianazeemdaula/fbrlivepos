@@ -234,7 +234,7 @@ export default function SettingsPage() {
     return (
         <div className="p-6 lg:p-8">
             <p className="text-xs font-medium uppercase tracking-caps text-muted">Compliance setup</p>
-            <h1 className="mb-6 mt-2 text-page-title font-normal text-ink">Settings</h1>
+            <h1 className="mb-6 text-page-title font-normal text-ink">Settings</h1>
 
             {/* <div className="mb-6 grid grid-cols-1 gap-2 rounded-2xl border border-border bg-surface-subtle p-2 sm:grid-cols-2">
                 <button

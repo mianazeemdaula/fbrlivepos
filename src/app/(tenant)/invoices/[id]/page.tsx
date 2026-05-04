@@ -121,7 +121,7 @@ export default function InvoiceDetailPage() {
 
     if (!invoice) {
         return (
-            <div className="p-6 text-center text-muted">
+            <div className="p-6 text-center">
                 Invoice not found.
                 <button onClick={() => router.back()} className="ml-2 text-muted hover:underline">
                     Go back
@@ -136,7 +136,7 @@ export default function InvoiceDetailPage() {
                 ← Back to Invoices
             </button>
 
-            <div className="bg-white rounded-card shadow-card rounded-2xl p-6">
+            <div className="bg-white rounded-card shadow-card p-6">
                 <div className="flex justify-between items-start mb-6">
                     <div>
                         <p className="text-xs uppercase tracking-caps-xl text-muted">Invoice detail</p>
@@ -190,7 +190,7 @@ export default function InvoiceDetailPage() {
                 </div>
 
                 {/* DI Info */}
-                <div className="bg-white rounded-card shadow-card-soft mb-6 rounded-2xl p-4 space-y-4">
+                <div className="bg-white rounded-card shadow-card-soft mb-6 p-4 space-y-4">
                     <div className="flex items-center justify-between gap-4">
                         <div>
                             <p className="mb-1 text-xs text-muted">PRAL DI Status</p>

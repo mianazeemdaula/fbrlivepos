@@ -327,9 +327,9 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                             <option key={r.id} value={r.id}>{r.desc}</option>
                                         ))}
                                     </select>
-                                    {rateSource === 'fallback' && (
+                                    {/* {rateSource === 'fallback' && (
                                         <p className="mt-1 text-xs text-yellow-400 leading-tight">⚠ Using local rate presets — PRAL API unavailable</p>
-                                    )}
+                                    )} */}
                                     {form.diRate && rateSource === 'pral' && (
                                         <p className="mt-1 text-xs text-muted">FBR value: <span className="text-accent font-mono">{form.diRate}</span></p>
                                     )}
@@ -354,9 +354,9 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                             <option key={s.id} value={s.id}>{s.desc}</option>
                                         ))}
                                     </select>
-                                    {sroSource === 'db_fallback' && (
+                                    {/* {sroSource === 'db_fallback' && (
                                         <p className="mt-1 text-xs text-amber-400 leading-tight">⚠ Using local SRO presets — PRAL API unavailable</p>
-                                    )}
+                                    )} */}
                                 </div>
 
                                 {/* SR# Item */}
@@ -396,21 +396,22 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                     {/* ── HS Code ── */}
                     <div className="rounded-xl border border-border bg-surface p-4 space-y-2">
                         <p className="text-xs font-semibold uppercase tracking-wider text-accent">HS Code</p>
-                        <div className="flex items-end gap-2">
-                            <div className="flex-1">
-                                <label className={labelCls}>Search HS Code</label>
-                                <input value={hsSearch} onChange={e => setHsSearch(e.target.value)}
-                                    className={inputCls} placeholder="Enter code or keyword…" />
+                        <div className='flex gap-2'>
+                            <div className="flex items-end gap-2">
+                                <div className="flex-1">
+                                    <input value={hsSearch} onChange={e => setHsSearch(e.target.value)}
+                                        className={inputCls} placeholder="Enter code or keyword…" />
+                                </div>
+                                <button type="button" onClick={() => loadHS(hsSearch)} disabled={hsLoading}
+                                    className="flex h-9 w-10 items-center justify-center rounded-xl border border-border bg-surface text-ink hover:bg-canvas disabled:opacity-50">
+                                    ↺
+                                </button>
                             </div>
-                            <button type="button" onClick={() => loadHS(hsSearch)} disabled={hsLoading}
-                                className="flex h-9 w-10 items-center justify-center rounded-xl border border-border bg-surface text-ink hover:bg-canvas disabled:opacity-50">↺
-                                ↺
-                            </button>
+                            <select required value={form.hsCodeId} onChange={e => handleHSSelect(e.target.value)} className={`${inputCls} text-xs`}>
+                                <option value="">{hsLoading ? 'Loading…' : hsCodes.length === 0 ? 'No HS codes' : 'Select HS code'}</option>
+                                {hsCodes.map(h => <option key={h.id} value={h.id}>{h.code} — {h.shortName || h.description}</option>)}
+                            </select>
                         </div>
-                        <select required value={form.hsCodeId} onChange={e => handleHSSelect(e.target.value)} className={`${inputCls} text-xs`}>
-                            <option value="">{hsLoading ? 'Loading…' : hsCodes.length === 0 ? 'No HS codes' : 'Select HS code'}</option>
-                            {hsCodes.map(h => <option key={h.id} value={h.id}>{h.code} — {h.shortName || h.description}</option>)}
-                        </select>
                         {selectedHS && (
                             <div className="flex flex-wrap gap-4 rounded-lg bg-canvas px-3 py-2 text-xs text-ink-secondary">
                                 <span><span className="text-muted">Category: </span>{selectedHS.category}</span>

@@ -45,7 +45,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                     {/* Logo + Nav */}
                     <div className="flex items-center gap-4">
                         <div className="border border-border-strong rounded-full px-4 py-1.5 shrink-0">
-                            <span className="font-semibold text-ui-sm text-ink">FBR Live POS</span>
+                            <span className="font-semibold text-ui-sm text-ink">AAZIFY FBR</span>
                         </div>
                         <nav className="hidden lg:flex items-center gap-1">
                             {navItems.map((item) => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 
@@ -24,16 +24,19 @@ export default function InvoicesPage() {
     const [loading, setLoading] = useState(true)
     const [page, setPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
+    const [search, setSearch] = useState('')
     const [actionLoading, setActionLoading] = useState<string | null>(null)
     const [actionError, setActionError] = useState<string | null>(null)
 
     // Modals
     const [viewDIId, setViewDIId] = useState<string | null>(null)
 
-    async function loadInvoices() {
+    const loadInvoices = useCallback(async () => {
         setLoading(true)
         try {
-            const res = await fetch(`/api/invoices?page=${page}&limit=20`)
+            const params = new URLSearchParams({ page: String(page), limit: '20' })
+            if (search) params.set('q', search)
+            const res = await fetch(`/api/invoices?${params}`)
             if (res.ok) {
                 const data = await res.json()
                 setInvoices(data.invoices ?? data.data ?? [])
@@ -44,9 +47,14 @@ export default function InvoicesPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [page, search])
 
-    useEffect(() => { loadInvoices() }, [page]) // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(() => { loadInvoices() }, [loadInvoices])
+
+    useEffect(() => {
+        const timer = setTimeout(() => { setPage(1) }, 300)
+        return () => clearTimeout(timer)
+    }, [search])
 
     async function handleAction(invoiceId: string, action: 'validate' | 'confirm') {
         setActionLoading(invoiceId + action)
@@ -80,7 +88,7 @@ export default function InvoicesPage() {
             <div className="mb-6 flex items-center justify-between">
                 <div>
                     <p className="text-xs font-medium uppercase tracking-caps text-muted">Sales ledger</p>
-                    <h1 className="mt-1 text-page-title font-normal text-ink">Invoices</h1>
+                    <h1 className="text-page-title font-normal text-ink">Invoices</h1>
                 </div>
                 <Link
                     href="/pos"
@@ -88,6 +96,17 @@ export default function InvoicesPage() {
                 >
                     + New Invoice
                 </Link>
+            </div>
+
+            {/* Search */}
+            <div className="mb-4">
+                <input
+                    type="text"
+                    placeholder="Search by invoice # or buyer name..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full max-w-md rounded-input border border-border bg-white px-4 py-2.5 text-sm text-ink placeholder:text-muted focus:outline-none focus:border-primary"
+                />
             </div>
 
             {actionError && (

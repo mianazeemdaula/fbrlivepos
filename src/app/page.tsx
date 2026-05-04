@@ -64,7 +64,7 @@ export default async function HomePage() {
                 <p className="text-2xl font-bold">Live Compliance Desk</p>
                 <p className="mt-1 text-sm text-white/70">Real-time FBR DI submissions, audit trail, and tenant isolation.</p>
               </div>
-              <div className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white/90 border border-white/20">Unified Ops</div>
+              <div className="rounded-full bg-white/15 px-3 py-1 text-xs text-nowrap font-medium text-white/90 border border-white/20">Unified Ops</div>
             </div>
 
             <div className="space-y-3">

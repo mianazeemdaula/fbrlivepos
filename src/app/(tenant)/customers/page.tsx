@@ -291,6 +291,7 @@ export default function CustomersPage() {
                             <th className="p-4 text-left text-ui-xs font-normal text-muted">NTN/CNIC</th>
                             <th className="p-4 text-left text-ui-xs font-normal text-muted">Phone</th>
                             <th className="p-4 text-left text-ui-xs font-normal text-muted">Province</th>
+                            <th className="p-4 text-left text-ui-xs font-normal text-muted">FBR Register</th>
                             <th className="p-4 text-left text-ui-xs font-normal text-muted">FBR Status</th>
                             <th className="p-4 text-left text-ui-xs font-normal text-muted">Actions</th>
                         </tr>
@@ -303,29 +304,31 @@ export default function CustomersPage() {
                         ) : (
                             customers.map((c) => (
                                 <tr key={c.id} className="border-b border-border-muted hover:bg-surface-subtle transition-colors">
-                                    <td className="p-4 font-medium text-ink">{c.name}</td>
-                                    <td className="p-4 font-mono text-ui-xs text-muted">{c.ntnCnic || '—'}</td>
-                                    <td className="p-4 text-muted">{c.phone || '—'}</td>
-                                    <td className="p-4 text-muted">{c.province || '—'}</td>
-                                    <td className="p-4">
+                                    <td className="px-4 py-2 font-medium text-ink">{c.name}</td>
+                                    <td className="px-4 py-2 font-mono text-ui-xs text-muted">{c.ntnCnic || '—'}</td>
+                                    <td className="px-4 py-2 text-muted">{c.phone || '—'}</td>
+                                    <td className="px-4 py-2 text-muted">{c.province || '—'}</td>
+                                    <td className="px-4 py-2">
                                         {c.fbrVerified ? (
-                                            <div className="flex flex-col gap-1">
-                                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium w-fit ${c.registrationType === 'Registered' ? 'bg-success-bg text-success' : 'bg-accent-light text-warning'}`}>
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                                                    {c.registrationType}
-                                                </span>
-                                                {c.atlStatus && (
-                                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium w-fit ${c.atlStatus === 'Active' ? 'bg-success-bg text-success' : 'bg-error-bg text-error'}`}>
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                                                        ATL: {c.atlStatus}
-                                                    </span>
-                                                )}
-                                            </div>
+                                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium w-fit ${c.registrationType === 'Registered' ? 'bg-success-bg text-success' : 'bg-accent-light text-warning'}`}>
+                                                <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                                                {c.registrationType}
+                                            </span>
                                         ) : (
                                             <span className="text-xs text-muted">Not verified</span>
                                         )}
                                     </td>
-                                    <td className="p-4">
+                                    <td className="px-4 py-2">
+                                        {c.atlStatus ? (
+                                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium w-fit ${c.atlStatus === 'Active' ? 'bg-success-bg text-success' : 'bg-error-bg text-error'}`}>
+                                                <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                                                ATL: {c.atlStatus}
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs text-muted">Not verified</span>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-2">
                                         {c.ntnCnic && (
                                             <button onClick={() => handleVerifyBuyer(c.id, c.ntnCnic!)} disabled={verifying === c.id}
                                                 className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-ink hover:bg-surface disabled:opacity-50 transition-colors">
@@ -376,13 +379,13 @@ export default function CustomersPage() {
                             <div className="mb-4 rounded-xl border border-border-muted bg-surface-subtle p-4">
                                 <div className="grid grid-cols-2 gap-3 text-ui-xs">
                                     <div>
-                                        <span className="text-muted">Registration:</span>
+                                        <span className="">Registration:</span>
                                         <p className={`font-medium mt-0.5 ${verifyResult.registrationType === 'Registered' ? 'text-success' : 'text-warning'}`}>
                                             {verifyResult.registrationType}
                                         </p>
                                     </div>
                                     <div>
-                                        <span className="text-muted">ATL Status:</span>
+                                        <span className="">ATL Status:</span>
                                         <p className={`font-medium mt-0.5 ${verifyResult.atlStatus === 'Active' ? 'text-success' : 'text-error'}`}>
                                             {verifyResult.atlStatus}
                                         </p>

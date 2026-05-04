@@ -148,10 +148,17 @@ export async function GET(req: NextRequest) {
     const page = Number(searchParams.get('page') ?? 1)
     const limit = Number(searchParams.get('limit') ?? 25)
     const status = searchParams.get('status')
+    const q = searchParams.get('q')?.trim()
 
     const where = {
         tenantId: tenant.id,
         ...(status ? { status: status as 'PENDING' | 'QUEUED' | 'SUBMITTED' | 'FAILED' } : {}),
+        ...(q ? {
+            OR: [
+                { invoiceNumber: { contains: q, mode: 'insensitive' as const } },
+                { buyerName: { contains: q, mode: 'insensitive' as const } },
+            ],
+        } : {}),
     }
 
     // Date boundaries for stats

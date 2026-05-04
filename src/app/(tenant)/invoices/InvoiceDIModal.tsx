@@ -67,11 +67,11 @@ export default function InvoiceDIModal({ invoiceId, onClose }: Props) {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
             onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
         >
-            <div className="bg-white rounded-card shadow-card relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl">
+            <div className="bg-white rounded-card shadow-card relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-6 py-4">
                     <div>
-                        <p className="text-xs font-medium uppercase tracking-caps text-muted">PRAL DI Response</p>
+                        <p className="text-xs font-medium uppercase tracking-caps text-muted">FBR Response</p>
                         {data && <h2 className="mt-1 text-lg font-bold text-white">{data.invoiceNumber}</h2>}
                     </div>
                     <button
@@ -91,7 +91,7 @@ export default function InvoiceDIModal({ invoiceId, onClose }: Props) {
                             ))}
                         </div>
                     ) : !data ? (
-                        <p className="text-center text-muted">Invoice not found.</p>
+                        <p className="text-cente">Invoice not found.</p>
                     ) : (
                         <>
                             {/* Status summary */}
@@ -115,8 +115,8 @@ export default function InvoiceDIModal({ invoiceId, onClose }: Props) {
                             {/* Error */}
                             {displayError && (
                                 <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 space-y-1">
-                                    <p className="text-xs font-medium text-red-300">Error Details</p>
-                                    <p className="text-sm text-red-200 whitespace-pre-wrap">{displayError}</p>
+                                    <p className="text-xs font-medium text-red-500">Error Details</p>
+                                    <p className="text-sm text-red-500 whitespace-pre-wrap">{displayError}</p>
                                     {data.diErrorCode && (
                                         <p className="font-mono text-xs text-red-300/60">Code: {data.diErrorCode}</p>
                                     )}
@@ -125,7 +125,7 @@ export default function InvoiceDIModal({ invoiceId, onClose }: Props) {
 
                             {/* Per-item statuses */}
                             <div>
-                                <p className="mb-2 text-xs text-muted">Per-item DI Statuses</p>
+                                <p className="mb-2 text-xs">Per-item DI Statuses</p>
                                 <pre className="max-h-52 overflow-auto rounded-lg border border-border bg-code-bg p-3 text-xs text-ink whitespace-pre-wrap wrap-break-word">
                                     {formatJson(data.diItemStatuses)}
                                 </pre>
@@ -170,9 +170,9 @@ function InfoCell({
 }) {
     return (
         <div className="rounded-xl border border-border bg-surface-subtle p-3">
-            <p className="mb-1 text-xs text-muted">{label}</p>
+            <p className="mb-1 text-xs">{label}</p>
             <p
-                className={`break-all text-sm font-medium ${highlight ? 'text-green-400' : 'text-white'} ${mono ? 'font-mono' : ''}`}
+                className={`break-all text-sm font-medium ${highlight ? 'text-green-400' : 'text-muted'} ${mono ? 'font-mono' : ''}`}
             >
                 {value}
             </p>

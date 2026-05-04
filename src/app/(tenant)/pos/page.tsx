@@ -439,22 +439,22 @@ export default function POSPage() {
                     {/* Totals row */}
                     <div className="grid grid-cols-4 divide-x divide-border-muted px-4 py-3">
                         <div className="pr-3">
-                            <p className="text-xs text-muted">Subtotal</p>
+                            <p className="text-xs ">Subtotal</p>
                             <p className="text-sm font-semibold text-ink">PKR {subtotal().toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                         </div>
                         <div className="px-3">
-                            <p className="text-xs text-muted">Discount</p>
+                            <p className="text-xs">Discount</p>
                             {discountTotal() > 0
                                 ? <p className="text-sm font-semibold text-success">−PKR {discountTotal().toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
-                                : <p className="text-sm font-semibold text-muted">—</p>
+                                : <p className="text-sm font-semibold ">—</p>
                             }
                         </div>
                         <div className="px-3">
-                            <p className="text-xs text-muted">Sales Tax</p>
+                            <p className="text-xs">Sales Tax</p>
                             <p className="text-sm font-semibold text-ink">PKR {taxAmount().toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                         </div>
                         <div className="pl-3">
-                            <p className="text-xs text-muted">Total</p>
+                            <p className="text-xs">Total</p>
                             <p className="text-base font-bold text-primary">PKR {total().toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                         </div>
                     </div>
