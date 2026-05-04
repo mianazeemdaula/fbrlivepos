@@ -62,34 +62,35 @@ export default function DashboardPage() {
 
     return (
         <div className="p-6 lg:p-8">
+            {/* Page header */}
             <div className="mb-8">
-                <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Tenant overview</p>
-                <h1 className="brand-heading mt-2 text-3xl font-bold text-white">Dashboard</h1>
+                <p className="text-xs font-medium uppercase tracking-caps text-muted">Tenant overview</p>
+                <h1 className="mt-1 text-page-title font-normal text-ink">Dashboard</h1>
             </div>
 
             {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="app-panel rounded-2xl p-5 animate-pulse">
-                            <div className="mb-3 h-4 w-24 rounded bg-white/10" />
-                            <div className="h-8 w-16 rounded bg-white/10" />
+                        <div key={i} className="bg-white rounded-card p-5 animate-pulse shadow-card">
+                            <div className="mb-3 h-3 w-24 rounded-full bg-border" />
+                            <div className="h-7 w-16 rounded-full bg-border" />
                         </div>
                     ))}
                 </div>
             ) : (
                 <>
                     {!stats?.diConfigured && (
-                        <div className="mb-6 rounded-2xl border border-[#f0d9a03a] bg-[#f0d9a00f] p-4">
+                        <div className="mb-6 rounded-card border border-border bg-accent-light p-4">
                             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-[#f0d9a0]">PRAL DI setup is still pending</p>
-                                    <p className="mt-1 text-sm text-[#d8d0bf]">
+                                    <p className="text-sm font-medium text-ink">PRAL DI setup is still pending</p>
+                                    <p className="mt-1 text-sm text-muted">
                                         You can manage products and use the dashboard now, then finish DI credentials in Settings before live submissions.
                                     </p>
                                 </div>
                                 <Link
                                     href="/settings"
-                                    className="inline-flex items-center justify-center rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--primary)] hover:bg-[var(--accent-soft)]"
+                                    className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark transition-colors"
                                 >
                                     Open Settings
                                 </Link>
@@ -97,59 +98,36 @@ export default function DashboardPage() {
                         </div>
                     )}
 
+                    {/* Stats row */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        <StatCard
-                            label="Today's Sales"
-                            value={`PKR ${(stats?.todaySales ?? 0).toLocaleString()}`}
-                            sub={`${stats?.todayInvoices ?? 0} invoices`}
-                        />
-                        <StatCard
-                            label="This Month"
-                            value={`PKR ${(stats?.monthSales ?? 0).toLocaleString()}`}
-                            sub={`${stats?.monthInvoices ?? 0} invoices`}
-                        />
+                        <StatCard label="Today's Sales" value={`PKR ${(stats?.todaySales ?? 0).toLocaleString()}`} sub={`${stats?.todayInvoices ?? 0} invoices`} style="black" />
+                        <StatCard label="This Month" value={`PKR ${(stats?.monthSales ?? 0).toLocaleString()}`} sub={`${stats?.monthInvoices ?? 0} invoices`} style="yellow" />
                         <StatCard
                             label="PRAL DI Status"
-                            value={stats?.diStatus === 'CLOSED' || stats?.diStatus === 'HALF_OPEN' ? 'Connected' : stats?.diStatus === 'CONNECTED' ? 'Connected' : stats?.diStatus === 'NOT_CONFIGURED' ? 'Not Configured' : stats?.diStatus ?? 'N/A'}
+                            value={stats?.diStatus === 'CLOSED' || stats?.diStatus === 'HALF_OPEN' || stats?.diStatus === 'CONNECTED' ? 'Connected' : stats?.diStatus === 'NOT_CONFIGURED' ? 'Not Configured' : stats?.diStatus ?? 'N/A'}
                             sub={`${stats?.pendingSubmissions ?? 0} pending`}
-                            valueColor={stats?.diStatus === 'CLOSED' || stats?.diStatus === 'HALF_OPEN' || stats?.diStatus === 'CONNECTED' ? 'text-green-400' : 'text-yellow-400'}
+                            style={stats?.diStatus === 'CLOSED' || stats?.diStatus === 'HALF_OPEN' || stats?.diStatus === 'CONNECTED' ? 'green' : 'outlined'}
                         />
-                        <StatCard
-                            label="Products"
-                            value={String(stats?.productCount ?? 0)}
-                            sub="in catalogue"
-                        />
+                        <StatCard label="Products" value={String(stats?.productCount ?? 0)} sub="in catalogue" style="outlined" />
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="app-panel rounded-2xl p-5">
-                            <h2 className="mb-4 text-lg font-semibold text-white">Quick Actions</h2>
+                        <div className="bg-white rounded-card shadow-card p-6">
+                            <h2 className="mb-4 text-ui-sm font-semibold text-ink">Quick Actions</h2>
                             <div className="grid grid-cols-2 gap-3">
-                                <QuickAction href="/pos" icon="🖥️" label="Open POS" />
-                                <QuickAction href="/invoices" icon="📄" label="View Invoices" />
-                                <QuickAction href="/products" icon="📦" label="Manage Products" />
-                                <QuickAction href="/settings" icon="⚙️" label="DI Settings" />
+                                <QuickAction href="/pos" label="Open POS" />
+                                <QuickAction href="/invoices" label="View Invoices" />
+                                <QuickAction href="/products" label="Manage Products" />
+                                <QuickAction href="/settings" label="DI Settings" />
                             </div>
                         </div>
 
-                        <div className="app-panel rounded-2xl p-5">
-                            <h2 className="mb-4 text-lg font-semibold text-white">Getting Started</h2>
-                            <div className="space-y-3">
-                                <Step
-                                    number={1}
-                                    title="Configure PRAL DI Credentials"
-                                    description="Go to Settings to enter your IRIS security token and business details."
-                                />
-                                <Step
-                                    number={2}
-                                    title="Add Products"
-                                    description="Add your products with GST rates and HS codes."
-                                />
-                                <Step
-                                    number={3}
-                                    title="Start Selling"
-                                    description="Use the POS terminal to create invoices automatically submitted to PRAL."
-                                />
+                        <div className="bg-white rounded-card shadow-card p-6">
+                            <h2 className="mb-4 text-ui-sm font-semibold text-ink">Getting Started</h2>
+                            <div className="space-y-4">
+                                <Step number={1} title="Configure PRAL DI Credentials" description="Go to Settings to enter your IRIS security token and business details." />
+                                <Step number={2} title="Add Products" description="Add your products with GST rates and HS codes." />
+                                <Step number={3} title="Start Selling" description="Use the POS terminal to create invoices automatically submitted to PRAL." />
                             </div>
                         </div>
                     </div>
@@ -159,55 +137,42 @@ export default function DashboardPage() {
     )
 }
 
-function StatCard({
-    label,
-    value,
-    sub,
-    valueColor = 'text-white',
-}: {
-    label: string
-    value: string
-    sub: string
-    valueColor?: string
-}) {
+function StatCard({ label, value, sub, style = 'outlined' }: { label: string; value: string; sub: string; style?: 'black' | 'yellow' | 'green' | 'outlined' }) {
+    const styles = {
+        black: 'bg-primary text-white',
+        yellow: 'bg-accent text-ink',
+        green: 'bg-success-bg text-success',
+        outlined: 'bg-white border border-border text-ink',
+    }
     return (
-        <div className="app-panel rounded-2xl p-5">
-            <p className="mb-1 text-sm text-[#c1bcaf]">{label}</p>
-            <p className={`metric-value text-2xl font-bold ${valueColor}`}>{value}</p>
-            <p className="mt-1 text-xs text-[#8d897d]">{sub}</p>
+        <div className={`rounded-card p-5 shadow-card ${styles[style]}`}>
+            <p className={`mb-1 text-xs font-medium uppercase tracking-caps-xs ${style === 'black' ? 'text-muted' : style === 'yellow' ? 'text-ink/60' : style === 'green' ? 'text-success/70' : 'text-muted'}`}>{label}</p>
+            <p className="text-2xl font-semibold">{value}</p>
+            <p className={`mt-1 text-xs ${style === 'black' ? 'text-muted' : 'text-current opacity-60'}`}>{sub}</p>
         </div>
     )
 }
 
-function QuickAction({ href, icon, label }: { href: string; icon: string; label: string }) {
+function QuickAction({ href, label }: { href: string; label: string }) {
     return (
         <a
             href={href}
-            className="flex items-center gap-2 rounded-xl bg-white/6 px-4 py-3 text-sm text-[#d8d0bf] transition-colors hover:bg-white/10 hover:text-white"
+            className="flex items-center justify-center rounded-input border border-border px-4 py-3 text-ui-xs font-medium text-ink hover:bg-surface transition-colors"
         >
-            <span>{icon}</span>
             {label}
         </a>
     )
 }
 
-function Step({
-    number,
-    title,
-    description,
-}: {
-    number: number
-    title: string
-    description: string
-}) {
+function Step({ number, title, description }: { number: number; title: string; description: string }) {
     return (
         <div className="flex gap-3">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f0d9a01a] text-xs font-bold text-[#f0d9a0]">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-white">
                 {number}
             </div>
             <div>
-                <p className="text-sm font-medium text-white">{title}</p>
-                <p className="text-xs text-[#c1bcaf]">{description}</p>
+                <p className="text-sm font-medium text-ink">{title}</p>
+                <p className="text-ui-xs text-muted">{description}</p>
             </div>
         </div>
     )

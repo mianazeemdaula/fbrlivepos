@@ -111,14 +111,15 @@ export default function ProductsPage() {
 
     return (
         <div className="p-6 lg:p-8">
+            {/* Header */}
             <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
-                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Catalog Management</p>
-                    <h1 className="brand-heading mt-2 text-3xl font-bold text-white">Products</h1>
+                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Catalog Management</p>
+                    <h1 className="mt-1 text-page-title font-normal text-ink">Products</h1>
                 </div>
                 <button
                     onClick={handleAddNew}
-                    className="rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-primary shadow-lg shadow-accent/20 transition-all hover:bg-[--accent-soft] hover:shadow-accent/40"
+                    className="rounded-full bg-primary px-5 py-2.5 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors"
                 >
                     + Define New Product
                 </button>
@@ -129,91 +130,82 @@ export default function ProductsPage() {
                     editingProductId={editingProduct?.id}
                     initialValues={initialValues}
                     onSave={handleSave}
-                    onClose={() => {
-                        setShowModal(false)
-                        setEditingProduct(null)
-                    }}
+                    onClose={() => { setShowModal(false); setEditingProduct(null) }}
                 />
             )}
 
+            {/* Search */}
             <div className="mb-4">
                 <input
                     type="text"
                     placeholder="Search products..."
                     value={search}
-                    onChange={(e) => {
-                        setSearch(e.target.value)
-                        setPage(1)
-                    }}
-                    className="w-full max-w-md rounded-xl border border-white/10 bg-white/6 px-4 py-2 text-sm text-white placeholder:text-[#8d897d]"
+                    onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+                    className="w-full max-w-md rounded-input border border-border bg-white px-4 py-2 text-sm text-ink placeholder:text-muted focus:outline-none focus:border-primary"
                 />
             </div>
 
-            <div className="app-panel rounded-xl overflow-hidden">
+            {/* Table card */}
+            <div className="bg-white rounded-card shadow-card overflow-hidden">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-white/10">
-                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">Name</th>
-                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">SKU</th>
-                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">HS Code</th>
-                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">Price</th>
-                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">Tax %</th>
-                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">Unit</th>
-                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">DI Ready</th>
-                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">Status</th>
-                            <th className="text-left text-xs font-medium text-[#c1bcaf] px-4 py-3">Actions</th>
+                        <tr className="border-b border-border-muted">
+                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Name</th>
+                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">SKU</th>
+                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">HS Code</th>
+                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Price</th>
+                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Tax %</th>
+                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Unit</th>
+                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">DI Ready</th>
+                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Status</th>
+                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             Array.from({ length: 3 }).map((_, i) => (
-                                <tr key={i} className="border-b border-white/8">
+                                <tr key={i} className="border-b border-border-muted">
                                     <td colSpan={9} className="px-4 py-3">
-                                        <div className="h-4 bg-white/10 rounded animate-pulse" />
+                                        <div className="h-4 bg-border rounded-full animate-pulse" />
                                     </td>
                                 </tr>
                             ))
                         ) : products.length === 0 ? (
                             <tr>
-                                <td colSpan={9} className="px-4 py-12 text-center text-[#8d897d]">
+                                <td colSpan={9} className="px-4 py-12 text-center text-muted text-sm">
                                     No products. Add your first product to see it here.
                                 </td>
                             </tr>
                         ) : (
                             products.map((p) => (
-                                <tr key={p.id} className="border-b border-white/8 hover:bg-white/4">
-                                    <td className="px-4 py-3 text-sm text-white">{p.name}</td>
-                                    <td className="px-4 py-3 text-sm text-[#c1bcaf] font-mono">{p.sku || '—'}</td>
-                                    <td className="px-4 py-3 text-sm text-[#c1bcaf] font-mono">{p.hsCode}</td>
-                                    <td className="px-4 py-3 text-sm text-white">PKR {Number(p.price).toLocaleString()}</td>
-                                    <td className="px-4 py-3 text-sm text-[#c1bcaf]">{Number(p.taxRate)}%</td>
-                                    <td className="px-4 py-3 text-sm text-[#c1bcaf]">{p.unit}</td>
+                                <tr key={p.id} className="border-b border-border-muted transition-colors hover:bg-surface-subtle">
+                                    <td className="px-4 py-3 text-sm font-medium text-ink">{p.name}</td>
+                                    <td className="px-4 py-3 text-ui-xs text-muted font-mono">{p.sku || '—'}</td>
+                                    <td className="px-4 py-3 text-ui-xs text-muted font-mono">{p.hsCode}</td>
+                                    <td className="px-4 py-3 text-sm font-medium text-ink">PKR {Number(p.price).toLocaleString()}</td>
+                                    <td className="px-4 py-3 text-ui-xs text-muted">{Number(p.taxRate)}%</td>
+                                    <td className="px-4 py-3 text-ui-xs text-muted">{p.unit}</td>
                                     <td className="px-4 py-3 align-top">
-                                        <span className={`text-xs px-2 py-0.5 rounded-full ${p.diReady ? 'bg-green-500/10 text-green-400' : 'bg-amber-500/10 text-amber-300'}`}>
-                                            {p.diReady ? 'Ready' : 'Needs PRAL fields'}
+                                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${p.diReady ? 'bg-success-bg text-success' : 'bg-accent-light text-warning'}`}>
+                                            <span className="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0" />
+                                            {p.diReady ? 'Ready' : 'Needs fields'}
                                         </span>
                                         {!p.diReady && p.diIssues.length > 0 && (
-                                            <div className="mt-2 text-xs text-amber-200 max-w-xs space-y-1">
-                                                {p.diIssues.slice(0, 2).map((issue) => (
-                                                    <p key={issue}>{issue}</p>
-                                                ))}
+                                            <div className="mt-1.5 text-xs text-warning max-w-xs space-y-0.5">
+                                                {p.diIssues.slice(0, 2).map((issue) => <p key={issue}>{issue}</p>)}
                                             </div>
                                         )}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <span
-                                            className={`text-xs px-2 py-0.5 rounded-full ${p.isActive
-                                                ? 'bg-green-500/10 text-green-400'
-                                                : 'bg-red-500/10 text-red-400'
-                                                }`}
-                                        >
+                                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${p.isActive ? 'bg-success-bg text-success' : 'bg-error-bg text-error'}`}>
+                                            <span className="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0" />
                                             {p.isActive ? 'Active' : 'Inactive'}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3">
                                         <button
                                             onClick={() => handleEditProduct(p)}
-                                            className="text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-white/6 text-[#d8d0bf] hover:bg-white/12"
+                                            className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-ink hover:bg-surface transition-colors"
                                         >
                                             Edit
                                         </button>

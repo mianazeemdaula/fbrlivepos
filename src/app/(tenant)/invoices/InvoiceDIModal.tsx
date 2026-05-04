@@ -67,16 +67,16 @@ export default function InvoiceDIModal({ invoiceId, onClose }: Props) {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
             onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
         >
-            <div className="app-panel relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl">
+            <div className="bg-white rounded-card shadow-card relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl">
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+                <div className="flex items-center justify-between border-b border-border px-6 py-4">
                     <div>
-                        <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">PRAL DI Response</p>
+                        <p className="text-xs font-medium uppercase tracking-caps text-muted">PRAL DI Response</p>
                         {data && <h2 className="mt-1 text-lg font-bold text-white">{data.invoiceNumber}</h2>}
                     </div>
                     <button
                         onClick={onClose}
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-white/8 text-[#8d897d] hover:bg-white/14 hover:text-white"
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-muted hover:bg-white/14 hover:text-white"
                     >
                         ✕
                     </button>
@@ -87,11 +87,11 @@ export default function InvoiceDIModal({ invoiceId, onClose }: Props) {
                     {loading ? (
                         <div className="animate-pulse space-y-3">
                             {Array.from({ length: 4 }).map((_, i) => (
-                                <div key={i} className="h-8 rounded bg-white/10" />
+                                <div key={i} className="h-8 rounded bg-border" />
                             ))}
                         </div>
                     ) : !data ? (
-                        <p className="text-center text-[#8d897d]">Invoice not found.</p>
+                        <p className="text-center text-muted">Invoice not found.</p>
                     ) : (
                         <>
                             {/* Status summary */}
@@ -125,8 +125,8 @@ export default function InvoiceDIModal({ invoiceId, onClose }: Props) {
 
                             {/* Per-item statuses */}
                             <div>
-                                <p className="mb-2 text-xs text-[#8d897d]">Per-item DI Statuses</p>
-                                <pre className="max-h-52 overflow-auto rounded-lg border border-white/10 bg-[#0b1510] p-3 text-xs text-[#d8d0bf] whitespace-pre-wrap wrap-break-word">
+                                <p className="mb-2 text-xs text-muted">Per-item DI Statuses</p>
+                                <pre className="max-h-52 overflow-auto rounded-lg border border-border bg-code-bg p-3 text-xs text-ink whitespace-pre-wrap wrap-break-word">
                                     {formatJson(data.diItemStatuses)}
                                 </pre>
                             </div>
@@ -134,7 +134,7 @@ export default function InvoiceDIModal({ invoiceId, onClose }: Props) {
                             {/* Latest PRAL response */}
                             {data.latestSubmissionLog?.responseBody != null && (
                                 <div>
-                                    <p className="mb-2 text-xs text-[#8d897d]">
+                                    <p className="mb-2 text-xs text-muted">
                                         Latest PRAL Response
                                         {data.latestSubmissionLog.responseCode
                                             ? ` (${data.latestSubmissionLog.responseCode})`
@@ -144,7 +144,7 @@ export default function InvoiceDIModal({ invoiceId, onClose }: Props) {
                                             : ''}
                                         {` · Attempt #${data.latestSubmissionLog.attempt}`}
                                     </p>
-                                    <pre className="max-h-72 overflow-auto rounded-lg border border-white/10 bg-[#0b1510] p-3 text-xs text-[#d8d0bf] whitespace-pre-wrap wrap-break-word">
+                                    <pre className="max-h-72 overflow-auto rounded-lg border border-border bg-code-bg p-3 text-xs text-ink whitespace-pre-wrap wrap-break-word">
                                         {formatJson(data.latestSubmissionLog.responseBody)}
                                     </pre>
                                 </div>
@@ -169,8 +169,8 @@ function InfoCell({
     highlight?: boolean
 }) {
     return (
-        <div className="rounded-xl border border-white/10 bg-white/4 p-3">
-            <p className="mb-1 text-xs text-[#8d897d]">{label}</p>
+        <div className="rounded-xl border border-border bg-surface-subtle p-3">
+            <p className="mb-1 text-xs text-muted">{label}</p>
             <p
                 className={`break-all text-sm font-medium ${highlight ? 'text-green-400' : 'text-white'} ${mono ? 'font-mono' : ''}`}
             >

@@ -48,19 +48,19 @@ export default function AdminOverviewPage() {
         <div className="p-8">
             {/* Header */}
             <div className="mb-8">
-                <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Super admin</p>
-                <h1 className="brand-heading text-3xl font-bold text-white">Platform Overview</h1>
-                <p className="mt-1 text-sm text-[#c1bcaf]">Real-time metrics across all tenants</p>
+                <p className="text-xs font-medium uppercase tracking-caps text-muted">Super admin</p>
+                <h1 className="text-page-title font-normal text-ink">Platform Overview</h1>
+                <p className="mt-1 text-sm text-muted">Real-time metrics across all tenants</p>
             </div>
 
             {/* Stats grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
                 {loading ? (
                     Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="app-panel rounded-2xl p-5 animate-pulse">
-                            <div className="mb-4 h-3.5 w-24 rounded bg-white/10" />
-                            <div className="mb-2 h-7 w-20 rounded bg-white/10" />
-                            <div className="h-3 w-16 rounded bg-white/10" />
+                        <div key={i} className="bg-white rounded-card shadow-card rounded-2xl p-5 animate-pulse">
+                            <div className="mb-4 h-3.5 w-24 rounded bg-border" />
+                            <div className="mb-2 h-7 w-20 rounded bg-border" />
+                            <div className="h-3 w-16 rounded bg-border" />
                         </div>
                     ))
                 ) : (
@@ -167,31 +167,31 @@ function StatCard({
     icon: React.ReactNode
 }) {
     const accentMap = {
-        indigo: 'text-indigo-400 bg-indigo-500/10',
-        emerald: 'text-emerald-400 bg-emerald-500/10',
-        sky: 'text-sky-400 bg-sky-500/10',
-        violet: 'text-violet-400 bg-violet-500/10',
+        indigo: 'text-indigo-500 bg-indigo-50',
+        emerald: 'text-success bg-success-bg',
+        sky: 'text-sky-500 bg-sky-50',
+        violet: 'text-violet-500 bg-violet-50',
     }
     return (
-        <div className="app-panel rounded-2xl p-5">
+        <div className="bg-white shadow-card rounded-2xl p-5">
             <div className="flex items-start justify-between mb-3">
-                <p className="text-xs font-medium leading-tight text-[#c1bcaf]">{label}</p>
+                <p className="text-xs font-medium leading-tight text-muted">{label}</p>
                 <span className={`p-1.5 rounded-lg ${accentMap[accent]}`}>{icon}</span>
             </div>
             <p className="metric-value text-2xl font-bold">{value}</p>
-            {sub && <p className="mt-1 text-xs text-[#8d897d]">{sub}</p>}
+            {sub && <p className="mt-1 text-xs text-muted">{sub}</p>}
         </div>
     )
 }
 
 function QuickLink({ href, title, description, icon }: { href: string; title: string; description: string; icon: React.ReactNode }) {
     return (
-        <a href={href} className="app-panel group block rounded-2xl p-5 transition-all hover:border-[rgba(200,164,90,0.28)] hover:bg-[rgba(29,44,34,0.88)]">
+        <a href={href} className="bg-white rounded-card shadow-card group block p-5 border border-border-muted transition-all hover:border-border-strong hover:bg-surface">
             <div className="flex items-center gap-3 mb-2">
-                <span className="text-[#f0d9a0] transition-colors group-hover:text-[#f6e7bf]">{icon}</span>
-                <h3 className="text-sm font-semibold text-white">{title}</h3>
+                <span className="text-muted transition-colors group-hover:text-ink">{icon}</span>
+                <h3 className="text-sm font-semibold text-ink">{title}</h3>
             </div>
-            <p className="text-xs text-[#8d897d]">{description}</p>
+            <p className="text-xs text-muted">{description}</p>
         </a>
     )
 }

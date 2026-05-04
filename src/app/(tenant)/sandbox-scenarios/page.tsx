@@ -49,30 +49,30 @@ export default function SandboxScenariosPage() {
         <div className="p-6 lg:p-8">
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Testing</p>
-                    <h1 className="brand-heading mt-2 text-3xl font-bold text-white">Sandbox Scenarios</h1>
-                    <p className="mt-1 text-sm text-[#c1bcaf]">
+                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Testing</p>
+                    <h1 className="mt-2 text-page-title font-normal text-ink">Sandbox Scenarios</h1>
+                    <p className="mt-1 text-sm text-muted">
                         Run PRAL DI sandbox cases outside Settings so testing has a dedicated page.
                     </p>
                 </div>
                 <Link
                     href="/settings"
-                    className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-[#d8d0bf] transition-colors hover:bg-white/6 hover:text-white"
+                    className="rounded-full border border-border px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface-subtle hover:text-white"
                 >
                     Back to Settings
                 </Link>
             </div>
 
             {loading ? (
-                <div className="app-panel rounded-2xl p-6 text-sm text-[#c1bcaf]">
+                <div className="bg-white rounded-card shadow-card rounded-2xl p-6 text-sm text-muted">
                     Loading sandbox configuration...
                 </div>
             ) : !config?.configured ? (
-                <div className="rounded-xl border border-[rgba(200,164,90,0.3)] bg-[rgba(200,164,90,0.12)] p-6 text-sm text-[#f0d9a0]">
+                <div className="rounded-xl border border-gold/30 bg-gold/10 p-6 text-sm text-muted">
                     Configure PRAL DI credentials in Settings before running sandbox scenarios.
                 </div>
             ) : config.environment !== 'SANDBOX' ? (
-                <div className="rounded-xl border border-[rgba(1,107,48,0.35)] bg-[rgba(1,107,48,0.12)] p-6 text-sm text-[#9fd9b0]">
+                <div className="rounded-xl border border-primary/35 bg-primary/10 p-6 text-sm text-success">
                     This tenant is currently set to Production. Switch the DI environment back to Sandbox in Settings if you want to run scenario tests.
                 </div>
             ) : (

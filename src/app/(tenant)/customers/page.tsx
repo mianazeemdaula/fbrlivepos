@@ -171,22 +171,23 @@ export default function CustomersPage() {
 
     return (
         <div className="p-6 lg:p-8">
+            {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Buyer registry</p>
-                    <h1 className="brand-heading mt-2 text-3xl font-bold text-white">Customers</h1>
-                    <p className="mt-1 text-sm text-[#c1bcaf]">{total} total customers</p>
+                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Buyer registry</p>
+                    <h1 className="mt-1 text-page-title font-normal text-ink">Customers</h1>
+                    <p className="mt-1 text-ui-xs text-muted">{total} total customers</p>
                 </div>
                 <div className="flex gap-3">
                     <button
                         onClick={() => setShowVerifyModal(true)}
-                        className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-[#d8d0bf] transition-colors hover:bg-white/10"
+                        className="rounded-full border border-border bg-white px-4 py-2 text-ui-xs font-medium text-ink hover:bg-surface transition-colors"
                     >
                         Verify NTN/CNIC
                     </button>
                     <button
                         onClick={() => setShowForm(!showForm)}
-                        className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-(--accent-soft)"
+                        className="rounded-full bg-primary px-4 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors"
                     >
                         {showForm ? 'Cancel' : '+ Add Customer'}
                     </button>
@@ -194,9 +195,9 @@ export default function CustomersPage() {
             </div>
 
             {message && (
-                <div className={`text-sm rounded-lg p-3 mb-4 ${message.type === 'success'
-                    ? 'bg-green-500/10 text-green-400 border border-green-500/30'
-                    : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                <div className={`text-ui-xs rounded-input p-3 mb-4 ${message.type === 'success'
+                    ? 'bg-success-bg text-success border border-success-border'
+                    : 'bg-error-bg text-error border border-error-border'
                     }`}
                 >
                     {message.text}
@@ -205,69 +206,50 @@ export default function CustomersPage() {
 
             {/* Add Customer Form */}
             {showForm && (
-                <div className="app-panel mb-6 rounded-2xl p-6">
-                    <h2 className="text-lg font-semibold text-white mb-4">New Customer</h2>
+                <div className="bg-white rounded-card shadow-card mb-6 p-6">
+                    <h2 className="text-ui-sm font-semibold text-ink mb-4">New Customer</h2>
                     <form onSubmit={handleAddCustomer} className="space-y-3">
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="mb-1 block text-xs text-[#c1bcaf]">Name *</label>
-                                <input
-                                    required
-                                    value={form.name}
-                                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
-                                    placeholder="Business or person name"
-                                />
+                                <label className="mb-1 block text-xs text-muted">Name *</label>
+                                <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                    className="w-full rounded-input border border-border px-3 py-2 text-sm text-ink bg-white focus:outline-none focus:border-primary"
+                                    placeholder="Business or person name" />
                             </div>
                             <div>
-                                <label className="mb-1 block text-xs text-[#c1bcaf]">NTN/CNIC</label>
-                                <input
-                                    value={form.ntnCnic}
-                                    onChange={(e) => setForm({ ...form, ntnCnic: normalizeNtnCnic(e.target.value) })}
-                                    inputMode="numeric"
-                                    maxLength={13}
-                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
-                                    placeholder="7-digit NTN or 13-digit CNIC"
-                                />
+                                <label className="mb-1 block text-xs text-muted">NTN/CNIC</label>
+                                <input value={form.ntnCnic} onChange={(e) => setForm({ ...form, ntnCnic: normalizeNtnCnic(e.target.value) })}
+                                    inputMode="numeric" maxLength={13}
+                                    className="w-full rounded-input border border-border px-3 py-2 text-sm text-ink bg-white focus:outline-none focus:border-primary"
+                                    placeholder="7-digit NTN or 13-digit CNIC" />
                                 {form.ntnCnic && !isValidNtnCnic(normalizedFormNtnCnic) && (
-                                    <p className="mt-1 text-xs text-amber-400">Use 7 digits for NTN or 13 digits for CNIC.</p>
+                                    <p className="mt-1 text-xs text-warning">Use 7 digits for NTN or 13 digits for CNIC.</p>
                                 )}
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="mb-1 block text-xs text-[#c1bcaf]">Phone</label>
-                                <input
-                                    value={form.phone}
-                                    onChange={(e) => setForm({ ...form, phone: normalizeMobile(e.target.value) })}
-                                    inputMode="numeric"
-                                    maxLength={11}
-                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
-                                    placeholder="03001234567"
-                                />
+                                <label className="mb-1 block text-xs text-muted">Phone</label>
+                                <input value={form.phone} onChange={(e) => setForm({ ...form, phone: normalizeMobile(e.target.value) })}
+                                    inputMode="numeric" maxLength={11}
+                                    className="w-full rounded-input border border-border px-3 py-2 text-sm text-ink bg-white focus:outline-none focus:border-primary"
+                                    placeholder="03001234567" />
                                 {form.phone && !isValidMobile(normalizedFormPhone) && (
-                                    <p className="mt-1 text-xs text-amber-400">Use a Pakistani mobile number like 03001234567.</p>
+                                    <p className="mt-1 text-xs text-warning">Use a Pakistani mobile number like 03001234567.</p>
                                 )}
                             </div>
                             <div>
-                                <label className="mb-1 block text-xs text-[#c1bcaf]">Email</label>
-                                <input
-                                    type="email"
-                                    value={form.email}
-                                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
-                                    placeholder="email@example.com"
-                                />
+                                <label className="mb-1 block text-xs text-muted">Email</label>
+                                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+                                    className="w-full rounded-input border border-border px-3 py-2 text-sm text-ink bg-white focus:outline-none focus:border-primary"
+                                    placeholder="email@example.com" />
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="mb-1 block text-xs text-[#c1bcaf]">Province</label>
-                                <select
-                                    value={form.province}
-                                    onChange={(e) => setForm({ ...form, province: e.target.value })}
-                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
-                                >
+                                <label className="mb-1 block text-xs text-muted">Province</label>
+                                <select value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })}
+                                    className="w-full rounded-input border border-border px-3 py-2 text-sm text-ink bg-white focus:outline-none focus:border-primary">
                                     <option value="">Select province</option>
                                     <option value="Punjab">Punjab</option>
                                     <option value="Sindh">Sindh</option>
@@ -279,20 +261,14 @@ export default function CustomersPage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="mb-1 block text-xs text-[#c1bcaf]">Address</label>
-                                <input
-                                    value={form.address}
-                                    onChange={(e) => setForm({ ...form, address: e.target.value })}
-                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
-                                    placeholder="Business address"
-                                />
+                                <label className="mb-1 block text-xs text-muted">Address</label>
+                                <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })}
+                                    className="w-full rounded-input border border-border px-3 py-2 text-sm text-ink bg-white focus:outline-none focus:border-primary"
+                                    placeholder="Business address" />
                             </div>
                         </div>
-                        <button
-                            type="submit"
-                            disabled={saving}
-                            className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary disabled:opacity-70"
-                        >
+                        <button type="submit" disabled={saving}
+                            className="rounded-full bg-primary px-4 py-2 text-ui-xs font-medium text-white disabled:opacity-70 hover:bg-primary-dark transition-colors">
                             {saving ? 'Saving...' : 'Add Customer'}
                         </button>
                     </form>
@@ -301,69 +277,58 @@ export default function CustomersPage() {
 
             {/* Search */}
             <div className="mb-4">
-                <input
-                    type="text"
-                    placeholder="Search by name, NTN, or phone..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full max-w-md rounded-xl border border-white/10 bg-white/6 px-4 py-2.5 text-white placeholder:text-[#8d897d]"
-                />
+                <input type="text" placeholder="Search by name, NTN, or phone..."
+                    value={search} onChange={(e) => setSearch(e.target.value)}
+                    className="w-full max-w-md rounded-input border border-border bg-white px-4 py-2.5 text-sm text-ink placeholder:text-muted focus:outline-none focus:border-primary" />
             </div>
 
             {/* Table */}
-            <div className="app-panel overflow-hidden rounded-2xl">
+            <div className="bg-white rounded-card shadow-card overflow-hidden">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="border-b border-white/10">
-                            <th className="p-3 text-left font-medium text-[#8d897d]">Name</th>
-                            <th className="p-3 text-left font-medium text-[#8d897d]">NTN/CNIC</th>
-                            <th className="p-3 text-left font-medium text-[#8d897d]">Phone</th>
-                            <th className="p-3 text-left font-medium text-[#8d897d]">Province</th>
-                            <th className="p-3 text-left font-medium text-[#8d897d]">FBR Status</th>
-                            <th className="p-3 text-left font-medium text-[#8d897d]">Actions</th>
+                        <tr className="border-b border-border-muted">
+                            <th className="p-4 text-left text-ui-xs font-normal text-muted">Name</th>
+                            <th className="p-4 text-left text-ui-xs font-normal text-muted">NTN/CNIC</th>
+                            <th className="p-4 text-left text-ui-xs font-normal text-muted">Phone</th>
+                            <th className="p-4 text-left text-ui-xs font-normal text-muted">Province</th>
+                            <th className="p-4 text-left text-ui-xs font-normal text-muted">FBR Status</th>
+                            <th className="p-4 text-left text-ui-xs font-normal text-muted">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan={6} className="p-8 text-center text-[#8d897d]">Loading...</td></tr>
+                            <tr><td colSpan={6} className="p-8 text-center text-muted">Loading...</td></tr>
                         ) : customers.length === 0 ? (
-                            <tr><td colSpan={6} className="p-8 text-center text-[#8d897d]">No customers found</td></tr>
+                            <tr><td colSpan={6} className="p-8 text-center text-muted">No customers found</td></tr>
                         ) : (
                             customers.map((c) => (
-                                <tr key={c.id} className="border-b border-white/10 hover:bg-white/6">
-                                    <td className="p-3 text-white">{c.name}</td>
-                                    <td className="p-3 font-mono text-xs text-[#d8d0bf]">{c.ntnCnic || '—'}</td>
-                                    <td className="p-3 text-[#d8d0bf]">{c.phone || '—'}</td>
-                                    <td className="p-3 text-[#d8d0bf]">{c.province || '—'}</td>
-                                    <td className="p-3">
+                                <tr key={c.id} className="border-b border-border-muted hover:bg-surface-subtle transition-colors">
+                                    <td className="p-4 font-medium text-ink">{c.name}</td>
+                                    <td className="p-4 font-mono text-ui-xs text-muted">{c.ntnCnic || '—'}</td>
+                                    <td className="p-4 text-muted">{c.phone || '—'}</td>
+                                    <td className="p-4 text-muted">{c.province || '—'}</td>
+                                    <td className="p-4">
                                         {c.fbrVerified ? (
-                                            <div className="flex flex-col gap-0.5">
-                                                <span className={`text-xs px-2 py-0.5 rounded-full inline-block w-fit ${c.registrationType === 'Registered'
-                                                    ? 'bg-green-500/10 text-green-400'
-                                                    : 'bg-yellow-500/10 text-yellow-400'
-                                                    }`}>
+                                            <div className="flex flex-col gap-1">
+                                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium w-fit ${c.registrationType === 'Registered' ? 'bg-success-bg text-success' : 'bg-accent-light text-warning'}`}>
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
                                                     {c.registrationType}
                                                 </span>
                                                 {c.atlStatus && (
-                                                    <span className={`text-xs px-2 py-0.5 rounded-full inline-block w-fit ${c.atlStatus === 'Active'
-                                                        ? 'bg-green-500/10 text-green-400'
-                                                        : 'bg-red-500/10 text-red-400'
-                                                        }`}>
+                                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium w-fit ${c.atlStatus === 'Active' ? 'bg-success-bg text-success' : 'bg-error-bg text-error'}`}>
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
                                                         ATL: {c.atlStatus}
                                                     </span>
                                                 )}
                                             </div>
                                         ) : (
-                                            <span className="text-xs text-[#8d897d]">Not verified</span>
+                                            <span className="text-xs text-muted">Not verified</span>
                                         )}
                                     </td>
-                                    <td className="p-3">
+                                    <td className="p-4">
                                         {c.ntnCnic && (
-                                            <button
-                                                onClick={() => handleVerifyBuyer(c.id, c.ntnCnic!)}
-                                                disabled={verifying === c.id}
-                                                className="rounded-lg border border-white/10 bg-white/6 px-3 py-1 text-xs text-[#f0d9a0] hover:bg-white/10"
-                                            >
+                                            <button onClick={() => handleVerifyBuyer(c.id, c.ntnCnic!)} disabled={verifying === c.id}
+                                                className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-ink hover:bg-surface disabled:opacity-50 transition-colors">
                                                 {verifying === c.id ? 'Checking...' : c.fbrVerified ? 'Re-verify' : 'Verify FBR'}
                                             </button>
                                         )}
@@ -378,21 +343,13 @@ export default function CustomersPage() {
             {/* Pagination */}
             {pages > 1 && (
                 <div className="mt-4 flex justify-center gap-2">
-                    <button
-                        disabled={page <= 1}
-                        onClick={() => setPage(page - 1)}
-                        className="rounded-xl border border-white/10 bg-white/6 px-3 py-1 text-sm text-[#d8d0bf] disabled:opacity-50"
-                    >
+                    <button disabled={page <= 1} onClick={() => setPage(page - 1)}
+                        className="rounded-full border border-border bg-white px-3 py-1.5 text-ui-xs text-ink disabled:opacity-40 hover:bg-surface transition-colors">
                         Prev
                     </button>
-                    <span className="px-3 py-1 text-sm text-[#8d897d]">
-                        Page {page} of {pages}
-                    </span>
-                    <button
-                        disabled={page >= pages}
-                        onClick={() => setPage(page + 1)}
-                        className="rounded-xl border border-white/10 bg-white/6 px-3 py-1 text-sm text-[#d8d0bf] disabled:opacity-50"
-                    >
+                    <span className="px-3 py-1.5 text-ui-xs text-muted">Page {page} of {pages}</span>
+                    <button disabled={page >= pages} onClick={() => setPage(page + 1)}
+                        className="rounded-full border border-border bg-white px-3 py-1.5 text-ui-xs text-ink disabled:opacity-40 hover:bg-surface transition-colors">
                         Next
                     </button>
                 </div>
@@ -400,57 +357,44 @@ export default function CustomersPage() {
 
             {/* Verify NTN/CNIC Modal */}
             {showVerifyModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-                    <div className="app-panel w-full max-w-md rounded-2xl p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4">Verify Buyer NTN/CNIC</h3>
-                        <p className="mb-4 text-sm text-[#c1bcaf]">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+                    <div className="bg-white rounded-card shadow-modal w-full max-w-md p-6">
+                        <h3 className="text-heading-sm font-semibold text-ink mb-3">Verify Buyer NTN/CNIC</h3>
+                        <p className="mb-4 text-ui-xs text-muted">
                             Check a buyer&apos;s registration status and Active Taxpayer List (ATL) status with FBR.
                         </p>
                         <div className="flex gap-2 mb-4">
-                            <input
-                                type="text"
-                                value={verifyNtn}
-                                onChange={(e) => setVerifyNtn(normalizeNtnCnic(e.target.value))}
-                                inputMode="numeric"
-                                maxLength={13}
-                                placeholder="Enter 7-digit NTN or 13-digit CNIC"
-                                className="flex-1 rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
-                            />
-                            <button
-                                onClick={handleQuickVerify}
-                                disabled={verifying === 'quick' || !verifyNtn}
-                                className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary disabled:opacity-70"
-                            >
+                            <input type="text" value={verifyNtn} onChange={(e) => setVerifyNtn(normalizeNtnCnic(e.target.value))}
+                                inputMode="numeric" maxLength={13} placeholder="Enter 7-digit NTN or 13-digit CNIC"
+                                className="flex-1 rounded-input border border-border px-3 py-2 text-sm text-ink bg-white focus:outline-none focus:border-primary" />
+                            <button onClick={handleQuickVerify} disabled={verifying === 'quick' || !verifyNtn}
+                                className="rounded-full bg-primary px-4 py-2 text-ui-xs font-medium text-white disabled:opacity-70 hover:bg-primary-dark transition-colors">
                                 {verifying === 'quick' ? 'Checking...' : 'Verify'}
                             </button>
                         </div>
-
                         {verifyResult && (
-                            <div className="mb-4 rounded-2xl border border-white/10 bg-white/6 p-4">
-                                <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="mb-4 rounded-xl border border-border-muted bg-surface-subtle p-4">
+                                <div className="grid grid-cols-2 gap-3 text-ui-xs">
                                     <div>
-                                        <span className="text-[#8d897d]">Registration Type:</span>
-                                        <p className={`font-medium ${verifyResult.registrationType === 'Registered' ? 'text-green-400' : 'text-yellow-400'}`}>
+                                        <span className="text-muted">Registration:</span>
+                                        <p className={`font-medium mt-0.5 ${verifyResult.registrationType === 'Registered' ? 'text-success' : 'text-warning'}`}>
                                             {verifyResult.registrationType}
                                         </p>
                                     </div>
                                     <div>
-                                        <span className="text-[#8d897d]">ATL Status:</span>
-                                        <p className={`font-medium ${verifyResult.atlStatus === 'Active' ? 'text-green-400' : 'text-red-400'}`}>
+                                        <span className="text-muted">ATL Status:</span>
+                                        <p className={`font-medium mt-0.5 ${verifyResult.atlStatus === 'Active' ? 'text-success' : 'text-error'}`}>
                                             {verifyResult.atlStatus}
                                         </p>
                                     </div>
                                 </div>
-                                <p className={`text-xs mt-2 ${verifyResult.verified ? 'text-green-400' : 'text-yellow-400'}`}>
+                                <p className={`text-xs mt-2 ${verifyResult.verified ? 'text-success' : 'text-warning'}`}>
                                     {verifyResult.verified ? 'Buyer verified with FBR' : 'Could not verify — buyer may not be in FBR system'}
                                 </p>
                             </div>
                         )}
-
-                        <button
-                            onClick={() => { setShowVerifyModal(false); setVerifyResult(null); setVerifyNtn('') }}
-                            className="w-full rounded-xl border border-white/10 bg-white/6 py-2 text-sm text-[#d8d0bf] hover:bg-white/10"
-                        >
+                        <button onClick={() => { setShowVerifyModal(false); setVerifyResult(null); setVerifyNtn('') }}
+                            className="w-full rounded-input border border-border py-2.5 text-ui-xs text-ink hover:bg-surface transition-colors">
                             Close
                         </button>
                     </div>

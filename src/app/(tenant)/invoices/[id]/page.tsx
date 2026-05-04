@@ -112,8 +112,8 @@ export default function InvoiceDetailPage() {
         return (
             <div className="p-6">
                 <div className="animate-pulse space-y-4">
-                    <div className="h-8 w-48 rounded bg-white/10" />
-                    <div className="h-64 rounded bg-white/10" />
+                    <div className="h-8 w-48 rounded bg-border" />
+                    <div className="h-64 rounded bg-border" />
                 </div>
             </div>
         )
@@ -121,9 +121,9 @@ export default function InvoiceDetailPage() {
 
     if (!invoice) {
         return (
-            <div className="p-6 text-center text-[#8d897d]">
+            <div className="p-6 text-center text-muted">
                 Invoice not found.
-                <button onClick={() => router.back()} className="ml-2 text-[#f0d9a0] hover:underline">
+                <button onClick={() => router.back()} className="ml-2 text-muted hover:underline">
                     Go back
                 </button>
             </div>
@@ -132,16 +132,16 @@ export default function InvoiceDetailPage() {
 
     return (
         <div className=" p-6 lg:p-8">
-            <button onClick={() => router.back()} className="mb-4 inline-block text-sm text-[#8d897d] hover:text-white">
+            <button onClick={() => router.back()} className="mb-4 inline-block text-sm text-muted hover:text-white">
                 ← Back to Invoices
             </button>
 
-            <div className="app-panel rounded-2xl p-6">
+            <div className="bg-white rounded-card shadow-card rounded-2xl p-6">
                 <div className="flex justify-between items-start mb-6">
                     <div>
-                        <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Invoice detail</p>
-                        <h1 className="brand-heading mt-2 text-3xl font-bold text-white">{invoice.invoiceNumber}</h1>
-                        <p className="mt-1 text-sm text-[#c1bcaf]">
+                        <p className="text-xs uppercase tracking-caps-xl text-muted">Invoice detail</p>
+                        <h1 className="mt-2 text-3xl font-bold text-white">{invoice.invoiceNumber}</h1>
+                        <p className="mt-1 text-sm text-muted">
                             Created {new Date(invoice.createdAt).toLocaleString()}
                         </p>
                     </div>
@@ -160,63 +160,63 @@ export default function InvoiceDetailPage() {
                 {/* Buyer Info */}
                 <div className="grid grid-cols-2 gap-4 mb-6 text-sm md:grid-cols-4">
                     <div>
-                        <p className="text-[#8d897d]">Buyer</p>
+                        <p className="text-muted">Buyer</p>
                         <p className="text-white">{invoice.buyerName || 'Walk-in Customer'}</p>
                     </div>
                     <div>
-                        <p className="text-[#8d897d]">NTN</p>
+                        <p className="text-muted">NTN</p>
                         <p className="text-white">{invoice.buyerNTN || '—'}</p>
                     </div>
                     <div>
-                        <p className="text-[#8d897d]">Payment</p>
+                        <p className="text-muted">Payment</p>
                         <p className="text-white">{invoice.paymentMethod}</p>
                     </div>
                     <div>
-                        <p className="text-[#8d897d]">Phone</p>
+                        <p className="text-muted">Phone</p>
                         <p className="text-white">{invoice.buyerPhone || invoice.customer?.phone || '—'}</p>
                     </div>
                     <div>
-                        <p className="text-[#8d897d]">Province</p>
+                        <p className="text-muted">Province</p>
                         <p className="text-white">{invoice.buyerProvince || invoice.customer?.province || '—'}</p>
                     </div>
                     <div>
-                        <p className="text-[#8d897d]">Registration</p>
+                        <p className="text-muted">Registration</p>
                         <p className="text-white">{invoice.buyerRegistrationType || invoice.customer?.registrationType || '—'}</p>
                     </div>
                     <div className="col-span-2 md:col-span-4">
-                        <p className="text-[#8d897d]">Address</p>
+                        <p className="text-muted">Address</p>
                         <p className="text-white">{invoice.buyerAddress || invoice.customer?.address || '—'}</p>
                     </div>
                 </div>
 
                 {/* DI Info */}
-                <div className="app-panel-soft mb-6 rounded-2xl p-4 space-y-4">
+                <div className="bg-white rounded-card shadow-card-soft mb-6 rounded-2xl p-4 space-y-4">
                     <div className="flex items-center justify-between gap-4">
                         <div>
-                            <p className="mb-1 text-xs text-[#8d897d]">PRAL DI Status</p>
-                            <p className="text-sm text-white font-medium">{invoice.diStatus || invoice.status}</p>
+                            <p className="mb-1 text-xs text-muted">PRAL DI Status</p>
+                            <p className="text-sm text-ink font-medium">{invoice.diStatus || invoice.status}</p>
                         </div>
                         <div className="text-right">
-                            <p className="mb-1 text-xs text-[#8d897d]">Status Code</p>
-                            <p className="text-sm text-white font-mono">{invoice.diStatusCode || '—'}</p>
+                            <p className="mb-1 text-xs text-muted">Status Code</p>
+                            <p className="text-sm font-mono text-muted">{invoice.diStatusCode || '—'}</p>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
-                            <p className="mb-1 text-[#8d897d]">PRAL Invoice Number</p>
+                            <p className="mb-1 text-muted">PRAL Invoice Number</p>
                             <p className="text-green-400 font-mono break-all">{invoice.diInvoiceNumber || '—'}</p>
                         </div>
                         <div>
-                            <p className="mb-1 text-[#8d897d]">Confirmed At</p>
+                            <p className="mb-1 text-muted">Confirmed At</p>
                             <p className="text-white">{invoice.diInvoiceDate ? new Date(invoice.diInvoiceDate).toLocaleString() : '—'}</p>
                         </div>
                         <div>
-                            <p className="mb-1 text-[#8d897d]">DI Error Code</p>
+                            <p className="mb-1 text-muted">DI Error Code</p>
                             <p className="text-white font-mono">{invoice.diErrorCode || '—'}</p>
                         </div>
                         <div>
-                            <p className="mb-1 text-[#8d897d]">Latest Attempt</p>
+                            <p className="mb-1 text-muted">Latest Attempt</p>
                             <p className="text-white">
                                 {invoice.latestSubmissionLog
                                     ? `#${invoice.latestSubmissionLog.attempt} · ${new Date(invoice.latestSubmissionLog.createdAt).toLocaleString()}`
@@ -234,7 +234,7 @@ export default function InvoiceDetailPage() {
                             {isAuthError(invoice.submissionError || invoice.latestSubmissionLog?.error) && (
                                 <a
                                     href="/settings"
-                                    className="inline-flex items-center gap-1 text-xs font-medium text-[#f0d9a0] hover:text-[#f6e7bf] hover:underline"
+                                    className="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-cream hover:underline"
                                 >
                                     Go to Settings → PRAL DI Setup
                                 </a>
@@ -243,32 +243,32 @@ export default function InvoiceDetailPage() {
                     )}
 
                     <div>
-                        <p className="mb-2 text-xs text-[#8d897d]">Per-item DI Statuses</p>
-                        <pre className="max-h-64 overflow-auto rounded-lg border border-white/10 bg-[#0b1510] p-3 text-xs text-[#d8d0bf] whitespace-pre-wrap wrap-break-word">
+                        <p className="mb-2 text-xs text-muted">Per-item DI Statuses</p>
+                        <pre className="max-h-64 overflow-auto rounded-lg border border-border bg-code-bg p-3 text-xs text-ink whitespace-pre-wrap wrap-break-word">
                             {formatJson(invoice.diItemStatuses)}
                         </pre>
                     </div>
 
                     {invoice.latestSubmissionLog?.requestBody != null && (
                         <div>
-                            <p className="mb-2 text-xs text-[#8d897d]">
+                            <p className="mb-2 text-xs text-muted">
                                 Latest PRAL Response
                                 {invoice.latestSubmissionLog.responseCode ? ` (${invoice.latestSubmissionLog.responseCode})` : ''}
                                 {invoice.latestSubmissionLog.durationMs != null ? ` · ${invoice.latestSubmissionLog.durationMs} ms` : ''}
                             </p>
-                            <pre className="max-h-80 overflow-auto rounded-lg border border-white/10 bg-[#0b1510] p-3 text-xs text-[#d8d0bf] whitespace-pre-wrap wrap-break-word">
+                            <pre className="max-h-80 overflow-auto rounded-lg border border-border bg-code-bg p-3 text-xs text-ink whitespace-pre-wrap wrap-break-word">
                                 {formatJson(invoice.latestSubmissionLog.requestBody)}
                             </pre>
                         </div>
                     )}
                     {invoice.latestSubmissionLog?.responseBody != null && (
                         <div>
-                            <p className="mb-2 text-xs text-[#8d897d]">
+                            <p className="mb-2 text-xs text-muted">
                                 Latest PRAL Response
                                 {invoice.latestSubmissionLog.responseCode ? ` (${invoice.latestSubmissionLog.responseCode})` : ''}
                                 {invoice.latestSubmissionLog.durationMs != null ? ` · ${invoice.latestSubmissionLog.durationMs} ms` : ''}
                             </p>
-                            <pre className="max-h-80 overflow-auto rounded-lg border border-white/10 bg-[#0b1510] p-3 text-xs text-[#d8d0bf] whitespace-pre-wrap wrap-break-word">
+                            <pre className="max-h-80 overflow-auto rounded-lg border border-border bg-code-bg p-3 text-xs text-ink whitespace-pre-wrap wrap-break-word">
                                 {formatJson(invoice.latestSubmissionLog.responseBody)}
                             </pre>
                         </div>
@@ -278,24 +278,24 @@ export default function InvoiceDetailPage() {
                 {/* Items */}
                 <table className="w-full mb-6">
                     <thead>
-                        <tr className="border-b border-white/10">
-                            <th className="pb-2 text-left text-xs font-medium text-[#8d897d]">Item</th>
-                            <th className="pb-2 text-right text-xs font-medium text-[#8d897d]">Qty</th>
-                            <th className="pb-2 text-right text-xs font-medium text-[#8d897d]">Price</th>
-                            <th className="pb-2 text-right text-xs font-medium text-[#8d897d]">GST</th>
-                            <th className="pb-2 text-right text-xs font-medium text-[#8d897d]">Total</th>
+                        <tr className="border-b border-border">
+                            <th className="pb-2 text-left text-xs font-medium text-muted">Item</th>
+                            <th className="pb-2 text-right text-xs font-medium text-muted">Qty</th>
+                            <th className="pb-2 text-right text-xs font-medium text-muted">Price</th>
+                            <th className="pb-2 text-right text-xs font-medium text-muted">GST</th>
+                            <th className="pb-2 text-right text-xs font-medium text-muted">Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         {invoice.items.map((item) => (
-                            <tr key={item.id} className="border-b border-white/10">
-                                <td className="py-2 text-sm text-white">{item.product.name}</td>
-                                <td className="py-2 text-right text-sm text-[#d8d0bf]">{item.quantity}</td>
-                                <td className="py-2 text-right text-sm text-[#d8d0bf]">
+                            <tr key={item.id} className="border-b border-border">
+                                <td className="py-2 text-sm text-ink">{item.product.name}</td>
+                                <td className="py-2 text-right text-sm text-ink">{item.quantity}</td>
+                                <td className="py-2 text-right text-sm text-ink">
                                     PKR {item.unitPrice.toLocaleString()}
                                 </td>
-                                <td className="py-2 text-right text-sm text-[#c1bcaf]">{item.gstRate}%</td>
-                                <td className="py-2 text-sm text-white text-right font-medium">
+                                <td className="py-2 text-right text-sm text-muted">{item.gstRate}%</td>
+                                <td className="py-2 text-sm text-ink text-right font-medium">
                                     PKR {item.totalPrice.toLocaleString()}
                                 </td>
                             </tr>
@@ -306,16 +306,16 @@ export default function InvoiceDetailPage() {
                 {/* Totals */}
                 <div className="flex flex-col items-end gap-1">
                     <div className="flex gap-8 text-sm">
-                        <span className="text-[#8d897d]">Subtotal</span>
+                        <span className="text-muted">Subtotal</span>
                         <span className="text-white">PKR {invoice.subtotal.toLocaleString()}</span>
                     </div>
                     <div className="flex gap-8 text-sm">
-                        <span className="text-[#8d897d]">Tax (GST)</span>
+                        <span className="text-muted">Tax (GST)</span>
                         <span className="text-white">PKR {invoice.totalTax.toLocaleString()}</span>
                     </div>
                     <div className="flex gap-8 text-lg font-bold mt-1">
                         <span className="text-white">Total</span>
-                        <span className="text-[#f0d9a0]">PKR {invoice.totalAmount.toLocaleString()}</span>
+                        <span className="text-muted">PKR {invoice.totalAmount.toLocaleString()}</span>
                     </div>
                 </div>
             </div>

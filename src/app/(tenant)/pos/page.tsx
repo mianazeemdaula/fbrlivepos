@@ -37,7 +37,7 @@ export default function POSPage() {
     const {
         items, buyerName, buyerNTN, buyerProvince, buyerAddress,
         buyerRegistrationType, customerId, paymentMethod,
-        addItem, removeItem, updateQuantity, updateDiscount,
+        addItem, removeItem, updateQuantity, updateDiscount, updatePrice, updateTaxRate,
         setBuyerInfo, setCustomer, setPaymentMethod,
         subtotal, discountTotal, taxAmount, total, clearCart,
     } = useCartStore()
@@ -53,7 +53,11 @@ export default function POSPage() {
     }, [])
 
     useEffect(() => { searchProducts('') }, [searchProducts])
-    useEffect(() => { fetch('/api/tenant/profile').then(r => r.json()).then(d => { if (d.preferredIdType) setPreferredIdType(d.preferredIdType) }).catch(() => { }) }, [])
+    useEffect(() => {
+        fetch('/api/tenant/profile').then(r => r.json()).then(d => {
+            if (d.preferredIdType) setPreferredIdType(d.preferredIdType)
+        }).catch(() => { })
+    }, [])
 
     useEffect(() => {
         const timer = setTimeout(() => searchProducts(search), 300)
@@ -71,7 +75,6 @@ export default function POSPage() {
 
     function handleProductSaved(p: SavedProduct) {
         setShowProductModal(false)
-        // add to search results and add to cart
         setProducts(prev => {
             if (prev.some(x => x.id === p.id)) return prev
             return [{ id: p.id, name: p.name, hsCode: p.hsCode, price: p.price, taxRate: p.taxRate, unit: p.unit }, ...prev]
@@ -79,11 +82,21 @@ export default function POSPage() {
         addItem({ productId: p.id, name: p.name, hsCode: p.hsCode, price: p.price, taxRate: p.taxRate, unit: p.unit })
     }
 
-    async function handleSaveNewCustomerFromModal(form: { name: string; ntnCnic: string; phone: string; province: string; registrationType: string; address: string }) {
+    async function handleSaveNewCustomerFromModal(form: {
+        name: string; ntnCnic: string; phone: string
+        province: string; registrationType: string; address: string
+    }) {
         const res = await fetch('/api/customers', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: form.name.trim(), ntnCnic: form.ntnCnic || undefined, phone: form.phone || undefined, province: form.province || undefined, address: form.address || undefined, registrationType: form.registrationType || undefined }),
+            body: JSON.stringify({
+                name: form.name.trim(),
+                ntnCnic: form.ntnCnic || undefined,
+                phone: form.phone || undefined,
+                province: form.province || undefined,
+                address: form.address || undefined,
+                registrationType: form.registrationType || undefined,
+            }),
         })
         const data = await res.json()
         if (!res.ok) return { error: data.error || 'Failed to save customer.' }
@@ -120,6 +133,7 @@ export default function POSPage() {
             setDraftInvoiceId(data.invoice.id)
             setValidationState('IDLE')
             setValidationLog(null)
+            clearCart()
         } catch { setMessage({ type: 'error', text: 'Network error.' }) } finally { setDraftLoading(false) }
     }
 
@@ -134,33 +148,24 @@ export default function POSPage() {
         setValidationLog(null)
         setValidationState('IDLE')
         setMessage(null)
-
         try {
             const body = { ...(await buildInvoiceBody()), status: 'DRAFT' }
             const res = await fetch('/api/invoices', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
             const data = await res.json()
             if (!res.ok) { setMessage({ type: 'error', text: data.error || 'Failed to save invoice.' }); setIsValidating(false); return }
-
             const currentInvoiceId = data.invoice.id
             setDraftInvoiceId(currentInvoiceId)
-
             const valRes = await fetch('/api/tenant/fbr/validate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ invoiceId: currentInvoiceId }) })
             const valData = await valRes.json()
-
             if (valRes.ok && valData.valid) {
                 setValidationState('VALID')
                 setMessage({ type: 'success', text: 'Invoice verified successfully by FBR! Ready to submit.' })
             } else {
                 setValidationState('FAILED')
-                setValidationLog({
-                    error: valData.error || 'Validation rejected by FBR',
-                    details: valData.errors || valData.details,
-                    rawResponse: valData.rawResponse,
-                    payload: valData.payload
-                })
+                setValidationLog({ error: valData.error || 'Validation rejected by FBR', details: valData.errors || valData.details, rawResponse: valData.rawResponse, payload: valData.payload })
                 setMessage({ type: 'error', text: 'FBR Validation failed. Check logs below.' })
             }
-        } catch (e) {
+        } catch {
             setMessage({ type: 'error', text: 'Network error during validation.' })
         } finally {
             setIsValidating(false)
@@ -174,20 +179,13 @@ export default function POSPage() {
         try {
             const diRes = await fetch('/api/tenant/fbr/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ invoiceId: draftInvoiceId }) })
             const d = await diRes.json().catch(() => ({}))
-
             if (!diRes.ok) {
                 setMessage({ type: 'error', text: `DI submission failed: ${d.error ?? 'Unknown error.'}` })
-                setValidationLog({
-                    error: d.error || 'Submission failed',
-                    details: d.details || d.errors,
-                    rawResponse: d.rawResponse,
-                    payload: d.payload
-                })
+                setValidationLog({ error: d.error || 'Submission failed', details: d.details || d.errors, rawResponse: d.rawResponse, payload: d.payload })
                 setValidationState('FAILED')
                 setIsConfirming(false)
                 return
             }
-
             setMessage({ type: 'success', text: `Invoice ${d.diInvoiceNumber || 'submitted'} to FBR successfully!` })
             setDraftInvoiceId(null)
             setValidationState('IDLE')
@@ -196,278 +194,343 @@ export default function POSPage() {
         } catch { setMessage({ type: 'error', text: 'Network error during submission.' }) } finally { setIsConfirming(false) }
     }
 
-    const selectedCustomer = customerId ? { id: customerId, name: buyerName, ntnCnic: buyerNTN || null, registrationType: buyerRegistrationType || null } : null
+    const selectedCustomer = customerId
+        ? { id: customerId, name: buyerName, ntnCnic: buyerNTN || null, registrationType: buyerRegistrationType || null }
+        : null
 
     return (
         <>
-            <div className="flex h-screen flex-col overflow-hidden xl:flex-row">
+            <div className="flex h-screen flex-col overflow-hidden bg-canvas">
 
-                {/* ── Left: Product Search ── */}
-                <div className="flex min-h-0 flex-1 flex-col border-b border-white/10 bg-[linear-gradient(180deg,rgba(7,20,15,0.96),rgba(6,14,11,0.98))] xl:border-b-0 xl:border-r">
-                    {/* Search header */}
-                    <div className="border-b border-white/10 p-4">
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                                <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Point of Sale</p>
+                {/* ══ TOP BAR: Customer | Search | New Product ══ */}
+                <div className="shrink-0 border-b border-border bg-surface px-4 py-3">
+                    <div className="flex items-center gap-3">
+
+                        {/* Customer selector */}
+                        <button
+                            type="button"
+                            onClick={() => setShowCustomerModal(true)}
+                            className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-left transition-colors hover:border-border-strong"
+                        >
+                            {customerId ? (
+                                <>
+                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-micro text-white">✓</span>
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block truncate text-sm font-medium text-ink">{buyerName}</span>
+                                        {buyerNTN && <span className="block font-mono text-xs text-muted">{buyerNTN}</span>}
+                                    </span>
+                                    {buyerRegistrationType && (
+                                        <span className="shrink-0 rounded-full bg-primary-light px-2 py-0.5 text-xs font-medium text-primary">
+                                            {buyerRegistrationType}
+                                        </span>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-dashed border-border-strong text-xs text-muted">+</span>
+                                    <span className="text-sm text-muted">Add Customer</span>
+                                </>
+                            )}
+                        </button>
+
+                        {/* Product search with dropdown */}
+                        <div className="relative flex min-w-0 flex-2 flex-col">
+                            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
+                                <svg className="h-4 w-4 shrink-0 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+                                </svg>
+                                <input
+                                    type="text"
+                                    placeholder="Search products by name, SKU, HS code…"
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
+                                    className="min-w-0 flex-1 bg-transparent text-sm text-ink placeholder:text-muted focus:outline-none"
+                                />
+                                {search && (
+                                    <button onClick={() => setSearch('')} className="shrink-0 text-muted hover:text-ink">✕</button>
+                                )}
                             </div>
-                            <button
-                                onClick={() => setShowProductModal(true)}
-                                className="shrink-0 rounded-full border border-[rgba(200,164,90,0.3)] bg-[rgba(200,164,90,0.08)] px-3 py-1.5 text-xs font-medium text-[#f0d9a0] hover:bg-[rgba(200,164,90,0.15)] transition-colors"
-                            >
-                                + New Product
-                            </button>
+                            {search && products.length > 0 && (
+                                <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-auto rounded-xl border border-border bg-card shadow-modal">
+                                    {products.map(product => (
+                                        <button
+                                            key={product.id}
+                                            onClick={() => { handleAddProduct(product); setSearch('') }}
+                                            className="flex w-full items-center gap-3 border-b border-border-muted px-4 py-2.5 text-left last:border-0 hover:bg-surface"
+                                        >
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate text-sm font-medium text-ink">{product.name}</p>
+                                                <p className="text-xs text-muted">{product.hsCode}{product.diSaleType ? ` · ${product.diSaleType}` : ''}</p>
+                                            </div>
+                                            <div className="shrink-0 text-right">
+                                                <p className="text-sm font-semibold text-ink">PKR {product.price.toLocaleString()}</p>
+                                                <p className="text-xs text-muted">{product.taxRate}% tax</p>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                            {search && products.length === 0 && (
+                                <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted shadow-card">
+                                    No products found for &ldquo;{search}&rdquo;
+                                </div>
+                            )}
                         </div>
-                        <input
-                            type="text"
-                            placeholder="Search products by name, SKU, HS code…"
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            className="mt-3 w-full rounded-xl border border-white/10 bg-white/6 px-4 py-2.5 text-white placeholder:text-[#8d897d]"
-                        />
-                    </div>
 
-                    {/* Product grid */}
-                    <div className="flex-1 overflow-auto p-4">
-                        {products.length === 0 ? (
-                            <div className="mt-12 text-center">
-                                <p className="text-[#8d897d]">No products found.</p>
-                                <button onClick={() => setShowProductModal(true)} className="mt-3 text-sm text-[#f0d9a0] underline underline-offset-2">Add your first product →</button>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-                                {products.map(product => (
-                                    <button
-                                        key={product.id}
-                                        onClick={() => handleAddProduct(product)}
-                                        className="min-w-0 rounded-2xl border border-white/10 bg-white/6 p-4 text-left transition-colors hover:border-[rgba(200,164,90,0.4)] hover:bg-white/8"
-                                    >
-                                        <p className="truncate text-sm font-medium text-white">{product.name}</p>
-                                        <p className="mt-0.5 break-all text-xs text-[#8d897d]">{product.hsCode}</p>
-                                        {product.diSaleType && (
-                                            <p className="mt-0.5 truncate text-xs text-[#c8a45a]">{product.diSaleType}</p>
-                                        )}
-                                        <div className="mt-2 flex items-center justify-between gap-3">
-                                            <span className="min-w-0 text-sm font-bold text-[#f0d9a0]">PKR {product.price.toLocaleString()}</span>
-                                            <span className="shrink-0 text-xs text-[#8d897d]">{product.taxRate}% Tax</span>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+                        {/* New product button */}
+                        <button
+                            onClick={() => setShowProductModal(true)}
+                            className="shrink-0 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-ink-secondary transition-colors hover:border-primary hover:text-primary"
+                        >
+                            + New Product
+                        </button>
                     </div>
                 </div>
 
-                {/* ── Right: Cart + Fixed Bottom ── */}
-                <div className="flex w-full shrink-0 flex-col bg-[linear-gradient(180deg,rgba(8,23,18,0.98),rgba(5,13,10,0.98))] xl:w-96">
-                    {/* Cart header */}
-                    <div className="border-b border-white/10 p-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="brand-heading text-xl font-bold text-white">Cart ({items.length})</h2>
-                            {/* Invoice type */}
-                            <div className="flex gap-1">
-                                {(['Sale Invoice', 'Debit Note'] as const).map(t => (
-                                    <button
-                                        key={t}
-                                        onClick={() => setInvoiceType(t)}
-                                        className={`rounded-lg px-2 py-1 text-xs font-medium transition-colors ${invoiceType === t ? 'bg-[#c8a45a]/20 text-[#f0d9a0]' : 'text-[#8d897d] hover:text-white'}`}
-                                    >
-                                        {t === 'Sale Invoice' ? 'Sale' : 'Debit Note'}
-                                    </button>
-                                ))}
-                            </div>
+                {/* ══ CART ITEMS (scrollable) ══ */}
+                <div className="min-h-0 flex-1 overflow-auto">
+                    {items.length === 0 ? (
+                        <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-surface text-3xl">🛒</div>
+                            <p className="text-base font-medium text-ink-secondary">Cart is empty</p>
+                            <p className="text-sm text-muted">Search and add products above</p>
                         </div>
-                        {invoiceType === 'Debit Note' && (
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[720px] border-collapse text-sm">
+                                <thead>
+                                    <tr className="border-b border-border bg-surface sticky top-0 z-10">
+                                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted">Product</th>
+                                        <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-32">Unit Price</th>
+                                        <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-caps text-muted w-32">Qty</th>
+                                        <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-24">Tax %</th>
+                                        <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-28">Discount</th>
+                                        <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-caps text-muted w-36">Total</th>
+                                        <th className="px-3 py-2.5 w-10" />
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {items.map((item, idx) => {
+                                        const lineBase = item.price * item.quantity
+                                        const lineTax = ((lineBase - item.discount) * item.taxRate) / 100
+                                        const lineTotal = lineBase - item.discount + lineTax
+                                        return (
+                                            <tr key={item.productId} className={`border-b border-border-muted transition-colors hover:bg-surface-subtle ${idx % 2 === 0 ? '' : 'bg-surface-subtle/40'}`}>
+                                                {/* Product */}
+                                                <td className="px-4 py-2.5">
+                                                    <p className="font-medium text-ink truncate max-w-[180px]">{item.name}</p>
+                                                    <p className="text-xs text-muted font-mono">{item.hsCode}</p>
+                                                </td>
+
+                                                {/* Unit Price */}
+                                                <td className="px-3 py-2.5">
+                                                    <div className="flex items-center rounded-lg border border-border bg-card px-2 py-1.5 focus-within:border-primary">
+                                                        <span className="shrink-0 text-xs text-muted mr-1">PKR</span>
+                                                        <input
+                                                            type="number" min={0} step="0.01" value={item.price}
+                                                            onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= 0) updatePrice(item.productId, v) }}
+                                                            className="min-w-0 w-full bg-transparent text-sm font-medium text-ink focus:outline-none"
+                                                        />
+                                                    </div>
+                                                </td>
+
+                                                {/* Qty */}
+                                                <td className="px-3 py-2.5">
+                                                    <div className="flex items-center gap-1">
+                                                        <button
+                                                            onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                                                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-surface text-sm text-ink-secondary hover:bg-canvas"
+                                                        >−</button>
+                                                        <input
+                                                            type="number" min={1} value={item.quantity}
+                                                            onChange={e => { const v = parseInt(e.target.value, 10); if (!isNaN(v) && v > 0) updateQuantity(item.productId, v) }}
+                                                            className="h-7 w-10 rounded-md border border-border bg-card text-center text-sm font-medium text-ink focus:outline-none focus:border-primary"
+                                                        />
+                                                        <button
+                                                            onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                                                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-surface text-sm text-ink-secondary hover:bg-canvas"
+                                                        >+</button>
+                                                    </div>
+                                                </td>
+
+                                                {/* Tax % */}
+                                                <td className="px-3 py-2.5">
+                                                    <div className="flex items-center rounded-lg border border-border bg-card px-2 py-1.5 focus-within:border-primary">
+                                                        <input
+                                                            type="number" min={0} max={100} step="0.1" value={item.taxRate}
+                                                            onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= 0 && v <= 100) updateTaxRate(item.productId, v) }}
+                                                            className="min-w-0 w-full bg-transparent text-sm font-medium text-ink focus:outline-none"
+                                                        />
+                                                        <span className="shrink-0 text-xs text-muted ml-1">%</span>
+                                                    </div>
+                                                </td>
+
+                                                {/* Discount */}
+                                                <td className="px-3 py-2.5">
+                                                    <div className="flex items-center rounded-lg border border-border bg-card px-2 py-1.5 focus-within:border-primary">
+                                                        <span className="shrink-0 text-xs text-muted mr-1">PKR</span>
+                                                        <input
+                                                            type="number" min={0} step="0.01" value={item.discount || ''}
+                                                            onChange={e => updateDiscount(item.productId, Number(e.target.value) || 0)}
+                                                            placeholder="0"
+                                                            className="min-w-0 w-full bg-transparent text-sm text-ink placeholder:text-muted focus:outline-none"
+                                                        />
+                                                    </div>
+                                                </td>
+
+                                                {/* Total */}
+                                                <td className="px-3 py-2.5 text-right">
+                                                    <p className="text-sm font-bold text-ink">PKR {lineTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                                                    <p className="text-xs text-muted">+{lineTax.toLocaleString(undefined, { maximumFractionDigits: 2 })} tax</p>
+                                                </td>
+
+                                                {/* Remove */}
+                                                <td className="px-3 py-2.5 text-center">
+                                                    <button
+                                                        onClick={() => removeItem(item.productId)}
+                                                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-error-bg text-xs text-error transition-colors hover:bg-error hover:text-white mx-auto"
+                                                    >✕</button>
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
+                {/* ══ FIXED BOTTOM PANEL ══ */}
+                <div className="shrink-0 border-t border-border bg-surface shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+
+                    {/* Invoice type + payment */}
+                    <div className="flex items-center gap-3 border-b border-border-muted px-4 py-2.5">
+                        <div className="flex gap-1 rounded-lg border border-border bg-canvas p-0.5">
+                            {(['Sale Invoice', 'Debit Note'] as const).map(t => (
+                                <button
+                                    key={t}
+                                    onClick={() => setInvoiceType(t)}
+                                    className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${invoiceType === t ? 'bg-primary text-white shadow-sm' : 'text-ink-secondary hover:text-ink'}`}
+                                >{t}</button>
+                            ))}
+                        </div>
+                        <select
+                            value={paymentMethod}
+                            onChange={e => setPaymentMethod(e.target.value as 'CASH' | 'CARD' | 'BANK_TRANSFER')}
+                            className="flex-1 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-ink focus:outline-none focus:border-primary"
+                        >
+                            <option value="CASH">Cash</option>
+                            <option value="CARD">Card</option>
+                            <option value="BANK_TRANSFER">Bank Transfer</option>
+                        </select>
+                    </div>
+
+                    {invoiceType === 'Debit Note' && (
+                        <div className="border-b border-border-muted px-4 py-2">
                             <input
                                 value={invoiceRefNo}
                                 onChange={e => setInvoiceRefNo(e.target.value)}
                                 placeholder="Original FBR Invoice Number (22 or 28 chars)"
-                                className="mt-2 w-full rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-white placeholder:text-[#8d897d]"
+                                className="w-full rounded-lg border border-accent/40 bg-accent-light px-3 py-2 text-xs text-ink placeholder:text-muted focus:outline-none"
                             />
-                        )}
+                        </div>
+                    )}
+
+                    {/* Totals row */}
+                    <div className="grid grid-cols-4 divide-x divide-border-muted px-4 py-3">
+                        <div className="pr-3">
+                            <p className="text-xs text-muted">Subtotal</p>
+                            <p className="text-sm font-semibold text-ink">PKR {subtotal().toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                        </div>
+                        <div className="px-3">
+                            <p className="text-xs text-muted">Discount</p>
+                            {discountTotal() > 0
+                                ? <p className="text-sm font-semibold text-success">−PKR {discountTotal().toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                                : <p className="text-sm font-semibold text-muted">—</p>
+                            }
+                        </div>
+                        <div className="px-3">
+                            <p className="text-xs text-muted">Sales Tax</p>
+                            <p className="text-sm font-semibold text-ink">PKR {taxAmount().toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                        </div>
+                        <div className="pl-3">
+                            <p className="text-xs text-muted">Total</p>
+                            <p className="text-base font-bold text-primary">PKR {total().toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                        </div>
                     </div>
 
-                    {/* Cart items */}
-                    <div className="min-h-0 flex-1 overflow-auto p-4 space-y-2">
-                        {items.length === 0 ? (
-                            <p className="mt-8 text-center text-[#8d897d]">Cart is empty</p>
-                        ) : (
-                            items.map(item => (
-                                <div key={item.productId} className="rounded-2xl border border-white/10 bg-white/6 p-3">
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate text-sm font-medium text-white">{item.name}</p>
-                                            <p className="text-xs text-[#8d897d]">PKR {item.price.toLocaleString()} × {item.quantity}</p>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 ml-2">
-                                            <button onClick={() => updateQuantity(item.productId, item.quantity - 1)} className="flex h-6 w-6 items-center justify-center rounded bg-white/10 text-sm text-white hover:bg-white/16">−</button>
-                                            <input
-                                                type="number"
-                                                min={1}
-                                                value={item.quantity}
-                                                onChange={e => {
-                                                    const val = Number(e.target.value)
-                                                    if (!isNaN(val) && val > 0) updateQuantity(item.productId, val)
-                                                }}
-                                                className="w-16 text-center text-sm text-white bg-transparent border border-white/10 rounded"
-                                            />
-                                            <button onClick={() => updateQuantity(item.productId, item.quantity + 1)} className="flex h-6 w-6 items-center justify-center rounded bg-white/10 text-sm text-white hover:bg-white/16">+</button>
-                                            <button onClick={() => removeItem(item.productId)} className="flex h-6 w-6 items-center justify-center rounded bg-red-900/40 text-xs text-red-300 hover:bg-red-900/70">✕</button>
-                                        </div>
-                                    </div>
-                                    <div className="mt-2 flex items-center gap-2">
-                                        <label className="text-xs text-[#8d897d]">Disc:</label>
-                                        <input type="number" min={0} step="0.01" value={item.discount || ''} onChange={e => updateDiscount(item.productId, Number(e.target.value) || 0)} placeholder="0"
-                                            className="w-20 rounded border border-white/10 bg-white/8 px-2 py-0.5 text-xs text-white placeholder:text-[#8d897d]" />
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
+                    {/* Message banner */}
+                    {message && (
+                        <div className={`mx-4 mb-2 rounded-lg p-2 text-xs ${message.type === 'success' ? 'bg-success-bg text-success border border-success-border' : 'bg-error-bg text-error border border-error-border'}`}>
+                            {message.text}
+                        </div>
+                    )}
 
-                    {/* ── Fixed Bottom: Customer + Totals + Actions ── */}
-                    <div className="shrink-0 border-t border-white/10">
-                        {/* Customer */}
-                        <div className="px-4 pt-3 pb-2">
-                            <div className="flex items-center justify-between mb-2">
-                                <p className="text-xs font-semibold uppercase tracking-wider text-[#f0d9a0]">Customer</p>
-                                <button type="button" onClick={() => setShowCustomerModal(true)} className="text-xs text-[#c1bcaf] hover:text-white">
-                                    {customerId ? 'Change' : '+ Add/Search'}
+                    {/* Action buttons */}
+                    <div className="flex gap-2 px-4 pb-4">
+                        {validationState === 'VALID' ? (
+                            <>
+                                <button
+                                    onClick={() => setValidationState('IDLE')}
+                                    className="flex-1 rounded-full border border-border bg-canvas py-2.5 text-sm font-medium text-ink-secondary transition-colors hover:bg-surface"
+                                >Edit Details</button>
+                                <button
+                                    onClick={handleConfirmSubmit}
+                                    disabled={isConfirming}
+                                    className="flex-2 rounded-full bg-success py-2.5 text-sm font-bold text-white transition-colors hover:opacity-90 disabled:opacity-50"
+                                >
+                                    {isConfirming ? 'Submitting…' : 'Confirm & Submit to FBR'}
                                 </button>
-                            </div>
-                            {customerId && (
-                                <div className="flex items-center gap-2 rounded-xl border border-green-500/30 bg-green-500/8 px-3 py-2">
-                                    <span className="text-green-400">✓</span>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-medium text-white">{buyerName}</p>
-                                        {buyerNTN && <p className="font-mono text-xs text-[#8d897d]">{buyerNTN}</p>}
-                                    </div>
-                                    {buyerRegistrationType && (
-                                        <span className="shrink-0 rounded bg-green-500/10 px-1.5 py-0.5 text-xs text-green-400">{buyerRegistrationType}</span>
-                                    )}
-                                </div>
-                            )}
-                            {/* // : (
-                            // <div className="space-y-2">
-                            //     <input type="text" placeholder="Buyer Name (optional)" value={buyerName} onChange={e => setBuyerInfo({ buyerName: e.target.value })}
-                            //         className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white placeholder:text-[#8d897d]" />
-                            //     <div className="grid grid-cols-2 gap-2">
-                            //         <input type="text" placeholder={`${preferredIdType}/CNIC`} value={buyerNTN} onChange={e => setBuyerInfo({ buyerNTN: normalizeNtnCnic(e.target.value) })}
-                            //             inputMode="numeric" maxLength={13}
-                            //             className="min-w-0 rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white placeholder:text-[#8d897d]" />
-                            //         <select value={buyerRegistrationType} onChange={e => setBuyerInfo({ buyerRegistrationType: e.target.value as 'Registered' | 'Unregistered' | '' })}
-                            //             className="min-w-0 rounded-xl border border-white/10 bg-[#0e1d17] px-3 py-1.5 text-sm text-white">
-                            //             <option value="">Reg Type</option>
-                            //             <option value="Registered">Registered</option>
-                            //             <option value="Unregistered">Unregistered</option>
-                            //         </select>
-                            //     </div>
-                            // </div>
-                            // )} */}
-                        </div>
-
-                        {/* Payment method */}
-                        <div className="px-4 pb-2">
-                            <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value as 'CASH' | 'CARD' | 'BANK_TRANSFER')}
-                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white">
-                                <option value="CASH">Cash</option>
-                                <option value="CARD">Card</option>
-                                <option value="BANK_TRANSFER">Bank Transfer</option>
-                            </select>
-                        </div>
-
-                        {/* Totals */}
-                        <div className="border-t border-white/10 px-4 pt-3 pb-2">
-                            <div className="flex justify-between text-sm text-[#c1bcaf] mb-1">
-                                <span>Subtotal</span><span>PKR {subtotal().toLocaleString()}</span>
-                            </div>
-                            {discountTotal() > 0 && (
-                                <div className="flex justify-between text-sm text-green-400 mb-1">
-                                    <span>Discount</span><span>- PKR {discountTotal().toLocaleString()}</span>
-                                </div>
-                            )}
-                            <div className="flex justify-between text-sm text-[#c1bcaf] mb-1">
-                                <span>Sales Tax</span><span>PKR {taxAmount().toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between text-lg font-bold text-white">
-                                <span>Total</span><span>PKR {total().toLocaleString()}</span>
-                            </div>
-                        </div>
-
-                        {/* Message */}
-                        {message && (
-                            <div className={`mx-4 mb-2 rounded-lg p-2 text-xs ${message.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30'}`}>
-                                {message.text}
-                            </div>
-                        )}
-
-                        {/* Action buttons */}
-                        <div className="flex gap-2 px-4 pb-4">
-                            {validationState === 'VALID' ? (
-                                <>
-                                    <button
-                                        onClick={() => setValidationState('IDLE')}
-                                        className="flex-1 rounded-full border border-white/10 py-2.5 text-sm font-medium text-[#c1bcaf] transition-colors hover:bg-white/6"
-                                    >
-                                        Edit Details
-                                    </button>
-                                    <button
-                                        onClick={handleConfirmSubmit}
-                                        disabled={isConfirming}
-                                        className="flex-[2] rounded-full bg-green-500/20 border border-green-500/30 py-2.5 text-sm font-bold text-green-400 transition-colors hover:bg-green-500/30 disabled:opacity-50"
-                                    >
-                                        {isConfirming ? 'Submitting…' : 'Confirm & Submit to FBR'}
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <button
-                                        onClick={handleDraft}
-                                        disabled={items.length === 0 || draftLoading || isValidating || isConfirming}
-                                        className="flex-1 rounded-full border border-white/10 py-2.5 text-sm font-medium text-[#c1bcaf] transition-colors hover:bg-white/6 disabled:cursor-not-allowed disabled:opacity-40"
-                                    >
-                                        {draftLoading ? 'Saving…' : 'Save Draft'}
-                                    </button>
-                                    <button
-                                        onClick={handleValidate}
-                                        disabled={items.length === 0 || isValidating || draftLoading || isConfirming}
-                                        className="flex-[2] rounded-full bg-accent py-2.5 text-sm font-medium text-primary transition-colors hover:bg-[--accent-soft] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-[#8d897d]"
-                                    >
-                                        {isValidating ? 'Validating…' : `Validate FBR (PKR ${total().toLocaleString()})`}
-                                    </button>
-                                </>
-                            )}
-                        </div>
-
-                        {/* Validation Error Logs Display */}
-                        {validationState === 'FAILED' && validationLog && (
-                            <div className="mx-4 mb-4 rounded-xl border border-red-500/30 bg-red-500/5 p-3 text-xs">
-                                <h4 className="font-bold text-red-400 mb-1">Validation Errors</h4>
-                                <p className="text-red-300 mb-2">{validationLog.error}</p>
-                                {validationLog.details && (
-                                    <div className="max-h-32 overflow-y-auto mb-2 text-[#d8d0bf] bg-black/40 p-2 rounded">
-                                        <pre className="whitespace-pre-wrap font-mono text-[10px] m-0">{JSON.stringify(validationLog.details, null, 2)}</pre>
-                                    </div>
-                                )}
-                                <details className="text-[#8d897d]">
-                                    <summary className="cursor-pointer hover:text-[#c1bcaf]">View Payload & Raw FBR Response</summary>
-                                    <div className="mt-2 space-y-2">
-                                        <div>
-                                            <p className="font-semibold mb-1">Requested Payload:</p>
-                                            <div className="max-h-40 overflow-y-auto bg-black/40 p-2 rounded">
-                                                <pre className="whitespace-pre-wrap font-mono text-[10px] m-0">{JSON.stringify(validationLog.payload, null, 2)}</pre>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold mb-1">FBR Raw Response:</p>
-                                            <div className="max-h-40 overflow-y-auto bg-black/40 p-2 rounded">
-                                                <pre className="whitespace-pre-wrap font-mono text-[10px] m-0">{JSON.stringify(validationLog.rawResponse, null, 2)}</pre>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </details>
-                            </div>
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={handleDraft}
+                                    disabled={items.length === 0 || draftLoading || isValidating || isConfirming}
+                                    className="flex-1 rounded-full border border-border bg-canvas py-2.5 text-sm font-medium text-ink-secondary transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                    {draftLoading ? 'Saving…' : 'Save Draft'}
+                                </button>
+                                <button
+                                    onClick={handleValidate}
+                                    disabled={items.length === 0 || isValidating || draftLoading || isConfirming}
+                                    className="flex-2 rounded-full bg-primary py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                    {isValidating ? 'Validating…' : `Validate & FBR · PKR ${total().toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+                                </button>
+                            </>
                         )}
                     </div>
+
+                    {/* Validation error logs */}
+                    {validationState === 'FAILED' && validationLog && (
+                        <div className="mx-4 mb-4 rounded-xl border border-error-border bg-error-bg p-3 text-xs">
+                            <h4 className="font-bold text-error mb-1">Validation Errors</h4>
+                            <p className="text-error mb-2">{validationLog.error}</p>
+                            {validationLog.details && (
+                                <div className="max-h-32 overflow-y-auto mb-2 rounded bg-code-bg p-2">
+                                    <pre className="whitespace-pre-wrap font-mono text-micro text-green-400 m-0">{JSON.stringify(validationLog.details, null, 2)}</pre>
+                                </div>
+                            )}
+                            <details className="text-muted">
+                                <summary className="cursor-pointer hover:text-ink">View Payload &amp; Raw FBR Response</summary>
+                                <div className="mt-2 space-y-2">
+                                    <div>
+                                        <p className="font-semibold mb-1 text-ink-secondary">Requested Payload:</p>
+                                        <div className="max-h-40 overflow-y-auto rounded bg-code-bg p-2">
+                                            <pre className="whitespace-pre-wrap font-mono text-micro text-green-400 m-0">{JSON.stringify(validationLog.payload, null, 2)}</pre>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold mb-1 text-ink-secondary">FBR Raw Response:</p>
+                                        <div className="max-h-40 overflow-y-auto rounded bg-code-bg p-2">
+                                            <pre className="whitespace-pre-wrap font-mono text-micro text-green-400 m-0">{JSON.stringify(validationLog.rawResponse, null, 2)}</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    )}
                 </div>
             </div>
 

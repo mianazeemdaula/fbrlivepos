@@ -58,9 +58,9 @@ export default function TenantsPage() {
     return (
         <div className="p-8">
             <div className="mb-8">
-                <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Accounts</p>
-                <h1 className="brand-heading text-3xl font-bold text-white">Tenants</h1>
-                <p className="mt-1 text-sm text-[#c1bcaf]">Manage all registered businesses on the platform</p>
+                <p className="text-xs font-medium uppercase tracking-caps text-muted">Accounts</p>
+                <h1 className="text-page-title font-normal text-ink">Tenants</h1>
+                <p className="mt-1 text-sm text-muted">Manage all registered businesses on the platform</p>
             </div>
 
             <div className="flex gap-3 mb-4">
@@ -72,7 +72,7 @@ export default function TenantsPage() {
                         setSearch(e.target.value)
                         setPage(1)
                     }}
-                    className="flex-1 max-w-sm rounded-xl border border-white/10 bg-white/6 px-4 py-2 text-sm text-white placeholder:text-[#8d897d]"
+                    className="flex-1 max-w-sm rounded-input border border-border bg-white px-4 py-2 text-sm text-ink placeholder:text-muted"
                 />
                 <select
                     value={filter}
@@ -80,7 +80,7 @@ export default function TenantsPage() {
                         setFilter(e.target.value)
                         setPage(1)
                     }}
-                    className="rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
+                    className="rounded-input border border-border bg-white px-3 py-2 text-sm text-ink"
                 >
                     <option value="all">All tenants</option>
                     <option value="active">Active</option>
@@ -88,43 +88,43 @@ export default function TenantsPage() {
                 </select>
             </div>
 
-            <div className="app-panel overflow-hidden rounded-2xl">
+            <div className="bg-white rounded-card shadow-card overflow-hidden rounded-2xl">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-white/10 bg-white/3">
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Business</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Plan</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">DI Status</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Invoices</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Status</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Joined</th>
+                        <tr className="border-b border-border bg-surface-subtle">
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Business</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Plan</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">DI Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Invoices</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Joined</th>
                             <th className="px-4 py-3" />
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             Array.from({ length: 5 }).map((_, i) => (
-                                <tr key={i} className="border-b border-white/10">
+                                <tr key={i} className="border-b border-border">
                                     <td colSpan={7} className="px-4 py-3">
-                                        <div className="h-4 rounded bg-white/10 animate-pulse" />
+                                        <div className="h-4 rounded bg-border animate-pulse" />
                                     </td>
                                 </tr>
                             ))
                         ) : tenants.length === 0 ? (
                             <tr>
-                                <td colSpan={7} className="px-4 py-12 text-center text-sm text-[#8d897d]">
+                                <td colSpan={7} className="px-4 py-12 text-center text-sm text-muted">
                                     No tenants found.
                                 </td>
                             </tr>
                         ) : (
                             tenants.map((t) => (
-                                <tr key={t.id} className="border-b border-white/10 transition-colors hover:bg-white/6">
+                                <tr key={t.id} className="border-b border-border transition-colors hover:bg-surface-subtle">
                                     <td className="px-4 py-3">
-                                        <p className="text-sm text-white font-medium">{t.name}</p>
-                                        <p className="text-xs text-[#8d897d]">{t.email}</p>
+                                        <p className="text-sm text-ink font-medium">{t.name}</p>
+                                        <p className="text-xs text-muted">{t.email}</p>
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-[#d8d0bf]">
-                                        {t.subscription?.plan?.name || <span className="text-[#8d897d]">—</span>}
+                                    <td className="px-4 py-3 text-sm text-ink">
+                                        {t.subscription?.plan?.name || <span className="text-muted">—</span>}
                                     </td>
                                     <td className="px-4 py-3">
                                         {t.diCredentials?.isProductionReady ? (
@@ -132,10 +132,10 @@ export default function TenantsPage() {
                                         ) : t.diCredentials ? (
                                             <span className="text-xs text-amber-400 font-medium">{t.diCredentials.environment}</span>
                                         ) : (
-                                            <span className="text-xs text-[#8d897d]">Not set</span>
+                                            <span className="text-xs text-muted">Not set</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-[#d8d0bf]">
+                                    <td className="px-4 py-3 text-sm text-ink">
                                         {t._count?.invoices ?? 0}
                                     </td>
                                     <td className="px-4 py-3">
@@ -148,13 +148,13 @@ export default function TenantsPage() {
                                             {t.isActive ? 'Active' : 'Suspended'}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-[#8d897d]">
+                                    <td className="px-4 py-3 text-xs text-muted">
                                         {new Date(t.createdAt).toLocaleDateString()}
                                     </td>
                                     <td className="px-4 py-3">
                                         <Link
                                             href={`/super-admin/tenants/${t.id}`}
-                                            className="text-xs font-medium text-[#f0d9a0] transition-colors hover:text-[#f6e7bf]"
+                                            className="text-xs font-medium text-muted transition-colors hover:text-cream"
                                         >
                                             Manage →
                                         </Link>

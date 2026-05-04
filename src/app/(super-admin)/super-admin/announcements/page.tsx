@@ -125,13 +125,13 @@ export default function AnnouncementsPage() {
             {/* Header */}
             <div className="mb-8 flex items-start justify-between">
                 <div>
-                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Comms</p>
-                    <h1 className="brand-heading text-3xl font-bold text-white">Announcements</h1>
-                    <p className="mt-1 text-sm text-[#c1bcaf]">Publish platform-wide notices to tenants</p>
+                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Comms</p>
+                    <h1 className="text-page-title font-normal text-ink">Announcements</h1>
+                    <p className="mt-1 text-sm text-muted">Publish platform-wide notices to tenants</p>
                 </div>
                 <button
                     onClick={() => { setShowForm(!showForm); setError('') }}
-                    className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-(--accent-soft)"
+                    className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
@@ -142,43 +142,43 @@ export default function AnnouncementsPage() {
 
             {/* Create form */}
             {showForm && (
-                <form onSubmit={handleCreate} className="app-panel mb-6 rounded-2xl p-6">
-                    <h2 className="text-sm font-semibold text-white mb-4">Create Announcement</h2>
+                <form onSubmit={handleCreate} className="bg-white rounded-card shadow-card mb-6 p-6">
+                    <h2 className="text-sm font-semibold text-ink mb-4">Create Announcement</h2>
 
                     {error && (
-                        <div className="mb-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg p-3">
+                        <div className="mb-4 bg-error-bg border border-error-bg text-error text-sm rounded-lg p-3">
                             {error}
                         </div>
                     )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div className="md:col-span-2">
-                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Title</label>
+                            <label className="mb-1.5 block text-xs font-medium text-muted">Title</label>
                             <input
                                 name="title"
                                 required
-                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]"
+                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted"
                                 placeholder="e.g. Scheduled Maintenance on Saturday"
                             />
                         </div>
 
                         <div className="md:col-span-2">
-                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Body</label>
+                            <label className="mb-1.5 block text-xs font-medium text-muted">Body</label>
                             <textarea
                                 name="body"
                                 required
                                 rows={3}
-                                className="w-full resize-none rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]"
+                                className="w-full resize-none rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted"
                                 placeholder="Announcement details..."
                             />
                         </div>
 
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Type</label>
+                            <label className="mb-1.5 block text-xs font-medium text-muted">Type</label>
                             <select
                                 name="type"
                                 defaultValue="INFO"
-                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
+                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink"
                             >
                                 <option value="INFO">Info</option>
                                 <option value="WARNING">Warning</option>
@@ -188,11 +188,11 @@ export default function AnnouncementsPage() {
                         </div>
 
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Dismissable</label>
+                            <label className="mb-1.5 block text-xs font-medium text-muted">Dismissable</label>
                             <select
                                 name="isDismissable"
                                 defaultValue="true"
-                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
+                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink"
                             >
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
@@ -200,22 +200,22 @@ export default function AnnouncementsPage() {
                         </div>
 
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Starts At</label>
+                            <label className="mb-1.5 block text-xs font-medium text-muted">Starts At</label>
                             <input
                                 name="startsAt"
                                 type="datetime-local"
                                 required
                                 defaultValue={new Date().toISOString().slice(0, 16)}
-                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
+                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink"
                             />
                         </div>
 
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Ends At <span className="text-[#8d897d]">(optional)</span></label>
+                            <label className="mb-1.5 block text-xs font-medium text-muted">Ends At <span className="text-muted">(optional)</span></label>
                             <input
                                 name="endsAt"
                                 type="datetime-local"
-                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
+                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink"
                             />
                         </div>
                     </div>
@@ -224,14 +224,14 @@ export default function AnnouncementsPage() {
                         <button
                             type="button"
                             onClick={() => setShowForm(false)}
-                            className="rounded-lg px-4 py-2 text-sm text-[#c1bcaf] transition-colors hover:bg-white/6 hover:text-white"
+                            className="rounded-lg px-4 py-2 text-sm text-muted transition-colors hover:bg-surface-subtle hover:text-white"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={formLoading}
-                            className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-(--accent-soft) disabled:cursor-not-allowed disabled:opacity-70"
+                            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {formLoading ? 'Publishing...' : 'Publish'}
                         </button>
@@ -243,23 +243,23 @@ export default function AnnouncementsPage() {
             {loading ? (
                 <div className="space-y-3">
                     {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="app-panel rounded-2xl p-5 animate-pulse">
+                        <div key={i} className="bg-white rounded-card shadow-card p-5 animate-pulse">
                             <div className="flex gap-3 mb-3">
-                                <div className="h-5 w-20 bg-white/10 rounded-full" />
-                                <div className="h-5 w-40 bg-white/10 rounded" />
+                                <div className="h-5 w-20 bg-border rounded-full" />
+                                <div className="h-5 w-40 bg-border rounded" />
                             </div>
-                            <div className="h-4 bg-white/10 rounded w-3/4 mb-2" />
-                            <div className="h-3 bg-white/10 rounded w-1/2" />
+                            <div className="h-4 bg-border rounded w-3/4 mb-2" />
+                            <div className="h-3 bg-border rounded w-1/2" />
                         </div>
                     ))}
                 </div>
             ) : announcements.length === 0 ? (
-                <div className="app-panel rounded-2xl p-12 text-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-[#8d897d] mb-4">
+                <div className="bg-white shadow-card rounded-2xl p-12 text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-muted mb-4">
                         <path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0" />
                     </svg>
-                    <p className="text-[#8d897d] text-sm">No announcements yet.</p>
-                    <p className="text-[#8d897d] text-xs mt-1">Create one to notify your tenants.</p>
+                    <p className="text-muted text-sm">No announcements yet.</p>
+                    <p className="text-muted text-xs mt-1">Create one to notify your tenants.</p>
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -267,7 +267,7 @@ export default function AnnouncementsPage() {
                         const style = TYPE_STYLES[a.type]
                         const active = isActive(a)
                         return (
-                            <div key={a.id} className="app-panel rounded-2xl p-5">
+                            <div key={a.id} className="bg-white rounded-card shadow-card p-5">
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center flex-wrap gap-2 mb-2">
@@ -278,15 +278,15 @@ export default function AnnouncementsPage() {
                                             {active ? (
                                                 <span className="text-xs text-emerald-400 font-medium">● Active</span>
                                             ) : (
-                                                <span className="text-xs text-[#8d897d] font-medium">Inactive</span>
+                                                <span className="text-xs text-muted font-medium">Inactive</span>
                                             )}
                                             {!a.isDismissable && (
-                                                <span className="text-xs text-[#8d897d] bg-white/10 px-2 py-0.5 rounded-full">Persistent</span>
+                                                <span className="text-xs text-muted bg-border px-2 py-0.5 rounded-full">Persistent</span>
                                             )}
                                         </div>
-                                        <h3 className="text-sm font-semibold text-white mb-1">{a.title}</h3>
-                                        <p className="text-xs text-[#c1bcaf] leading-relaxed">{a.body}</p>
-                                        <div className="flex items-center gap-3 mt-3 text-xs text-[#8d897d]">
+                                        <h3 className="text-sm font-semibold text-ink mb-1">{a.title}</h3>
+                                        <p className="text-xs text-muted leading-relaxed">{a.body}</p>
+                                        <div className="flex items-center gap-3 mt-3 text-xs text-muted">
                                             <span>Starts {new Date(a.startsAt).toLocaleString()}</span>
                                             {a.endsAt && <span>· Ends {new Date(a.endsAt).toLocaleString()}</span>}
                                         </div>
@@ -294,7 +294,7 @@ export default function AnnouncementsPage() {
                                     <button
                                         onClick={() => handleDelete(a.id)}
                                         disabled={deleteId === a.id}
-                                        className="shrink-0 p-1.5 rounded-lg text-[#8d897d] hover:text-red-400 hover:bg-white/10 transition-colors disabled:opacity-50"
+                                        className="shrink-0 p-1.5 rounded-lg text-muted hover:text-red-400 hover:bg-border transition-colors disabled:opacity-50"
                                         title="Delete announcement"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -1,46 +1,94 @@
 @import "tailwindcss";
 
-:root {
-  --background: #f7f6f2;
-  --foreground: #1a1a18;
-  --surface: #ffffff;
-  --surface-strong: #f2efe7;
-  --border: #e4e1d8;
-  --muted: #6b6860;
-  --primary: #01411c;
-  --primary-strong: #016b30;
-  --primary-soft: #dfe9df;
-  --accent: #c8a45a;
-  --accent-soft: #f0d9a0;
-  --panel: rgba(255, 255, 255, 0.82);
-  --panel-dark: rgba(19, 32, 24, 0.78);
-  --shadow-card: 0 18px 40px rgba(1, 65, 28, 0.08);
-  --shadow-hover: 0 24px 64px rgba(1, 65, 28, 0.18);
-}
+/* ─────────────────────────────────────────────────────────────
+   DESIGN TOKENS  — edit these to retheme the entire app
+   Tailwind v4: --color-* in @theme → bg-*, text-*, border-*
+   ───────────────────────────────────────────────────────────── */
+@theme {
+  /* Fonts */
+  --font-sans:            'DM Sans', sans-serif;
+  --font-display:         'DM Sans', sans-serif;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-surface: var(--surface);
-  --color-border: var(--border);
-  --color-muted: var(--muted);
-  --color-primary: var(--primary);
-  --color-accent: var(--accent);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-brand-display);
-}
+  /* ── Layout surfaces ── */
+  --color-canvas:         #E8E8E6;   /* outer page bg — warm gray   */
+  --color-surface:        #F4F3EF;   /* panel / nav / section bg    */
+  --color-card:           #FFFFFF;   /* white inner cards           */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0d1a12;
-    --foreground: #f2eee5;
-    --surface: #132018;
-    --surface-strong: #19281e;
-    --border: rgba(240, 217, 160, 0.12);
-    --muted: #c1bcaf;
-    --panel: rgba(19, 32, 24, 0.86);
-  }
+  /* ── Primary brand — GREEN (change hex here to retheme) ── */
+  --color-primary:        #16a34a;   /* green-600                   */
+  --color-primary-dark:   #15803d;   /* green-700 — hover           */
+  --color-primary-light:  #dcfce7;   /* green-100 — soft bg         */
+  --color-primary-muted:  #bbf7d0;   /* green-200 — tint            */
+
+  /* ── Text hierarchy ── */
+  --color-ink:            #1A1A1A;   /* primary text                */
+  --color-muted:          #8A8A8A;   /* secondary / label text      */
+  --color-subtle:         #C4C4C4;   /* placeholders, dividers      */
+
+  /* ── Yellow accent (badges, stat bars, highlights) ── */
+  --color-accent:         #F5C518;
+  --color-accent-light:   #FDF6C3;
+  --color-accent-muted:   #FAF0A0;
+
+  /* ── Borders (extra weights) ── */
+  --color-border:         #E8E8E8;   /* default border              */
+  --color-border-strong:  #D0D0D0;   /* logo pills, prominent edges */
+  --color-border-muted:   #F0F0F0;   /* subtle table dividers       */
+
+  /* ── Surfaces (extra tones) ── */
+  --color-surface-subtle: #FAFAF8;   /* table row hover, light chip */
+  --color-ink-secondary:  #444444;   /* inactive nav links          */
+
+  /* ── Semantic status ── */
+  --color-success:        #1DB97A;
+  --color-success-bg:     #E6F9F0;
+  --color-error:          #E53E3E;
+  --color-error-bg:       #FDECEA;
+  --color-warning:        #B8860B;
+  --color-warning-bg:     #FDF6C3;
+
+  /* ── Semantic error border ── */
+  --color-error-border:   #FCCDD0;   /* error state input/box border  */
+  --color-error-dark:     #C53030;   /* darker red for hover states   */
+  --color-success-border: #B8EDD5;   /* light green border / hover bg */
+
+  /* ── Contextual / special-purpose colors ── */
+  --color-gold:      #c8a45a;   /* amber/gold — onboarding steps, sandbox labels */
+  --color-cream:     #f6e7bf;   /* warm cream — link hover text on dark bg       */
+  --color-code-bg:   #0b1510;   /* dark terminal / JSON preview blocks           */
+  --color-print-bg:  #0d140f;   /* dark print-preview header                     */
+
+  /* ── Nav frosted glass background ── */
+  --color-nav-blur: rgba(247,246,242,0.92); /* sticky nav + marketing nav */
+
+  /* ── Typography scale (non-standard sizes) ── */
+  --text-micro:      0.625rem;    /* 10px — tiny badge labels       */
+  --text-ui-xs:      0.8125rem;   /* 13px — nav links, table meta   */
+  --text-ui-sm:      0.9375rem;   /* 15px — card headings           */
+  --text-heading-sm: 1.0625rem;   /* 17px — modal headings          */
+  --text-page-title: 2rem;        /* 32px — page h1 titles          */
+
+  /* ── Border radius ── */
+  --radius-input: 0.625rem;  /* 10px — inputs, selects             */
+  --radius-chip:  0.875rem;  /* 14px — small inline cards          */
+  --radius-card:  1.25rem;   /* 20px — app card shells             */
+  --radius-panel: 1.75rem;   /* 28px — feature / pricing panels    */
+  --radius-modal: 2rem;      /* 32px — auth page outer shell       */
+
+  /* ── Letter spacing (ALL-CAPS section labels) ── */
+  --tracking-caps-xs: 0.16em;   /* stat-card labels                */
+  --tracking-caps:    0.20em;   /* standard section eyebrow labels */
+  --tracking-caps-md: 0.22em;   /* medium-width labels             */
+  --tracking-caps-lg: 0.24em;   /* wide labels                     */
+  --tracking-caps-xl: 0.26em;   /* widest hero labels              */
+
+  /* ── Shadows ── */
+  --shadow-card:   0 2px 12px rgba(0,0,0,0.05);   /* default app card       */
+  --shadow-panel:  0 8px 48px rgba(0,0,0,0.07);   /* outer rounded panel    */
+  --shadow-hover:  0 8px 32px rgba(0,0,0,0.10);   /* elevated hover         */
+  --shadow-nav:    0 1px 4px  rgba(0,0,0,0.04);   /* sticky nav header      */
+  --shadow-modal:  0 8px 32px rgba(0,0,0,0.12);   /* dialog / modal         */
+  --shadow-brand:  0 8px 32px rgba(22,163,74,0.28); /* primary green glow   */
 }
 
 * {
@@ -52,14 +100,12 @@ html {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), sans-serif;
+  background-color: #E8E8E6; /* canvas */
+  color: #1A1A1A;             /* ink */
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
   min-height: 100vh;
-  background-image:
-    radial-gradient(circle at top left, rgba(200, 164, 90, 0.18), transparent 28%),
-    radial-gradient(circle at top right, rgba(1, 107, 48, 0.16), transparent 30%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.25), transparent 30%);
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -67,132 +113,234 @@ a {
   text-decoration: none;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   BRAND UTILITIES — shared across public + app surfaces
+   ───────────────────────────────────────────────────────────── */
+
+/* Outer page wrapper */
 .brand-shell {
   position: relative;
+  background-color: #E8E8E6;
 }
 
-.brand-shell::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(1, 65, 28, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(1, 65, 28, 0.035) 1px, transparent 1px);
-  background-size: 42px 42px;
-  mask-image: radial-gradient(circle at center, black, transparent 86%);
-  opacity: 0.45;
-}
-
+/* White card with subtle border */
 .brand-panel {
-  background: var(--panel);
-  backdrop-filter: blur(18px);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-card);
+  background: #FFFFFF;
+  border: 1px solid #E8E8E8;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
 }
 
-.brand-card-dark {
-  background: linear-gradient(180deg, rgba(19, 32, 24, 0.98), rgba(12, 21, 16, 0.94));
-  border: 1px solid rgba(240, 217, 160, 0.1);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
-}
-
+/* Featured / highlighted plan card — green gradient */
 .brand-gradient {
-  background: linear-gradient(135deg, var(--primary) 0%, #0f2a18 56%, #173e22 100%);
+  background: linear-gradient(135deg, #15803d 0%, #16a34a 55%, #14532d 100%);
 }
 
+/* Heading style */
 .brand-heading {
-  font-family: var(--font-brand-display), sans-serif;
-  letter-spacing: -0.04em;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: -0.02em;
+  color: #1A1A1A;
 }
 
+/* Secondary text */
 .brand-muted {
-  color: var(--muted);
+  color: #8A8A8A;
 }
 
+/* Filter chip / badge chip */
 .brand-chip {
-  border: 1px solid rgba(200, 164, 90, 0.4);
-  background: rgba(240, 217, 160, 0.12);
-  color: var(--accent);
+  border: 1px solid #E8E8E8;
+  background: #F4F3EF;
+  color: #1A1A1A;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   APP SHELL UTILITIES — tenant + admin surfaces
+   ───────────────────────────────────────────────────────────── */
 
 .app-shell {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(200, 164, 90, 0.08), transparent 22%),
-    linear-gradient(180deg, #102016 0%, #0d1a12 48%, #0b1510 100%);
-  color: #f6f0e4;
+  background-color: #E8E8E6;
+  color: #1A1A1A;
 }
 
 .app-sidebar {
-  background: linear-gradient(180deg, rgba(19, 32, 24, 0.98), rgba(10, 18, 13, 0.94));
-  border-right: 1px solid rgba(240, 217, 160, 0.12);
+  background: #F4F3EF;
+  border-right: 1px solid #E8E8E8;
 }
 
 .app-panel {
-  background: rgba(19, 32, 24, 0.84);
-  border: 1px solid rgba(240, 217, 160, 0.1);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
+  background: #FFFFFF;
+  border: 1px solid #E8E8E8;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
 }
 
 .app-panel-soft {
-  background: rgba(29, 44, 34, 0.72);
-  border: 1px solid rgba(240, 217, 160, 0.08);
+  background: #F4F3EF;
+  border: 1px solid #E8E8E8;
 }
 
+/* Nav active pill — primary green */
 .app-nav-active {
-  background: linear-gradient(90deg, rgba(200, 164, 90, 0.18), rgba(200, 164, 90, 0.05));
-  border: 1px solid rgba(200, 164, 90, 0.18);
-  color: #f0d9a0;
+  background-color: #16a34a;
+  color: #FFFFFF;
+  border-radius: 999px;
 }
 
 .metric-value {
-  color: #f8f1e0;
+  color: #1A1A1A;
 }
 
 .metric-accent {
-  color: var(--accent-soft);
+  color: #F5C518;
 }
 
-/* ── App-shell form elements ─────────────────────────────────────────────
-   Select / option elements rendered inside .app-shell or .app-panel must
-   always show dark backgrounds and light text regardless of OS/browser
-   light-mode defaults.  This also fixes the white-bg + invisible text bug
-   that appears in production builds on Chromium (Windows / macOS).
-   ─────────────────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────
+   FORM INPUTS — consistent across the entire app
+   Focus ring uses primary green
+   ───────────────────────────────────────────────────────────── */
+
+/* Force light rendering for native select/input inside any panel */
 .app-shell select,
 .app-panel select,
 .app-panel-soft select {
-  background-color: rgba(19, 32, 24, 0.92);
-  color: #f0ece3;
-  color-scheme: dark;
+  background-color: #FFFFFF;
+  color: #1A1A1A;
+  color-scheme: light;
+  border: 1px solid #E8E8E8;
 }
 
 .app-shell select option,
 .app-panel select option,
 .app-panel-soft select option {
-  background-color: #0e1d17;
-  color: #f0ece3;
+  background-color: #FFFFFF;
+  color: #1A1A1A;
 }
 
-/* Generic dark-input utility used on POS, Products, Settings forms */
+/* Shared input class — apply to <input>, <select>, <textarea> */
 select.app-input,
 input.app-input,
 textarea.app-input {
-  background: rgba(19, 32, 24, 0.72);
-  border: 1px solid rgba(240, 217, 160, 0.12);
-  color: #f0ece3;
-  color-scheme: dark;
+  background: #FFFFFF;
+  border: 1px solid #E8E8E8;
+  color: #1A1A1A;
+  color-scheme: light;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+select.app-input:focus,
+input.app-input:focus,
+textarea.app-input:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
 }
 
 select.app-input option {
-  background-color: #0e1d17;
-  color: #f0ece3;
+  background-color: #FFFFFF;
+  color: #1A1A1A;
 }
 
-/* Tailwind bg-white/6 selects inside dark shells — force dark rendering */
-.app-shell select[class*="bg-white"],
-.app-shell input[class*="bg-white"] {
-  color-scheme: dark;
+/* ─────────────────────────────────────────────────────────────
+   STATUS BADGES
+   ───────────────────────────────────────────────────────────── */
+
+.badge-invited,
+.badge-employed {
+  background: #E6F9F0;
+  color: #1DB97A;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+}
+
+.badge-absent,
+.badge-pending {
+  background: #F2F2F2;
+  color: #8A8A8A;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+}
+
+.badge-draft {
+  background: #F2F2F2;
+  color: #8A8A8A;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+}
+
+.badge-confirmed,
+.badge-submitted,
+.badge-success {
+  background: #E6F9F0;
+  color: #1DB97A;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+}
+
+.badge-failed,
+.badge-error {
+  background: #FDECEA;
+  color: #E53E3E;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CREXTIO DESIGN-SYSTEM PANEL SHELL
+   ───────────────────────────────────────────────────────────── */
+
+.crextio-shell {
+  background-color: #E8E8E6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.crextio-inner {
+  background-color: #F4F3EF;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.07);
+  position: relative;
+}
+
+/* Top-right gradient blob (green tinted) */
+.crextio-blob {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 420px;
+  height: 320px;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse at top right, #bbf7d0 0%, #dcfce7 35%, transparent 70%);
+  opacity: 0.6;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MICRO-INTERACTIONS
+   ───────────────────────────────────────────────────────────── */
+
+.transition-ui {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+/* Keep legacy alias */
+.transition-crextio {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 

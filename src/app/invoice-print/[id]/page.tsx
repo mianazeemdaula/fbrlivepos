@@ -36,7 +36,7 @@ export default function InvoicePrintPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#0d140f] p-6 text-sm text-[#c1bcaf]">
+            <div className="min-h-screen bg-print-bg p-6 text-sm text-muted">
                 Loading invoice print view...
             </div>
         )
@@ -44,7 +44,7 @@ export default function InvoicePrintPage() {
 
     if (error || !invoice) {
         return (
-            <div className="min-h-screen bg-[#0d140f] p-6">
+            <div className="min-h-screen bg-print-bg p-6">
                 <div className="mx-auto max-w-2xl rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-red-300">
                     {error ?? 'Invoice not found.'}
                 </div>
@@ -53,7 +53,7 @@ export default function InvoicePrintPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#0d140f]">
+        <div className="min-h-screen bg-print-bg">
             <InvoicePrintModal
                 invoice={invoice}
                 standalone

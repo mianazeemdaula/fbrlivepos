@@ -93,9 +93,9 @@ export default function BillingPage() {
         <div className="p-8">
             <div className="mb-8 flex items-start justify-between">
                 <div>
-                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Revenue</p>
-                    <h1 className="brand-heading text-3xl font-bold text-white">Billing</h1>
-                    <p className="mt-1 text-sm text-[#c1bcaf]">Track and manage tenant billing records</p>
+                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Revenue</p>
+                    <h1 className="text-page-title font-normal text-ink">Billing</h1>
+                    <p className="mt-1 text-sm text-muted">Track and manage tenant billing records</p>
                 </div>
                 <select
                     value={filter}
@@ -103,7 +103,7 @@ export default function BillingPage() {
                         setFilter(e.target.value)
                         setPage(1)
                     }}
-                    className="rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
+                    className="rounded-input border border-border bg-white px-3 py-2 text-sm text-ink"
                 >
                     <option value="all">All records</option>
                     <option value="PENDING">Pending</option>
@@ -112,42 +112,42 @@ export default function BillingPage() {
                 </select>
             </div>
 
-            <div className="app-panel overflow-hidden rounded-2xl">
+            <div className="bg-white rounded-card shadow-card overflow-hidden rounded-2xl">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-white/10">
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Tenant</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Plan</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Amount</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Period</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Status</th>
+                        <tr className="border-b border-border">
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Tenant</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Plan</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Amount</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Period</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Status</th>
                             <th className="px-4 py-3" />
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             Array.from({ length: 3 }).map((_, i) => (
-                                <tr key={i} className="border-b border-white/10">
+                                <tr key={i} className="border-b border-border">
                                     <td colSpan={6} className="px-4 py-3">
-                                        <div className="h-4 rounded bg-white/10 animate-pulse" />
+                                        <div className="h-4 rounded bg-border animate-pulse" />
                                     </td>
                                 </tr>
                             ))
                         ) : records.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="px-4 py-12 text-center text-sm text-[#8d897d]">
+                                <td colSpan={6} className="px-4 py-12 text-center text-sm text-muted">
                                     No billing records found.
                                 </td>
                             </tr>
                         ) : (
                             records.map((r) => (
-                                <tr key={r.id} className="border-b border-white/10 transition-colors hover:bg-white/6">
-                                    <td className="px-4 py-3 text-sm text-white font-medium">{r.tenant.businessName}</td>
-                                    <td className="px-4 py-3 text-sm text-[#d8d0bf]">{r.plan.name}</td>
-                                    <td className="px-4 py-3 text-sm text-white font-semibold">
+                                <tr key={r.id} className="border-b border-border transition-colors hover:bg-surface-subtle">
+                                    <td className="px-4 py-3 text-sm text-ink font-medium">{r.tenant.businessName}</td>
+                                    <td className="px-4 py-3 text-sm text-ink">{r.plan.name}</td>
+                                    <td className="px-4 py-3 text-sm text-ink font-semibold">
                                         PKR {r.amount.toLocaleString()}
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-[#8d897d]">
+                                    <td className="px-4 py-3 text-xs text-muted">
                                         {new Date(r.periodStart).toLocaleDateString()} — {new Date(r.periodEnd).toLocaleDateString()}
                                     </td>
                                     <td className="px-4 py-3">
@@ -166,7 +166,7 @@ export default function BillingPage() {
                                         {r.status !== 'PAID' && (
                                             <button
                                                 onClick={() => handleMarkPaid(r.id)}
-                                                className="text-xs font-medium text-[#f0d9a0] transition-colors hover:text-[#f6e7bf]"
+                                                className="text-xs font-medium text-muted transition-colors hover:text-cream"
                                             >
                                                 Mark Paid
                                             </button>

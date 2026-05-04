@@ -46,67 +46,67 @@ export default function AuditLogPage() {
         <div className="p-8">
             <div className="mb-8 flex items-start justify-between">
                 <div>
-                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Governance</p>
-                    <h1 className="brand-heading text-3xl font-bold text-white">Audit Log</h1>
-                    <p className="mt-1 text-sm text-[#c1bcaf]">Track all platform-level administrative actions</p>
+                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Governance</p>
+                    <h1 className="text-page-title font-normal text-ink">Audit Log</h1>
+                    <p className="mt-1 text-sm text-muted">Track all platform-level administrative actions</p>
                 </div>
                 <input
                     type="text"
                     placeholder="Filter by action..."
                     value={actionFilter}
                     onChange={(e) => { setActionFilter(e.target.value); setPage(1) }}
-                    className="rounded-xl border border-white/10 bg-white/6 px-4 py-2 text-sm text-white placeholder:text-[#8d897d]"
+                    className="rounded-input border border-border bg-white px-4 py-2 text-sm text-ink placeholder:text-muted"
                 />
             </div>
 
-            <div className="app-panel overflow-hidden rounded-2xl">
+            <div className="bg-white rounded-card shadow-card overflow-hidden rounded-2xl">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-white/10">
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Time</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Actor</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Role</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Action</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">Entity</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#8d897d]">IP</th>
+                        <tr className="border-b border-border">
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Time</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Actor</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Role</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Action</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Entity</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">IP</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             Array.from({ length: 5 }).map((_, i) => (
-                                <tr key={i} className="border-b border-white/10">
+                                <tr key={i} className="border-b border-border">
                                     <td colSpan={6} className="px-4 py-3">
-                                        <div className="h-4 rounded bg-white/10 animate-pulse" />
+                                        <div className="h-4 rounded bg-border animate-pulse" />
                                     </td>
                                 </tr>
                             ))
                         ) : entries.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="px-4 py-12 text-center text-sm text-[#8d897d]">
+                                <td colSpan={6} className="px-4 py-12 text-center text-sm text-muted">
                                     No audit entries found.
                                 </td>
                             </tr>
                         ) : (
                             entries.map((entry) => (
-                                <tr key={entry.id} className="border-b border-white/10 transition-colors hover:bg-white/6">
-                                    <td className="px-4 py-3 text-xs whitespace-nowrap text-[#8d897d]">
+                                <tr key={entry.id} className="border-b border-border transition-colors hover:bg-surface-subtle">
+                                    <td className="px-4 py-3 text-xs whitespace-nowrap text-muted">
                                         {new Date(entry.createdAt).toLocaleString()}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <p className="text-sm text-[#d8d0bf]">{entry.actorEmail || '—'}</p>
+                                        <p className="text-sm text-ink">{entry.actorEmail || '—'}</p>
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-[#8d897d]">
+                                    <td className="px-4 py-3 text-xs text-muted">
                                         {entry.actorRole || '—'}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <span className="rounded border border-white/10 bg-white/6 px-2 py-0.5 font-mono text-xs text-[#d8d0bf]">
+                                        <span className="rounded border border-border bg-surface-subtle px-2 py-0.5 font-mono text-xs text-ink">
                                             {entry.action}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-[#8d897d]">
+                                    <td className="px-4 py-3 text-xs text-muted">
                                         {entry.entity ? `${entry.entity}:${entry.entityId?.slice(0, 8)}` : '—'}
                                     </td>
-                                    <td className="px-4 py-3 font-mono text-xs text-[#8d897d]">
+                                    <td className="px-4 py-3 font-mono text-xs text-muted">
                                         {entry.ipAddress || '—'}
                                     </td>
                                 </tr>
@@ -121,17 +121,17 @@ export default function AuditLogPage() {
                     <button
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
-                        className="rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-[#d8d0bf] disabled:opacity-40"
+                        className="rounded-xl border border-border bg-surface-subtle px-3 py-1.5 text-sm text-ink disabled:opacity-40"
                     >
                         Previous
                     </button>
-                    <span className="px-3 py-1.5 text-sm text-[#8d897d]">
+                    <span className="px-3 py-1.5 text-sm text-muted">
                         Page {page} of {totalPages}
                     </span>
                     <button
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
-                        className="rounded-xl border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-[#d8d0bf] disabled:opacity-40"
+                        className="rounded-xl border border-border bg-surface-subtle px-3 py-1.5 text-sm text-ink disabled:opacity-40"
                     >
                         Next
                     </button>

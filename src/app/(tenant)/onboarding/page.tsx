@@ -119,9 +119,9 @@ export default function OnboardingPage() {
             <div className="mx-auto max-w-2xl">
                 {/* Header */}
                 <div className="mb-8">
-                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Setup Wizard</p>
-                    <h1 className="brand-heading mt-2 text-3xl font-bold text-white">FBR Digital Invoicing Setup</h1>
-                    <p className="mt-2 text-sm text-[#8d897d]">
+                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Setup Wizard</p>
+                    <h1 className="mt-2 text-page-title font-normal text-ink">FBR Digital Invoicing Setup</h1>
+                    <p className="mt-2 text-sm text-muted">
                         Complete these steps to configure your FBR DI credentials and start issuing compliant invoices.
                     </p>
                 </div>
@@ -134,19 +134,19 @@ export default function OnboardingPage() {
                                 className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors ${i + 1 < step
                                     ? 'bg-green-500/80 text-white'
                                     : i + 1 === step
-                                        ? 'bg-[#c8a45a] text-primary'
-                                        : 'bg-white/10 text-[#8d897d]'
+                                        ? 'bg-gold text-white'
+                                        : 'bg-border text-muted'
                                     }`}
                             >
                                 {i + 1 < step ? '✓' : i + 1}
                             </div>
-                            <p className="hidden text-center text-[10px] text-[#8d897d] sm:block">{title}</p>
+                            <p className="hidden text-center text-micro text-muted sm:block">{title}</p>
                         </div>
                     ))}
                 </div>
 
                 {/* Panel */}
-                <div className="app-panel rounded-2xl p-6">
+                <div className="bg-white rounded-card shadow-card rounded-2xl p-6">
                     {error && (
                         <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
                             {error}
@@ -156,61 +156,61 @@ export default function OnboardingPage() {
                     {/* ── Step 1: Business Identity ── */}
                     {step === 1 && (
                         <div className="space-y-4">
-                            <h2 className="text-lg font-semibold text-white">Business Identity</h2>
-                            <p className="text-sm text-[#8d897d]">
+                            <h2 className="text-lg font-semibold text-ink">Business Identity</h2>
+                            <p className="text-sm text-muted">
                                 Enter your taxpayer details exactly as registered with FBR/IRIS.
                             </p>
 
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div>
-                                    <label className="mb-1 block text-xs text-[#c1bcaf]">NTN (7-digit)</label>
+                                    <label className="mb-1 block text-xs text-muted">NTN (7-digit)</label>
                                     <input
                                         value={step1.sellerNTN}
                                         onChange={e => setStep1(s => ({ ...s, sellerNTN: e.target.value.replace(/\D/g, '').slice(0, 9) }))}
                                         placeholder="e.g. 2893028"
-                                        className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]"
+                                        className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted"
                                     />
                                 </div>
                                 <div>
-                                    <label className="mb-1 block text-xs text-[#c1bcaf]">CNIC (13-digit, optional)</label>
+                                    <label className="mb-1 block text-xs text-muted">CNIC (13-digit, optional)</label>
                                     <input
                                         value={step1.sellerCNIC}
                                         onChange={e => setStep1(s => ({ ...s, sellerCNIC: e.target.value.replace(/\D/g, '').slice(0, 13) }))}
                                         placeholder="e.g. 3530118686639"
-                                        className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]"
+                                        className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-xs text-[#c1bcaf]">Registered Business Name</label>
+                                <label className="mb-1 block text-xs text-muted">Registered Business Name</label>
                                 <input
                                     value={step1.sellerBusinessName}
                                     onChange={e => setStep1(s => ({ ...s, sellerBusinessName: e.target.value }))}
                                     placeholder="e.g. ALI PROTEIN FARM"
-                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]"
+                                    className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted"
                                 />
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-xs text-[#c1bcaf]">Province</label>
+                                <label className="mb-1 block text-xs text-muted">Province</label>
                                 <select
                                     value={step1.sellerProvince}
                                     onChange={e => setStep1(s => ({ ...s, sellerProvince: e.target.value }))}
-                                    className="w-full rounded-xl border border-white/10 bg-[#0e1d17] px-3 py-2 text-sm text-white"
+                                    className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-ink"
                                 >
                                     {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
                                 </select>
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-xs text-[#c1bcaf]">Business Address</label>
+                                <label className="mb-1 block text-xs text-muted">Business Address</label>
                                 <textarea
                                     value={step1.sellerAddress}
                                     onChange={e => setStep1(s => ({ ...s, sellerAddress: e.target.value }))}
                                     rows={2}
                                     placeholder="Full business address as registered with FBR"
-                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d] resize-none"
+                                    className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted resize-none"
                                 />
                             </div>
 
@@ -223,7 +223,7 @@ export default function OnboardingPage() {
                                     setError('')
                                     setStep(2)
                                 }}
-                                className="w-full rounded-full bg-accent py-2.5 text-sm font-medium text-primary transition-colors hover:bg-[--accent-soft]"
+                                className="w-full rounded-full bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
                             >
                                 Next: Activity & Sector →
                             </button>
@@ -233,28 +233,28 @@ export default function OnboardingPage() {
                     {/* ── Step 2: Business Activity & Sector ── */}
                     {step === 2 && (
                         <div className="space-y-4">
-                            <h2 className="text-lg font-semibold text-white">Business Activity & Sector</h2>
-                            <p className="text-sm text-[#8d897d]">
+                            <h2 className="text-lg font-semibold text-ink">Business Activity & Sector</h2>
+                            <p className="text-sm text-muted">
                                 This determines which FBR invoice scenarios you are required to support.
                             </p>
 
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div>
-                                    <label className="mb-1 block text-xs text-[#c1bcaf]">Business Activity</label>
+                                    <label className="mb-1 block text-xs text-muted">Business Activity</label>
                                     <select
                                         value={step2.businessActivity}
                                         onChange={e => setStep2(s => ({ ...s, businessActivity: e.target.value }))}
-                                        className="w-full rounded-xl border border-white/10 bg-[#0e1d17] px-3 py-2 text-sm text-white"
+                                        className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-ink"
                                     >
                                         {BUSINESS_ACTIVITIES.map(a => <option key={a} value={a}>{a}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="mb-1 block text-xs text-[#c1bcaf]">Sector</label>
+                                    <label className="mb-1 block text-xs text-muted">Sector</label>
                                     <select
                                         value={step2.sector}
                                         onChange={e => setStep2(s => ({ ...s, sector: e.target.value }))}
-                                        className="w-full rounded-xl border border-white/10 bg-[#0e1d17] px-3 py-2 text-sm text-white"
+                                        className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-ink"
                                     >
                                         {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
@@ -262,17 +262,17 @@ export default function OnboardingPage() {
                             </div>
 
                             {scenariosLoading ? (
-                                <p className="text-xs text-[#8d897d]">Loading applicable scenarios…</p>
+                                <p className="text-xs text-muted">Loading applicable scenarios…</p>
                             ) : applicableScenarios.length > 0 ? (
-                                <div className="rounded-xl border border-white/10 bg-[#0b1510] p-4">
-                                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#f0d9a0]">
+                                <div className="rounded-xl border border-border bg-code-bg p-4">
+                                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">
                                         Applicable Scenarios ({applicableScenarios.length})
                                     </p>
                                     <div className="max-h-48 overflow-auto space-y-1">
                                         {applicableScenarios.map(s => (
                                             <div key={s.scenarioId} className="flex items-start gap-2 text-xs">
-                                                <span className="shrink-0 font-mono text-[#c8a45a]">{s.scenarioId}</span>
-                                                <span className="text-[#c1bcaf]">{s.description}</span>
+                                                <span className="shrink-0 font-mono text-gold">{s.scenarioId}</span>
+                                                <span className="text-muted">{s.description}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -282,13 +282,13 @@ export default function OnboardingPage() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setStep(1)}
-                                    className="flex-1 rounded-full border border-white/10 py-2.5 text-sm text-[#c1bcaf] hover:bg-white/6"
+                                    className="flex-1 rounded-full border border-border py-2.5 text-sm text-muted hover:bg-surface-subtle"
                                 >
                                     ← Back
                                 </button>
                                 <button
                                     onClick={() => { setError(''); setStep(3) }}
-                                    className="flex-1 rounded-full bg-accent py-2.5 text-sm font-medium text-primary hover:bg-[--accent-soft]"
+                                    className="flex-1 rounded-full bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark"
                                 >
                                     Next: PRAL Token →
                                 </button>
@@ -299,22 +299,22 @@ export default function OnboardingPage() {
                     {/* ── Step 3: PRAL Token ── */}
                     {step === 3 && (
                         <div className="space-y-4">
-                            <h2 className="text-lg font-semibold text-white">PRAL Bearer Token</h2>
-                            <p className="text-sm text-[#8d897d]">
+                            <h2 className="text-lg font-semibold text-ink">PRAL Bearer Token</h2>
+                            <p className="text-sm text-muted">
                                 Your token is issued by PRAL and is valid for 5 years. It is stored encrypted.
                                 Environment routing is determined by which token is active — same URL for sandbox and production.
                             </p>
 
                             <div>
-                                <label className="mb-1 block text-xs text-[#c1bcaf]">Environment</label>
+                                <label className="mb-1 block text-xs text-muted">Environment</label>
                                 <div className="flex gap-2">
                                     {(['SANDBOX', 'PRODUCTION'] as const).map(env => (
                                         <button
                                             key={env}
                                             onClick={() => setStep3(s => ({ ...s, environment: env }))}
                                             className={`flex-1 rounded-xl border py-2 text-xs font-semibold transition-colors ${step3.environment === env
-                                                ? 'border-[#c8a45a] bg-[#c8a45a]/10 text-[#f0d9a0]'
-                                                : 'border-white/10 text-[#8d897d] hover:border-white/20'
+                                                ? 'border-gold bg-gold/10 text-muted'
+                                                : 'border-border text-muted hover:border-white/20'
                                                 }`}
                                         >
                                             {env}
@@ -329,37 +329,37 @@ export default function OnboardingPage() {
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-xs text-[#c1bcaf]">Sandbox Token</label>
+                                <label className="mb-1 block text-xs text-muted">Sandbox Token</label>
                                 <input
                                     type="password"
                                     value={step3.sandboxToken}
                                     onChange={e => setStep3(s => ({ ...s, sandboxToken: e.target.value }))}
                                     placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white font-mono placeholder:text-[#8d897d]"
+                                    className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink font-mono placeholder:text-muted"
                                 />
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-xs text-[#c1bcaf]">Production Token (when ready)</label>
+                                <label className="mb-1 block text-xs text-muted">Production Token (when ready)</label>
                                 <input
                                     type="password"
                                     value={step3.productionToken}
                                     onChange={e => setStep3(s => ({ ...s, productionToken: e.target.value }))}
                                     placeholder="Leave blank if not yet issued"
-                                    className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white font-mono placeholder:text-[#8d897d]"
+                                    className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink font-mono placeholder:text-muted"
                                 />
                             </div>
 
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setStep(2)}
-                                    className="flex-1 rounded-full border border-white/10 py-2.5 text-sm text-[#c1bcaf] hover:bg-white/6"
+                                    className="flex-1 rounded-full border border-border py-2.5 text-sm text-muted hover:bg-surface-subtle"
                                 >
                                     ← Back
                                 </button>
                                 <button
                                     onClick={() => { setError(''); setStep(4) }}
-                                    className="flex-1 rounded-full bg-accent py-2.5 text-sm font-medium text-primary hover:bg-[--accent-soft]"
+                                    className="flex-1 rounded-full bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark"
                                 >
                                     Review →
                                 </button>
@@ -370,9 +370,9 @@ export default function OnboardingPage() {
                     {/* ── Step 4: Review & Complete ── */}
                     {step === 4 && (
                         <div className="space-y-4">
-                            <h2 className="text-lg font-semibold text-white">Review & Complete</h2>
+                            <h2 className="text-lg font-semibold text-ink">Review & Complete</h2>
 
-                            <div className="space-y-3 rounded-xl border border-white/10 bg-[#0b1510] p-4 text-sm">
+                            <div className="space-y-3 rounded-xl border border-border bg-code-bg p-4 text-sm">
                                 <Row label="NTN" value={step1.sellerNTN} />
                                 {step1.sellerCNIC && <Row label="CNIC" value={step1.sellerCNIC} />}
                                 <Row label="Business Name" value={step1.sellerBusinessName} />
@@ -389,20 +389,20 @@ export default function OnboardingPage() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setStep(3)}
-                                    className="flex-1 rounded-full border border-white/10 py-2.5 text-sm text-[#c1bcaf] hover:bg-white/6"
+                                    className="flex-1 rounded-full border border-border py-2.5 text-sm text-muted hover:bg-surface-subtle"
                                 >
                                     ← Back
                                 </button>
                                 <button
                                     onClick={handleComplete}
                                     disabled={loading}
-                                    className="flex-1 rounded-full bg-accent py-2.5 text-sm font-medium text-primary hover:bg-[--accent-soft] disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="flex-1 rounded-full bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     {loading ? 'Saving…' : '✓ Complete Setup'}
                                 </button>
                             </div>
 
-                            <p className="text-center text-xs text-[#8d897d]">
+                            <p className="text-center text-xs text-muted">
                                 You can update these settings anytime in Settings → FBR Credentials.
                             </p>
                         </div>
@@ -416,7 +416,7 @@ export default function OnboardingPage() {
 function Row({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex justify-between gap-4">
-            <span className="text-[#8d897d]">{label}</span>
+            <span className="text-muted">{label}</span>
             <span className="text-right text-white">{value || '—'}</span>
         </div>
     )

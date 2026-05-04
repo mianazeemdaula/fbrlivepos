@@ -81,44 +81,44 @@ export default function FeatureFlagsPage() {
         <div className="p-8">
             <div className="mb-8 flex items-start justify-between">
                 <div>
-                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Platform controls</p>
-                    <h1 className="brand-heading text-3xl font-bold text-white">Feature Flags</h1>
-                    <p className="mt-1 text-sm text-[#c1bcaf]">Control platform features globally or per tenant</p>
+                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Platform controls</p>
+                    <h1 className="text-page-title font-normal text-ink">Feature Flags</h1>
+                    <p className="mt-1 text-sm text-muted">Control platform features globally or per tenant</p>
                 </div>
                 <button
                     onClick={() => setShowForm(!showForm)}
-                    className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)]"
+                    className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
                 >
                     {showForm ? 'Cancel' : '+ New Flag'}
                 </button>
             </div>
 
             {showForm && (
-                <form onSubmit={handleCreate} className="app-panel mb-6 rounded-2xl p-6">
-                    <h2 className="text-sm font-semibold text-white mb-4">New Feature Flag</h2>
+                <form onSubmit={handleCreate} className="bg-white rounded-card shadow-card mb-6 p-6">
+                    <h2 className="text-sm font-semibold text-ink mb-4">New Feature Flag</h2>
                     <div className="grid grid-cols-3 gap-4">
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Key</label>
-                            <input name="key" required className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" placeholder="e.g. email_invoices" />
+                            <label className="mb-1.5 block text-xs font-medium text-muted">Key</label>
+                            <input name="key" required className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink" placeholder="e.g. email_invoices" />
                         </div>
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Description</label>
-                            <input name="description" className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" />
+                            <label className="mb-1.5 block text-xs font-medium text-muted">Description</label>
+                            <input name="description" className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink" />
                         </div>
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Default State</label>
-                            <select name="isEnabled" className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white">
+                            <label className="mb-1.5 block text-xs font-medium text-muted">Default State</label>
+                            <select name="isEnabled" className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink">
                                 <option value="false">Disabled</option>
                                 <option value="true">Enabled</option>
                             </select>
                         </div>
                     </div>
                     <div className="flex justify-end gap-3 mt-4">
-                        <button type="button" onClick={() => setShowForm(false)} className="rounded-lg px-4 py-2 text-sm text-[#c1bcaf] transition-colors hover:bg-white/6 hover:text-white">Cancel</button>
+                        <button type="button" onClick={() => setShowForm(false)} className="rounded-lg px-4 py-2 text-sm text-muted transition-colors hover:bg-surface hover:text-ink">Cancel</button>
                         <button
                             type="submit"
                             disabled={formLoading}
-                            className="rounded-full bg-[var(--accent)] px-6 py-2 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
+                            className="rounded-full bg-primary px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {formLoading ? 'Creating...' : 'Create Flag'}
                         </button>
@@ -129,24 +129,24 @@ export default function FeatureFlagsPage() {
             <div className="space-y-2">
                 {loading
                     ? Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="app-panel rounded-2xl p-5 animate-pulse">
-                            <div className="h-5 w-32 rounded bg-white/10" />
+                        <div key={i} className="bg-white rounded-card shadow-card rounded-2xl p-5 animate-pulse">
+                            <div className="h-5 w-32 rounded bg-border" />
                         </div>
                     ))
                     : flags.length === 0
                         ? (
-                            <div className="app-panel rounded-2xl p-12 text-center text-sm text-[#8d897d]">No feature flags configured.</div>
+                            <div className="bg-white rounded-card shadow-card rounded-2xl p-12 text-center text-sm text-muted">No feature flags configured.</div>
                         )
                         : flags.map((flag) => (
-                            <div key={flag.id} className="app-panel rounded-2xl px-5 py-4">
+                            <div key={flag.id} className="bg-white rounded-card shadow-card rounded-2xl px-5 py-4">
                                 <div className="flex justify-between items-center">
                                     <div>
-                                        <h3 className="text-sm font-semibold text-white font-mono">{flag.key}</h3>
+                                        <h3 className="text-sm font-semibold text-ink font-mono">{flag.key}</h3>
                                         {flag.description && (
-                                            <p className="mt-0.5 text-xs text-[#8d897d]">{flag.description}</p>
+                                            <p className="mt-0.5 text-xs text-muted">{flag.description}</p>
                                         )}
                                         {flag.tenantOverrides.length > 0 && (
-                                            <p className="mt-1 text-xs text-[#8d897d]">
+                                            <p className="mt-1 text-xs text-muted">
                                                 {flag.tenantOverrides.length} tenant override(s)
                                             </p>
                                         )}
@@ -155,7 +155,7 @@ export default function FeatureFlagsPage() {
                                         onClick={() => handleToggle(flag.id, flag.isEnabled)}
                                         className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${flag.isEnabled
                                             ? 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/20'
-                                            : 'bg-white/10 text-[#c1bcaf] hover:bg-white/12 border border-white/10'
+                                            : 'bg-border text-muted hover:bg-border-strong border border-border'
                                             }`}
                                     >
                                         {flag.isEnabled ? 'Enabled' : 'Disabled'}

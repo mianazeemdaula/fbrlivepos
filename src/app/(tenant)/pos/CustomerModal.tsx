@@ -155,30 +155,30 @@ export default function CustomerModal({
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
             onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
         >
-            <div className="app-panel flex w-full max-w-md flex-col overflow-hidden rounded-2xl shadow-2xl">
+            <div className="bg-white rounded-card shadow-card flex w-full max-w-md flex-col overflow-hidden rounded-2xl shadow-2xl">
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+                <div className="flex items-center justify-between border-b border-border px-5 py-4">
                     <div>
-                        <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Customer</p>
-                        <h2 className="mt-0.5 text-base font-bold text-white">Add / Search Customer</h2>
+                        <p className="text-xs font-medium uppercase tracking-caps text-muted">Customer</p>
+                        <h2 className="mt-0.5 text-base font-bold text-ink">Add / Search Customer</h2>
                     </div>
                     <button
                         onClick={onClose}
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-white/8 text-[#8d897d] hover:bg-white/14 hover:text-white"
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-muted hover:bg-canvas hover:text-ink"
                     >
                         ✕
                     </button>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-b border-white/10">
+                <div className="flex border-b border-border">
                     {(['search', 'new'] as const).map((t) => (
                         <button
                             key={t}
                             onClick={() => { setTab(t); setError(null) }}
                             className={`flex-1 py-2.5 text-sm font-medium transition-colors ${tab === t
                                 ? 'border-b-2 border-accent text-accent'
-                                : 'text-[#8d897d] hover:text-white'
+                                : 'text-muted hover:text-ink'
                                 }`}
                         >
                             {t === 'search' ? 'Search Existing' : 'New Customer'}
@@ -189,17 +189,17 @@ export default function CustomerModal({
                 <div className="max-h-[70vh] overflow-auto p-5">
                     {/* ── Currently selected ── */}
                     {selectedCustomer && (
-                        <div className="mb-4 flex items-center gap-3 rounded-xl border border-green-500/30 bg-green-500/8 px-3 py-2.5">
-                            <span className="text-green-400">✓</span>
+                        <div className="mb-4 flex items-center gap-3 rounded-xl border border-green-300 bg-green-50 px-3 py-2.5">
+                            <span className="text-green-600">✓</span>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-white truncate">{selectedCustomer.name}</p>
+                                <p className="text-sm font-medium text-ink truncate">{selectedCustomer.name}</p>
                                 {selectedCustomer.ntnCnic && (
-                                    <p className="font-mono text-xs text-[#8d897d]">{selectedCustomer.ntnCnic}</p>
+                                    <p className="font-mono text-xs text-muted">{selectedCustomer.ntnCnic}</p>
                                 )}
                             </div>
                             <button
                                 onClick={() => { onClearCustomer(); onClose() }}
-                                className="shrink-0 text-xs text-red-300 hover:text-red-200"
+                                className="shrink-0 text-xs text-red-500 hover:text-red-700"
                             >
                                 Remove
                             </button>
@@ -214,10 +214,10 @@ export default function CustomerModal({
                                 value={search}
                                 onChange={(e) => handleSearch(e.target.value)}
                                 autoFocus
-                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]"
+                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted"
                             />
                             {searching && (
-                                <p className="text-center text-xs text-[#8d897d]">Searching…</p>
+                                <p className="text-center text-xs text-muted">Searching…</p>
                             )}
                             {results.length > 0 && (
                                 <div className="space-y-1">
@@ -225,35 +225,35 @@ export default function CustomerModal({
                                         <button
                                             key={c.id}
                                             onClick={() => { onSelectCustomer(c); onClose() }}
-                                            className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2.5 text-left hover:border-white/20 hover:bg-white/10"
+                                            className="w-full rounded-xl border border-border bg-surface-subtle px-3 py-2.5 text-left hover:border-border-strong hover:bg-canvas"
                                         >
                                             <div className="flex items-center justify-between gap-2">
-                                                <span className="text-sm font-medium text-white">{c.name}</span>
+                                                <span className="text-sm font-medium text-ink">{c.name}</span>
                                                 {c.registrationType && (
                                                     <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs ${c.fbrVerified
                                                         ? 'bg-green-500/10 text-green-400'
-                                                        : 'bg-white/8 text-[#8d897d]'
+                                                        : 'bg-surface text-muted'
                                                         }`}>
                                                         {c.fbrVerified ? '✓ ' : ''}{c.registrationType}
                                                     </span>
                                                 )}
                                             </div>
                                             {c.ntnCnic && (
-                                                <span className="font-mono text-xs text-[#8d897d]">{c.ntnCnic}</span>
+                                                <span className="font-mono text-xs text-muted">{c.ntnCnic}</span>
                                             )}
                                             {c.phone && (
-                                                <span className="ml-2 text-xs text-[#8d897d]">{c.phone}</span>
+                                                <span className="ml-2 text-xs text-muted">{c.phone}</span>
                                             )}
                                         </button>
                                     ))}
                                 </div>
                             )}
                             {!searching && search.length >= 2 && results.length === 0 && (
-                                <div className="rounded-xl border border-white/10 bg-white/4 p-4 text-center">
-                                    <p className="mb-2 text-sm text-[#8d897d]">No customers found.</p>
+                                <div className="rounded-xl border border-border bg-surface-subtle p-4 text-center">
+                                    <p className="mb-2 text-sm text-muted">No customers found.</p>
                                     <button
                                         onClick={() => setTab('new')}
-                                        className="text-sm text-[#f0d9a0] hover:underline"
+                                        className="text-sm text-muted hover:underline"
                                     >
                                         + Add new customer
                                     </button>
@@ -269,7 +269,7 @@ export default function CustomerModal({
                                 placeholder="Full Name *"
                                 value={form.name}
                                 onChange={(e) => setField('name', e.target.value)}
-                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]"
+                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted"
                             />
 
                             {/* NTN/CNIC + verify */}
@@ -284,13 +284,13 @@ export default function CustomerModal({
                                     }}
                                     inputMode="numeric"
                                     maxLength={13}
-                                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]"
+                                    className="min-w-0 flex-1 rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted"
                                 />
                                 <button
                                     type="button"
                                     onClick={handleVerify}
                                     disabled={verifying || !form.ntnCnic}
-                                    className="shrink-0 rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-xs font-medium text-[#d8d0bf] hover:bg-white/12 disabled:opacity-40"
+                                    className="shrink-0 rounded-xl border border-border bg-surface-subtle px-3 py-2 text-xs font-medium text-ink hover:bg-border-strong disabled:opacity-40"
                                 >
                                     {verifying ? '…' : 'Verify FBR'}
                                 </button>
@@ -298,8 +298,8 @@ export default function CustomerModal({
 
                             {verifyResult && (
                                 <div className={`rounded-lg border p-2.5 text-xs space-y-0.5 ${verifyResult.success
-                                    ? 'border-green-500/30 bg-green-500/8 text-green-300'
-                                    : 'border-red-500/30 bg-red-500/10 text-red-300'
+                                    ? 'border-green-300 bg-green-50 text-green-700'
+                                    : 'border-red-300 bg-red-50 text-red-600'
                                     }`}>
                                     {verifyResult.success ? (
                                         <>
@@ -321,12 +321,12 @@ export default function CustomerModal({
                                     onChange={(e) => setField('phone', normalizeMobile(e.target.value))}
                                     inputMode="numeric"
                                     maxLength={11}
-                                    className="min-w-0 rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]"
+                                    className="min-w-0 rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted"
                                 />
                                 <select
                                     value={form.registrationType}
                                     onChange={(e) => setField('registrationType', e.target.value)}
-                                    className="min-w-0 rounded-xl border border-white/10 bg-[#0e1d17] px-3 py-2 text-sm text-white"
+                                    className="min-w-0 rounded-xl border border-border bg-card px-3 py-2 text-sm text-ink"
                                 >
                                     <option value="">Reg. Type</option>
                                     <option value="Registered">Registered</option>
@@ -337,7 +337,7 @@ export default function CustomerModal({
                             <select
                                 value={form.province}
                                 onChange={(e) => setField('province', e.target.value)}
-                                className="w-full rounded-xl border border-white/10 bg-[#0e1d17] px-3 py-2 text-sm text-white"
+                                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-ink"
                             >
                                 <option value="">Province</option>
                                 {PROVINCES.map((p) => (
@@ -350,7 +350,7 @@ export default function CustomerModal({
                                 placeholder="Address"
                                 value={form.address}
                                 onChange={(e) => setField('address', e.target.value)}
-                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-[#8d897d]"
+                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted"
                             />
 
                             {error && (
@@ -364,14 +364,14 @@ export default function CustomerModal({
                                     type="button"
                                     onClick={handleSave}
                                     disabled={saving}
-                                    className="flex-1 rounded-full bg-accent py-2.5 text-sm font-medium text-primary hover:bg-(--accent-soft) disabled:opacity-50"
+                                    className="flex-1 rounded-full bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark disabled:opacity-50"
                                 >
                                     {saving ? 'Saving…' : 'Save & Select'}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={onClose}
-                                    className="rounded-full border border-white/10 px-4 py-2.5 text-sm text-[#8d897d] hover:bg-white/6"
+                                    className="rounded-full border border-border px-4 py-2.5 text-sm text-muted hover:bg-surface-subtle"
                                 >
                                     Cancel
                                 </button>

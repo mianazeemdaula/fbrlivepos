@@ -76,9 +76,9 @@ export default function HSCodesPage() {
         <div className="space-y-6 p-6 lg:p-8">
             {/* Header */}
             <div>
-                <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Reference library</p>
-                <h1 className="brand-heading mt-2 text-3xl font-bold text-white">FBR HS Codes</h1>
-                <p className="mt-1 text-sm text-[#c1bcaf]">
+                <p className="text-xs font-medium uppercase tracking-caps text-muted">Reference library</p>
+                <h1 className="mt-2 text-page-title font-normal text-ink">FBR HS Codes</h1>
+                <p className="mt-1 text-sm text-muted">
                     Browse the complete list of FBR-approved Harmonised System codes and applicable tax rates.
                 </p>
             </div>
@@ -90,12 +90,12 @@ export default function HSCodesPage() {
                     placeholder="Search by code, description, or short name…"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="flex-1 rounded-xl border border-white/10 bg-white/6 px-4 py-2 text-sm text-white placeholder:text-[#8d897d]"
+                    className="flex-1 rounded-input border border-border bg-white px-4 py-2 text-sm text-ink placeholder:text-muted"
                 />
                 <select
                     value={category}
                     onChange={(e) => handleCategoryChange(e.target.value)}
-                    className="sm:w-56 rounded-xl border border-white/10 bg-white/6 px-4 py-2 text-sm text-white"
+                    className="sm:w-56 rounded-input border border-border bg-white px-4 py-2 text-sm text-ink"
                 >
                     <option value="">All Categories</option>
                     {categories.map((cat) => (
@@ -107,13 +107,13 @@ export default function HSCodesPage() {
             </div>
 
             {/* Table */}
-            <div className="app-panel overflow-hidden rounded-2xl">
+            <div className="bg-white rounded-card shadow-card overflow-hidden rounded-2xl">
                 {loading ? (
-                    <div className="flex items-center justify-center py-20 text-sm text-[#8d897d]">
+                    <div className="flex items-center justify-center py-20 text-sm text-muted">
                         Loading…
                     </div>
                 ) : hsCodes.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-[#8d897d]">
+                    <div className="flex flex-col items-center justify-center py-20 text-muted">
                         <span className="text-4xl mb-3">🔍</span>
                         <p className="text-sm">No HS codes found matching your filters.</p>
                     </div>
@@ -121,7 +121,7 @@ export default function HSCodesPage() {
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-[#8d897d]">
+                                <tr className="border-b border-border text-xs uppercase tracking-wider text-muted">
                                     <th className="px-4 py-3 text-left">Code</th>
                                     <th className="px-4 py-3 text-left">Description</th>
                                     <th className="px-4 py-3 text-left">Short Name</th>
@@ -134,23 +134,23 @@ export default function HSCodesPage() {
                                 {hsCodes.map((hs) => (
                                     <tr
                                         key={hs.id}
-                                        className="transition-colors hover:bg-white/6"
+                                        className="transition-colors hover:bg-surface-subtle"
                                     >
-                                        <td className="px-4 py-3 font-mono whitespace-nowrap text-[#f0d9a0]">
+                                        <td className="px-4 py-3 font-mono whitespace-nowrap text-muted">
                                             {hs.code}
                                         </td>
-                                        <td className="max-w-xs truncate px-4 py-3 text-xs text-[#e7e0cf]">
+                                        <td className="max-w-xs truncate px-4 py-3 text-xs text-ink">
                                             {hs.description}
                                         </td>
-                                        <td className="px-4 py-3 text-[#c1bcaf]">
+                                        <td className="px-4 py-3 text-muted">
                                             {hs.shortName ?? '—'}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span className="rounded-full bg-white/8 px-2 py-0.5 text-xs text-[#d8d0bf]">
+                                            <span className="rounded-full bg-surface px-2 py-0.5 text-xs text-ink">
                                                 {hs.category}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-[#c1bcaf]">{hs.unit}</td>
+                                        <td className="px-4 py-3 text-muted">{hs.unit}</td>
                                         <td className="px-4 py-3 text-right font-medium text-emerald-400">
                                             {Number(hs.defaultTaxRate).toFixed(0)}%
                                         </td>
@@ -164,7 +164,7 @@ export default function HSCodesPage() {
 
             {/* Pagination */}
             {!loading && total > 0 && (
-                <div className="flex flex-col items-center justify-between gap-3 text-sm text-[#8d897d] sm:flex-row">
+                <div className="flex flex-col items-center justify-between gap-3 text-sm text-muted sm:flex-row">
                     <span>
                         Showing {from}–{to} of {total.toLocaleString()} codes
                     </span>
@@ -172,14 +172,14 @@ export default function HSCodesPage() {
                         <button
                             disabled={page === 1}
                             onClick={() => setPage(1)}
-                            className="rounded border border-white/10 px-2 py-1 transition-colors hover:bg-white/6 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="rounded border border-border px-2 py-1 transition-colors hover:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             «
                         </button>
                         <button
                             disabled={page === 1}
                             onClick={() => setPage((p) => p - 1)}
-                            className="rounded border border-white/10 px-3 py-1 transition-colors hover:bg-white/6 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="rounded border border-border px-3 py-1 transition-colors hover:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             Prev
                         </button>
@@ -193,8 +193,8 @@ export default function HSCodesPage() {
                                     key={p}
                                     onClick={() => setPage(p)}
                                     className={`px-3 py-1 rounded border transition-colors ${p === page
-                                        ? 'border-accent bg-[rgba(200,164,90,0.18)] text-[#f0d9a0]'
-                                        : 'border-white/10 hover:bg-white/6'
+                                        ? 'border-accent bg-gold/15 text-muted'
+                                        : 'border-border hover:bg-surface-subtle'
                                         }`}
                                 >
                                     {p}
@@ -205,14 +205,14 @@ export default function HSCodesPage() {
                         <button
                             disabled={page === totalPages}
                             onClick={() => setPage((p) => p + 1)}
-                            className="rounded border border-white/10 px-3 py-1 transition-colors hover:bg-white/6 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="rounded border border-border px-3 py-1 transition-colors hover:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             Next
                         </button>
                         <button
                             disabled={page === totalPages}
                             onClick={() => setPage(totalPages)}
-                            className="rounded border border-white/10 px-2 py-1 transition-colors hover:bg-white/6 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="rounded border border-border px-2 py-1 transition-colors hover:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             »
                         </button>

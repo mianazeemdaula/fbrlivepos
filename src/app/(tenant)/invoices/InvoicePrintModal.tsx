@@ -99,54 +99,54 @@ export default function InvoicePrintModal({ invoice, onClose, standalone = false
                     className="no-print fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
                     onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
                 >
-                    <div className="app-panel flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl">
-                        <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+                    <div className="bg-white rounded-card shadow-card flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl">
+                        <div className="flex items-center justify-between border-b border-border px-6 py-4">
                             <div>
-                                <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Print Invoice</p>
+                                <p className="text-xs font-medium uppercase tracking-caps text-muted">Print Invoice</p>
                                 <h2 className="mt-1 text-lg font-bold text-white">{invoice.invoiceNumber}</h2>
                             </div>
                             <button
                                 onClick={onClose}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/8 text-[#8d897d] hover:bg-white/14 hover:text-white"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-muted hover:bg-white/14 hover:text-white"
                             >
                                 ✕
                             </button>
                         </div>
                         <div className="flex-1 overflow-auto p-6">
-                            <p className="mb-4 text-sm text-[#c1bcaf]">
+                            <p className="mb-4 text-sm text-muted">
                                 Your browser print dialog will open. Recommended: A4 paper, no scaling.
                             </p>
-                            <div className="space-y-2 rounded-xl border border-white/10 bg-white/4 p-4 text-sm">
-                                <div className="flex justify-between text-[#c1bcaf]">
+                            <div className="space-y-2 rounded-xl border border-border bg-surface-subtle p-4 text-sm">
+                                <div className="flex justify-between text-muted">
                                     <span>Invoice #</span>
-                                    <span className="text-white font-medium">{invoice.invoiceNumber}</span>
+                                    <span className="text-ink font-medium">{invoice.invoiceNumber}</span>
                                 </div>
                                 {invoice.diInvoiceNumber && (
-                                    <div className="flex justify-between text-[#c1bcaf]">
+                                    <div className="flex justify-between text-muted">
                                         <span>PRAL #</span>
                                         <span className="text-green-400 font-mono text-xs">{invoice.diInvoiceNumber}</span>
                                     </div>
                                 )}
-                                <div className="flex justify-between text-[#c1bcaf]">
+                                <div className="flex justify-between text-muted">
                                     <span>Items</span>
-                                    <span className="text-white">{invoice.items.length}</span>
+                                    <span className="text-ink">{invoice.items.length}</span>
                                 </div>
-                                <div className="flex justify-between text-[#c1bcaf]">
+                                <div className="flex justify-between text-muted">
                                     <span>Total</span>
-                                    <span className="text-white font-bold">PKR {invoice.totalAmount.toLocaleString()}</span>
+                                    <span className="text-ink font-bold">PKR {invoice.totalAmount.toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
-                        <div className="border-t border-white/10 p-4 flex gap-3">
+                        <div className="border-t border-border p-4 flex gap-3">
                             <button
                                 onClick={handlePrint}
-                                className="flex-1 rounded-full bg-accent py-2.5 text-sm font-medium text-primary hover:bg-(--accent-soft)"
+                                className="flex-1 rounded-full bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark"
                             >
                                 Print / Save as PDF
                             </button>
                             <button
                                 onClick={onClose}
-                                className="rounded-full border border-white/10 px-4 py-2.5 text-sm text-[#8d897d] hover:bg-white/6"
+                                className="rounded-full border border-border px-4 py-2.5 text-sm text-muted hover:bg-surface-subtle"
                             >
                                 Cancel
                             </button>
@@ -156,22 +156,22 @@ export default function InvoicePrintModal({ invoice, onClose, standalone = false
             )}
 
             {standalone && (
-                <div className="no-print sticky top-0 z-10 border-b border-white/10 bg-[#0d140f] px-4 py-3">
+                <div className="no-print sticky top-0 z-10 border-b border-border bg-print-bg px-4 py-3">
                     <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3">
                         <div>
-                            <p className="text-xs uppercase tracking-[0.24em] text-[#f0d9a0]">Invoice Print View</p>
-                            <h2 className="text-sm font-semibold text-white">{invoice.invoiceNumber}</h2>
+                            <p className="text-xs uppercase tracking-caps-lg text-muted">Invoice Print View</p>
+                            <h2 className="text-sm font-semibold text-ink">{invoice.invoiceNumber}</h2>
                         </div>
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={handlePrint}
-                                className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary hover:bg-(--accent-soft)"
+                                className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark"
                             >
                                 Print / Save as PDF
                             </button>
                             <button
                                 onClick={onClose}
-                                className="rounded-full border border-white/15 px-4 py-2 text-sm text-[#d8d0bf] hover:bg-white/8"
+                                className="rounded-full border border-white/15 px-4 py-2 text-sm text-ink hover:bg-surface"
                             >
                                 Close Tab
                             </button>

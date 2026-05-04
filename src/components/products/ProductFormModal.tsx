@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { SALE_TYPE_CONFIG, SALE_TYPE_LIST, FORCED_UOM, type SaleTypeConfig } from '@/lib/di/sale-type-config'
@@ -273,7 +273,7 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
             <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(7,20,15,0.99),rgba(5,13,10,0.99))] my-8 shadow-2xl">
                 <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
                     <div>
-                        <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Catalog</p>
+                        <p className="text-xs uppercase tracking-caps-xl text-[#f0d9a0]">Catalog</p>
                         <h2 className="brand-heading mt-0.5 text-xl font-bold text-white">
                             {editingProductId ? 'Edit Product' : 'Add New Product'}
                         </h2>
@@ -304,7 +304,7 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                     ))}
                                 </select>
                                 {cfg && (
-                                    <p className="mt-1 text-[11px] text-[#8d897d] leading-tight">
+                                    <p className="mt-1 text-xs text-[#8d897d] leading-tight">
                                         Base: <span className="text-[#c1bcaf]">{cfg.taxBase}</span>
                                         {cfg.uomLocked && <> · UOM: <span className="text-[#f0d9a0]">{cfg.uomLocked}</span></>}
                                         {cfg.requiresSRO && <> · SRO</>}
@@ -329,10 +329,10 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                         ))}
                                     </select>
                                     {rateSource === 'fallback' && (
-                                        <p className="mt-1 text-[11px] text-yellow-400 leading-tight">⚠ Using local rate presets — PRAL API unavailable</p>
+                                        <p className="mt-1 text-xs text-yellow-400 leading-tight">⚠ Using local rate presets — PRAL API unavailable</p>
                                     )}
                                     {form.diRate && rateSource === 'pral' && (
-                                        <p className="mt-1 text-[11px] text-[#8d897d]">FBR value: <span className="text-[#f0d9a0] font-mono">{form.diRate}</span></p>
+                                        <p className="mt-1 text-xs text-[#8d897d]">FBR value: <span className="text-[#f0d9a0] font-mono">{form.diRate}</span></p>
                                     )}
                                 </div>
                             ) : <div />}
@@ -356,7 +356,7 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                         ))}
                                     </select>
                                     {sroSource === 'db_fallback' && (
-                                        <p className="mt-1 text-[11px] text-amber-400 leading-tight">⚠ Using local SRO presets — PRAL API unavailable</p>
+                                        <p className="mt-1 text-xs text-amber-400 leading-tight">⚠ Using local SRO presets — PRAL API unavailable</p>
                                     )}
                                 </div>
 
@@ -413,7 +413,7 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                             {hsCodes.map(h => <option key={h.id} value={h.id}>{h.code} — {h.shortName || h.description}</option>)}
                         </select>
                         {selectedHS && (
-                            <div className="flex gap-4 rounded-lg bg-[#0b1510] px-3 py-2 text-[11px] text-[#c1bcaf]">
+                            <div className="flex gap-4 rounded-lg bg-code-bg px-3 py-2 text-xs text-[#c1bcaf]">
                                 <span><span className="text-[#8d897d]">Category: </span>{selectedHS.category}</span>
                                 <span><span className="text-[#8d897d]">Default Tax: </span>{selectedHS.defaultTaxRate}%</span>
                                 <span><span className="text-[#8d897d]">Default UOM: </span>{selectedHS.unit}</span>
@@ -470,7 +470,7 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                         value={form.diFixedNotifiedValueOrRetailPrice}
                                         onChange={e => setForm(c => ({ ...c, diFixedNotifiedValueOrRetailPrice: e.target.value }))}
                                         className={inputCls} placeholder="Printed retail price" />
-                                    <p className="mt-1 text-[11px] text-[#8d897d]">3rd Schedule: GST is calculated on this price × qty, not on taxable value.</p>
+                                    <p className="mt-1 text-xs text-[#8d897d]">3rd Schedule: GST is calculated on this price × qty, not on taxable value.</p>
                                 </div>
                             )}
 
@@ -493,7 +493,7 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                         <input type="number" step="0.01" min="0" value={form.furtherTax}
                                             onChange={e => setForm(c => ({ ...c, furtherTax: e.target.value }))}
                                             className={inputCls} placeholder="3" />
-                                        <p className="mt-1 text-[11px] text-[#8d897d]">Unregistered buyers only</p>
+                                        <p className="mt-1 text-xs text-[#8d897d]">Unregistered buyers only</p>
                                     </div>
                                 )}
                                 {cfg.showFED && (

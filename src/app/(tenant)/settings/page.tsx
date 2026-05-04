@@ -233,16 +233,16 @@ export default function SettingsPage() {
 
     return (
         <div className="p-6 lg:p-8">
-            <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Compliance setup</p>
-            <h1 className="brand-heading mb-6 mt-2 text-3xl font-bold text-white">Settings</h1>
+            <p className="text-xs font-medium uppercase tracking-caps text-muted">Compliance setup</p>
+            <h1 className="mb-6 mt-2 text-page-title font-normal text-ink">Settings</h1>
 
-            {/* <div className="mb-6 grid grid-cols-1 gap-2 rounded-2xl border border-white/10 bg-white/4 p-2 sm:grid-cols-2">
+            {/* <div className="mb-6 grid grid-cols-1 gap-2 rounded-2xl border border-border bg-surface-subtle p-2 sm:grid-cols-2">
                 <button
                     type="button"
                     onClick={() => setActiveTab('business')}
                     className={`rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors ${activeTab === 'business'
-                        ? 'bg-accent text-primary'
-                        : 'bg-white/6 text-[#c1bcaf] hover:bg-white/10'
+                        ? 'bg-primary text-white'
+                        : 'bg-surface-subtle text-muted hover:bg-border'
                         }`}
                 >
                     1. PRAL Business Setup
@@ -251,8 +251,8 @@ export default function SettingsPage() {
                     type="button"
                     onClick={() => setActiveTab('sandbox')}
                     className={`rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors ${activeTab === 'sandbox'
-                        ? 'bg-accent text-primary'
-                        : 'bg-white/6 text-[#c1bcaf] hover:bg-white/10'
+                        ? 'bg-primary text-white'
+                        : 'bg-surface-subtle text-muted hover:bg-border'
                         }`}
                 >
                     2. Sandbox Test Scenarios
@@ -263,17 +263,17 @@ export default function SettingsPage() {
                 <>
 
                     {/* PRAL DI Credentials */}
-                    <div className="app-panel mb-6 rounded-2xl p-6">
-                        <h2 className="text-lg font-semibold text-white mb-4">PRAL Digital Invoicing</h2>
-                        <p className="mb-4 text-sm text-[#c1bcaf]">
+                    <div className="bg-white rounded-card shadow-card mb-6 rounded-2xl p-6">
+                        <h2 className="text-lg font-semibold text-ink mb-4">PRAL Digital Invoicing</h2>
+                        <p className="mb-4 text-sm text-muted">
                             Configure your PRAL DI credentials obtained from IRIS registration.
                             Tokens are encrypted at rest with AES-256-GCM.
                         </p>
 
                         {loading ? (
                             <div className="animate-pulse space-y-3">
-                                <div className="h-10 rounded bg-white/10" />
-                                <div className="h-10 rounded bg-white/10" />
+                                <div className="h-10 rounded bg-border" />
+                                <div className="h-10 rounded bg-border" />
                             </div>
                         ) : (
                             <>
@@ -299,14 +299,14 @@ export default function SettingsPage() {
                                 <form onSubmit={handleSaveDI} className="space-y-3">
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="mb-1 block text-xs text-[#c1bcaf]">Seller NTN / Registration No.</label>
+                                            <label className="mb-1 block text-xs text-muted">Seller NTN / Registration No.</label>
                                             <input
                                                 name="sellerNTN"
                                                 required
                                                 value={form.sellerNTN}
                                                 onChange={(e) => updateFormField('sellerNTN', e.target.value)}
                                                 disabled={isBusinessSetupLocked}
-                                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60"
                                                 placeholder="1234567 or 6650624-2"
                                             />
                                             {form.sellerNTN && !isValidSellerNtn(form.sellerNTN) && (
@@ -314,13 +314,13 @@ export default function SettingsPage() {
                                             )}
                                         </div>
                                         <div>
-                                            <label className="mb-1 block text-xs text-[#c1bcaf]">CNIC (optional fallback)</label>
+                                            <label className="mb-1 block text-xs text-muted">CNIC (optional fallback)</label>
                                             <input
                                                 name="sellerCNIC"
                                                 value={form.sellerCNIC}
                                                 onChange={(e) => updateFormField('sellerCNIC', e.target.value)}
                                                 disabled={isBusinessSetupLocked}
-                                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60"
                                                 placeholder="3520112345678"
                                             />
                                             {form.sellerCNIC && normalizedSellerCnic.length !== 13 && (
@@ -329,27 +329,27 @@ export default function SettingsPage() {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="mb-1 block text-xs text-[#c1bcaf]">Business Name</label>
+                                        <label className="mb-1 block text-xs text-muted">Business Name</label>
                                         <input
                                             name="sellerBusinessName"
                                             required
                                             value={form.sellerBusinessName}
                                             onChange={(e) => updateFormField('sellerBusinessName', e.target.value)}
                                             disabled={isBusinessSetupLocked}
-                                            className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                            className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60"
                                             placeholder="Your registered business name"
                                         />
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="mb-1 block text-xs text-[#c1bcaf]">Province</label>
+                                            <label className="mb-1 block text-xs text-muted">Province</label>
                                             <select
                                                 name="sellerProvince"
                                                 required
                                                 value={form.sellerProvince}
                                                 onChange={(e) => updateFormField('sellerProvince', e.target.value)}
                                                 disabled={isBusinessSetupLocked}
-                                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60"
                                             >
                                                 <option value="">Select province</option>
                                                 <option value="Punjab">Punjab</option>
@@ -362,88 +362,88 @@ export default function SettingsPage() {
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="mb-1 block text-xs text-[#c1bcaf]">Business Activity</label>
+                                            <label className="mb-1 block text-xs text-muted">Business Activity</label>
                                             <input
                                                 name="businessActivity"
                                                 required
                                                 value={form.businessActivity}
                                                 onChange={(e) => updateFormField('businessActivity', e.target.value)}
                                                 disabled={isBusinessSetupLocked}
-                                                className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60"
                                                 placeholder="e.g. Retail, Manufacturing"
                                             />
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="mb-1 block text-xs text-[#c1bcaf]">Business Address</label>
+                                        <label className="mb-1 block text-xs text-muted">Business Address</label>
                                         <input
                                             name="sellerAddress"
                                             required
                                             value={form.sellerAddress}
                                             onChange={(e) => updateFormField('sellerAddress', e.target.value)}
                                             disabled={isBusinessSetupLocked}
-                                            className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                            className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60"
                                             placeholder="Full business address"
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-1 block text-xs text-[#c1bcaf]">Sector</label>
+                                        <label className="mb-1 block text-xs text-muted">Sector</label>
                                         <input
                                             name="sector"
                                             required
                                             value={form.sector}
                                             onChange={(e) => updateFormField('sector', e.target.value)}
                                             disabled={isBusinessSetupLocked}
-                                            className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                            className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60"
                                             placeholder="e.g. Tier-1 Retailer"
                                         />
                                     </div>
 
-                                    <label className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/4 px-3 py-3">
+                                    <label className="flex items-start gap-3 rounded-xl border border-border bg-surface-subtle px-3 py-3">
                                         <input
                                             type="checkbox"
                                             checked={preferredIdType === 'CNIC'}
                                             onChange={(e) => setPreferredIdType(e.target.checked ? 'CNIC' : 'NTN')}
                                             disabled={isBusinessSetupLocked}
-                                            className="mt-0.5 h-4 w-4 rounded border-white/30 bg-white/8 text-accent focus:ring-accent disabled:cursor-not-allowed disabled:opacity-60"
+                                            className="mt-0.5 h-4 w-4 rounded border-white/30 bg-surface text-accent focus:ring-accent disabled:cursor-not-allowed disabled:opacity-60"
                                         />
                                         <div>
                                             <p className="text-sm font-medium text-white">Default Invoice ID Type</p>
-                                            <p className="mt-0.5 text-xs text-[#c1bcaf]">
+                                            <p className="mt-0.5 text-xs text-muted">
                                                 Check to use CNIC by default on invoices. Uncheck to use NTN by default.
                                             </p>
                                         </div>
                                     </label>
 
                                     <div>
-                                        <label className="mb-1 block text-xs text-[#c1bcaf]">Sandbox Security Token (from IRIS)</label>
+                                        <label className="mb-1 block text-xs text-muted">Sandbox Security Token (from IRIS)</label>
                                         <input
                                             name="sandboxToken"
                                             type="password"
                                             value={form.sandboxToken}
                                             onChange={(e) => updateFormField('sandboxToken', e.target.value)}
-                                            className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm font-mono text-white"
+                                            className="w-full rounded-xl border border-border bg-surface-subtle px-3 py-2 text-sm font-mono text-white"
                                             placeholder={diConfig?.hasSandboxToken ? 'A sandbox token is already stored. Enter a new token to replace it.' : 'Paste your sandbox IRIS security token'}
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-1 block text-xs text-[#c1bcaf]">Production Security Token (from IRIS)</label>
+                                        <label className="mb-1 block text-xs text-muted">Production Security Token (from IRIS)</label>
                                         <input
                                             name="productionToken"
                                             type="password"
                                             value={form.productionToken}
                                             onChange={(e) => updateFormField('productionToken', e.target.value)}
-                                            className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm font-mono text-white"
+                                            className="w-full rounded-xl border border-border bg-surface-subtle px-3 py-2 text-sm font-mono text-white"
                                             placeholder={diConfig?.hasProductionToken ? 'A production token is already stored. Enter a new token to replace it.' : 'Paste your production IRIS security token'}
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-1 block text-xs text-[#c1bcaf]">Environment</label>
+                                        <label className="mb-1 block text-xs text-muted">Environment</label>
                                         <select
                                             name="environment"
                                             value={form.environment}
                                             onChange={(e) => updateFormField('environment', e.target.value)}
-                                            className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white"
+                                            className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink"
                                         >
                                             <option value="SANDBOX">Sandbox (Testing)</option>
                                             <option value="PRODUCTION">Production</option>
@@ -465,7 +465,7 @@ export default function SettingsPage() {
                                         <button
                                             type="submit"
                                             disabled={saving}
-                                            className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary disabled:opacity-70"
+                                            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-70"
                                         >
                                             {saving ? 'Saving...' : 'Save Credentials'}
                                         </button>
@@ -474,7 +474,7 @@ export default function SettingsPage() {
                                                 type="button"
                                                 onClick={handleVerify}
                                                 disabled={verifying}
-                                                className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-[#d8d0bf] hover:bg-white/10"
+                                                className="rounded-full border border-border bg-surface-subtle px-4 py-2 text-sm font-medium text-ink hover:bg-border"
                                             >
                                                 {verifying ? 'Verifying...' : 'Verify Token'}
                                             </button>
@@ -499,9 +499,9 @@ export default function SettingsPage() {
             )}
 
             {activeTab === 'sandbox' && (
-                <div className="app-panel rounded-2xl p-4 sm:p-6">
+                <div className="bg-white rounded-card shadow-card rounded-2xl p-4 sm:p-6">
                     {loading ? (
-                        <p className="text-sm text-[#c1bcaf]">Loading sandbox configuration...</p>
+                        <p className="text-sm text-muted">Loading sandbox configuration...</p>
                     ) : !diConfig?.configured ? (
                         <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-300">
                             Configure PRAL DI credentials first in the PRAL Business Setup tab.

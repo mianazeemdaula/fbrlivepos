@@ -27,6 +27,8 @@ interface CartStore {
     removeItem: (productId: string) => void
     updateQuantity: (productId: string, quantity: number) => void
     updateDiscount: (productId: string, discount: number) => void
+    updatePrice: (productId: string, price: number) => void
+    updateTaxRate: (productId: string, taxRate: number) => void
     setBuyerInfo: (info: { buyerName?: string; buyerNTN?: string; buyerPhone?: string; buyerProvince?: string; buyerAddress?: string; buyerRegistrationType?: 'Registered' | 'Unregistered' | '' }) => void
     setCustomer: (customer: { id: string; name: string; ntnCnic?: string | null; phone?: string | null; province?: string | null; address?: string | null; registrationType?: string | null } | null) => void
     setPaymentMethod: (method: 'CASH' | 'CARD' | 'BANK_TRANSFER') => void
@@ -83,6 +85,20 @@ export const useCartStore = create<CartStore>((set, get) => ({
         set((state) => ({
             items: state.items.map((i) =>
                 i.productId === productId ? { ...i, discount: Math.max(0, discount) } : i,
+            ),
+        })),
+
+    updatePrice: (productId, price) =>
+        set((state) => ({
+            items: state.items.map((i) =>
+                i.productId === productId ? { ...i, price: Math.max(0, price) } : i,
+            ),
+        })),
+
+    updateTaxRate: (productId, taxRate) =>
+        set((state) => ({
+            items: state.items.map((i) =>
+                i.productId === productId ? { ...i, taxRate: Math.max(0, taxRate) } : i,
             ),
         })),
 

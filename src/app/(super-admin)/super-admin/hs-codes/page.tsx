@@ -133,13 +133,13 @@ export default function HSCodesPage() {
         <div className="p-8">
             <div className="mb-8 flex items-start justify-between">
                 <div>
-                    <p className="text-xs uppercase tracking-[0.26em] text-[#f0d9a0]">Tax reference</p>
-                    <h1 className="brand-heading text-3xl font-bold text-white">HS Code Library</h1>
-                    <p className="mt-1 text-sm text-[#c1bcaf]">Manage the master list of FBR Harmonized System codes</p>
+                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Tax reference</p>
+                    <h1 className="text-page-title font-normal text-ink">HS Code Library</h1>
+                    <p className="mt-1 text-sm text-muted">Manage the master list of FBR Harmonized System codes</p>
                 </div>
                 <div className="flex gap-2">
                     <label
-                        className={`cursor-pointer rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-[#d8d0bf] transition-colors ${importLoading ? 'opacity-50 pointer-events-none' : ''
+                        className={`cursor-pointer rounded-full border border-border bg-surface-subtle px-4 py-2 text-sm font-medium text-ink transition-colors ${importLoading ? 'opacity-50 pointer-events-none' : ''
                             }`}
                     >
                         {importLoading ? 'Importing...' : 'Import CSV'}
@@ -147,7 +147,7 @@ export default function HSCodesPage() {
                     </label>
                     <button
                         onClick={() => setShowForm(!showForm)}
-                        className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-(--accent-soft)"
+                        className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
                     >
                         {showForm ? 'Cancel' : '+ Add HS Code'}
                     </button>
@@ -161,29 +161,29 @@ export default function HSCodesPage() {
             )}
 
             {showForm && (
-                <form onSubmit={handleCreate} className="app-panel mb-6 rounded-2xl p-6">
+                <form onSubmit={handleCreate} className="bg-white rounded-card shadow-card mb-6 rounded-2xl p-6">
                     {error && (
-                        <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg p-3 mb-4">
+                        <div className="bg-error-bg border border-error-bg text-error text-sm rounded-lg p-3 mb-4">
                             {error}
                         </div>
                     )}
-                    <h2 className="text-sm font-semibold text-white mb-4">New HS Code</h2>
+                    <h2 className="text-sm font-semibold text-ink mb-4">New HS Code</h2>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">HS Code</label>
-                            <input name="code" required className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" placeholder="1234.56.78" />
+                            <label className="mb-1.5 block text-xs font-medium text-muted">HS Code</label>
+                            <input name="code" required className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink" placeholder="1234.56.78" />
                         </div>
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Description</label>
-                            <input name="description" required className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" />
+                            <label className="mb-1.5 block text-xs font-medium text-muted">Description</label>
+                            <input name="description" required className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink" />
                         </div>
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Category</label>
-                            <input name="category" required className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" />
+                            <label className="mb-1.5 block text-xs font-medium text-muted">Category</label>
+                            <input name="category" required className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink" />
                         </div>
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Unit</label>
-                            <select name="unit" required className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white">
+                            <label className="mb-1.5 block text-xs font-medium text-muted">Unit</label>
+                            <select name="unit" required className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink">
                                 <option value="PCS">PCS</option>
                                 <option value="KG">KG</option>
                                 <option value="LTR">LTR</option>
@@ -197,16 +197,16 @@ export default function HSCodesPage() {
                             </select>
                         </div>
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#c1bcaf]">Default Tax %</label>
-                            <input name="defaultTaxRate" type="number" step="0.01" min="0" defaultValue="18" required className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-sm text-white" />
+                            <label className="mb-1.5 block text-xs font-medium text-muted">Default Tax %</label>
+                            <input name="defaultTaxRate" type="number" step="0.01" min="0" defaultValue="18" required className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink" />
                         </div>
                     </div>
                     <div className="flex justify-end gap-3 mt-5">
-                        <button type="button" onClick={() => setShowForm(false)} className="rounded-lg px-4 py-2 text-sm text-[#c1bcaf] transition-colors hover:bg-white/6 hover:text-white">Cancel</button>
+                        <button type="button" onClick={() => setShowForm(false)} className="rounded-lg px-4 py-2 text-sm text-muted transition-colors hover:bg-surface hover:text-ink">Cancel</button>
                         <button
                             type="submit"
                             disabled={formLoading}
-                            className="rounded-full bg-accent px-6 py-2 text-sm font-medium text-primary transition-colors hover:bg-(--accent-soft) disabled:cursor-not-allowed disabled:opacity-70"
+                            className="rounded-full bg-primary px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {formLoading ? 'Creating...' : 'Create HS Code'}
                         </button>
@@ -223,20 +223,20 @@ export default function HSCodesPage() {
                         setSearch(e.target.value)
                         setPage(1)
                     }}
-                    className="w-full max-w-sm rounded-xl border border-white/10 bg-white/6 px-4 py-2 text-sm text-white placeholder:text-[#8d897d]"
+                    className="w-full max-w-sm rounded-input border border-border bg-white px-4 py-2 text-sm text-ink placeholder:text-muted"
                 />
             </div>
 
-            <div className="app-panel overflow-hidden rounded-2xl">
+            <div className="bg-white rounded-card shadow-card overflow-hidden rounded-2xl">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-white/10">
-                            <th className="text-left text-xs font-semibold text-[#8d897d] uppercase tracking-wider px-4 py-3">Code</th>
-                            <th className="text-left text-xs font-semibold text-[#8d897d] uppercase tracking-wider px-4 py-3">Description</th>
-                            <th className="text-left text-xs font-semibold text-[#8d897d] uppercase tracking-wider px-4 py-3">Tax %</th>
-                            <th className="text-left text-xs font-semibold text-[#8d897d] uppercase tracking-wider px-4 py-3">Unit</th>
-                            <th className="text-left text-xs font-semibold text-[#8d897d] uppercase tracking-wider px-4 py-3">Category</th>
-                            <th className="text-left text-xs font-semibold text-[#8d897d] uppercase tracking-wider px-4 py-3">Status</th>
+                        <tr className="border-b border-border">
+                            <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-4 py-3">Code</th>
+                            <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-4 py-3">Description</th>
+                            <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-4 py-3">Tax %</th>
+                            <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-4 py-3">Unit</th>
+                            <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-4 py-3">Category</th>
+                            <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-4 py-3">Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -244,24 +244,24 @@ export default function HSCodesPage() {
                             Array.from({ length: 5 }).map((_, i) => (
                                 <tr key={i} className="border-b border-white/8">
                                     <td colSpan={6} className="px-4 py-3">
-                                        <div className="h-4 bg-white/10 rounded animate-pulse" />
+                                        <div className="h-4 bg-border rounded animate-pulse" />
                                     </td>
                                 </tr>
                             ))
                         ) : codes.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="px-4 py-12 text-center text-[#8d897d] text-sm">
+                                <td colSpan={6} className="px-4 py-12 text-center text-muted text-sm">
                                     No HS codes found. Add codes manually or import a CSV.
                                 </td>
                             </tr>
                         ) : (
                             codes.map((code) => (
-                                <tr key={code.id} className="border-b border-white/8 hover:bg-white/10/30 transition-colors">
-                                    <td className="px-4 py-3 text-sm text-white font-mono">{code.code}</td>
-                                    <td className="px-4 py-3 text-sm text-[#d8d0bf]">{code.description}</td>
-                                    <td className="px-4 py-3 text-sm text-[#c1bcaf]">{code.defaultTaxRate}%</td>
-                                    <td className="px-4 py-3 text-sm text-[#c1bcaf]">{code.unit}</td>
-                                    <td className="px-4 py-3 text-sm text-[#c1bcaf]">{code.category || '—'}</td>
+                                <tr key={code.id} className="border-b border-white/8 hover:bg-border/30 transition-colors">
+                                    <td className="px-4 py-3 text-sm text-ink font-mono">{code.code}</td>
+                                    <td className="px-4 py-3 text-sm text-ink">{code.description}</td>
+                                    <td className="px-4 py-3 text-sm text-muted">{code.defaultTaxRate}%</td>
+                                    <td className="px-4 py-3 text-sm text-muted">{code.unit}</td>
+                                    <td className="px-4 py-3 text-sm text-muted">{code.category || '—'}</td>
                                     <td className="px-4 py-3">
                                         <span
                                             className={`text-xs px-2 py-0.5 rounded-full font-medium ${code.isFBRActive
