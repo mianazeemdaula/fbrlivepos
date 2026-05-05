@@ -80,7 +80,10 @@ export function buildDIPayload(
                 quantity: Number(Number(item.quantity).toFixed(4)),
                 totalValues: resolveTotalValues(item, lineValue, salesTaxApplicable),
                 valueSalesExcludingST: Number(lineValue.toFixed(2)),
-                fixedNotifiedValueOrRetailPrice: Number(Number(item.diFixedNotifiedValueOrRetailPrice ?? 0).toFixed(2)),
+                // 3rd Schedule: auto-fall back to unitPrice when no explicit retail/notified price is recorded
+                fixedNotifiedValueOrRetailPrice: normalize(item.diSaleType) === '3rd schedule goods'
+                    ? Number(Number(item.diFixedNotifiedValueOrRetailPrice ?? item.unitPrice).toFixed(2))
+                    : Number(Number(item.diFixedNotifiedValueOrRetailPrice ?? 0).toFixed(2)),
                 salesTaxApplicable,
                 salesTaxWithheldAtSource: Number(Number(item.diSalesTaxWithheldAtSource ?? 0).toFixed(2)),
                 extraTax: normalizeExtraTax(item.diSaleType, item.extraTax) == 0 ? '' : normalizeExtraTax(item.diSaleType, item.extraTax),

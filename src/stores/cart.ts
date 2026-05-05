@@ -140,10 +140,12 @@ export const useCartStore = create<CartStore>((set, get) => ({
     discountTotal: () => get().items.reduce((sum, i) => sum + i.discount, 0),
     taxAmount: () =>
         get().items.reduce((sum, i) => {
-            // 3rd Schedule Goods: tax is on fixedNotifiedValueOrRetailPrice × qty, not on the transaction value
+            // 3rd Schedule Goods: tax is on fixedNotifiedValueOrRetailPrice × qty, not on the transaction value.
+            // Auto-falls back to the product's sale price if no explicit retail/notified price is stored.
             const isThirdSchedule = i.diSaleType?.trim().toLowerCase() === '3rd schedule goods'
-            if (isThirdSchedule && i.diFixedNotifiedValueOrRetailPrice != null) {
-                return sum + (i.diFixedNotifiedValueOrRetailPrice * i.quantity * i.taxRate) / 100
+            if (isThirdSchedule) {
+                const retailBase = i.diFixedNotifiedValueOrRetailPrice ?? i.price
+                return sum + (retailBase * i.quantity * i.taxRate) / 100
             }
             const lineSubtotal = i.price * i.quantity - i.discount
             return sum + (lineSubtotal * i.taxRate) / 100

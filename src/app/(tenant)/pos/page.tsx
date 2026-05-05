@@ -315,8 +315,9 @@ export default function POSPage() {
                                     {items.map((item, idx) => {
                                         const lineBase = item.price * item.quantity
                                         const isThirdSchedule = item.diSaleType?.trim().toLowerCase() === '3rd schedule goods'
-                                        const lineTax = isThirdSchedule && item.diFixedNotifiedValueOrRetailPrice != null
-                                            ? (item.diFixedNotifiedValueOrRetailPrice * item.quantity * item.taxRate) / 100
+                                        const retailBase = item.diFixedNotifiedValueOrRetailPrice ?? item.price
+                                        const lineTax = isThirdSchedule
+                                            ? (retailBase * item.quantity * item.taxRate) / 100
                                             : ((lineBase - item.discount) * item.taxRate) / 100
                                         const lineTotal = lineBase - item.discount + lineTax
                                         return (

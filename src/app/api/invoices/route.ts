@@ -77,13 +77,14 @@ export async function POST(req: NextRequest) {
         const taxableAmount = lineSubtotal - itemDiscount
         const taxRate = Number(product.taxRate)
 
-        // 3rd Schedule Goods: tax is calculated on fixedNotifiedValueOrRetailPrice × qty, NOT on the taxable value
-        const retailPrice = product.diFixedNotifiedValueOrRetailPrice != null
-            ? Number(product.diFixedNotifiedValueOrRetailPrice)
-            : null
+        // 3rd Schedule Goods: tax is on fixedNotifiedValueOrRetailPrice × qty, NOT on the taxable value.
+        // Auto-falls back to unitPrice if no explicit retail/notified price is stored.
         const isThirdSchedule = product.diSaleType?.trim().toLowerCase() === '3rd schedule goods'
-        const lineTax = isThirdSchedule && retailPrice != null
-            ? (retailPrice * qty * taxRate) / 100
+        const retailBase = product.diFixedNotifiedValueOrRetailPrice != null
+            ? Number(product.diFixedNotifiedValueOrRetailPrice)
+            : unitPrice
+        const lineTax = isThirdSchedule
+            ? (retailBase * qty * taxRate) / 100
             : (taxableAmount * taxRate) / 100
         const lineTotal = taxableAmount + lineTax
 
