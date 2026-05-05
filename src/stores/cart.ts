@@ -6,6 +6,7 @@ interface CartItem {
     hsCode: string
     price: number
     taxRate: number
+    diRate: string | null // FBR rate string e.g. "18%", "Exempt"
     unit: string
     quantity: number
     discount: number // per-item discount amount

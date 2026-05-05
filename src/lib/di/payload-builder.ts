@@ -75,7 +75,7 @@ export function buildDIPayload(
             return {
                 hsCode: item.hsCode, // e.g. "8471.3000"
                 productDescription: item.name,
-                rate: item.diRate ?? '18%', // Must be exact string from Reference API 5.8
+                rate: item.diRate ?? `${Number(item.taxRate)}%`, // Must be exact string from Reference API 5.8
                 uoM: item.diUOM ?? item.unit, // Must be exact string from Reference API 5.6
                 quantity: Number(Number(item.quantity).toFixed(4)),
                 totalValues: resolveTotalValues(item, lineValue, salesTaxApplicable),

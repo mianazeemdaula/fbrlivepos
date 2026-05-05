@@ -14,6 +14,7 @@ interface Product {
     hsCode: string
     price: number
     taxRate: number
+    diRate?: string | null // FBR rate string e.g. "18%", "Exempt"
     unit: string
     diSaleType?: string | null
 }
@@ -70,16 +71,16 @@ export default function POSPage() {
     }, [items, customerId, paymentMethod, buyerNTN, buyerRegistrationType, invoiceType, invoiceRefNo])
 
     function handleAddProduct(product: Product) {
-        addItem({ productId: product.id, name: product.name, hsCode: product.hsCode, price: product.price, taxRate: product.taxRate, unit: product.unit })
+        addItem({ productId: product.id, name: product.name, hsCode: product.hsCode, price: product.price, taxRate: product.taxRate, diRate: product.diRate ?? null, unit: product.unit })
     }
 
     function handleProductSaved(p: SavedProduct) {
         setShowProductModal(false)
         setProducts(prev => {
             if (prev.some(x => x.id === p.id)) return prev
-            return [{ id: p.id, name: p.name, hsCode: p.hsCode, price: p.price, taxRate: p.taxRate, unit: p.unit }, ...prev]
+            return [{ id: p.id, name: p.name, hsCode: p.hsCode, price: p.price, taxRate: p.taxRate, diRate: p.diRate ?? null, unit: p.unit }, ...prev]
         })
-        addItem({ productId: p.id, name: p.name, hsCode: p.hsCode, price: p.price, taxRate: p.taxRate, unit: p.unit })
+        addItem({ productId: p.id, name: p.name, hsCode: p.hsCode, price: p.price, taxRate: p.taxRate, diRate: p.diRate ?? null, unit: p.unit })
     }
 
     async function handleSaveNewCustomerFromModal(form: {
@@ -355,14 +356,7 @@ export default function POSPage() {
 
                                                 {/* Tax % */}
                                                 <td className="px-3 py-2.5">
-                                                    <div className="flex items-center rounded-lg border border-border bg-card px-2 py-1.5 focus-within:border-primary">
-                                                        <input
-                                                            type="number" min={0} max={100} step="0.1" value={item.taxRate}
-                                                            onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= 0 && v <= 100) updateTaxRate(item.productId, v) }}
-                                                            className="min-w-0 w-full bg-transparent text-sm font-medium text-ink focus:outline-none"
-                                                        />
-                                                        <span className="shrink-0 text-xs text-muted ml-1">%</span>
-                                                    </div>
+                                                    <span className="text-sm font-medium text-ink">{item.diRate ?? `${item.taxRate}%`}</span>
                                                 </td>
 
                                                 {/* Discount */}
