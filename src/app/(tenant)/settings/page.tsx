@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { isValidSellerNtn, normalizeNtnCnic } from '@/lib/validation/pakistan'
-import { SandboxScenariosModal } from './SandboxScenariosModal'
 
 interface DIConfig {
     configured: boolean
@@ -29,89 +27,42 @@ interface DIConfig {
     }>
 }
 
-interface DIFormState {
-    sellerNTN: string
-    sellerCNIC: string
-    sellerBusinessName: string
-    sellerProvince: string
-    sellerAddress: string
-    businessActivity: string
-    sector: string
+interface TokenFormState {
     sandboxToken: string
     productionToken: string
-    environment: string
-}
-
-function createEmptyFormState(): DIFormState {
-    return {
-        sellerNTN: '',
-        sellerCNIC: '',
-        sellerBusinessName: '',
-        sellerProvince: '',
-        sellerAddress: '',
-        businessActivity: '',
-        sector: '',
-        sandboxToken: '',
-        productionToken: '',
-        environment: 'SANDBOX',
-    }
-}
-
-function createFormStateFromConfig(config?: DIConfig | null): DIFormState {
-    return {
-        sellerNTN: config?.sellerNTN ?? '',
-        sellerCNIC: config?.sellerCNIC ?? '',
-        sellerBusinessName: config?.sellerBusinessName ?? '',
-        sellerProvince: config?.sellerProvince ?? '',
-        sellerAddress: config?.sellerAddress ?? '',
-        businessActivity: config?.businessActivity ?? '',
-        sector: config?.sector ?? '',
-        sandboxToken: '',
-        productionToken: '',
-        environment: config?.environment ?? 'SANDBOX',
-    }
 }
 
 export default function SettingsPage() {
     const router = useRouter()
     const { update } = useSession()
     const [diConfig, setDiConfig] = useState<DIConfig | null>(null)
-    const [form, setForm] = useState<DIFormState>(createEmptyFormState)
+    const [tokenForm, setTokenForm] = useState<TokenFormState>({ sandboxToken: '', productionToken: '' })
     const [loading, setLoading] = useState(true)
-    const [saving, setSaving] = useState(false)
+    const [savingTokens, setSavingTokens] = useState(false)
+    const [switchingEnv, setSwitchingEnv] = useState(false)
     const [verifying, setVerifying] = useState(false)
     const [resettingCircuit, setResettingCircuit] = useState(false)
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
     const [preferredIdType, setPreferredIdType] = useState<'NTN' | 'CNIC'>('NTN')
-    const [activeTab, setActiveTab] = useState<'business' | 'sandbox'>('business')
+    const [savingIdType, setSavingIdType] = useState(false)
 
-    const normalizedSellerCnic = normalizeNtnCnic(form.sellerCNIC)
-    const isBusinessSetupLocked = diConfig?.sandboxCompleted === true
+    const isOnboardingComplete = diConfig?.sandboxCompleted === true
+    const isLive = diConfig?.environment === 'PRODUCTION'
 
     async function loadConfig(options?: { showLoading?: boolean }) {
-        if (options?.showLoading ?? true) {
-            setLoading(true)
-        }
-
+        if (options?.showLoading ?? true) setLoading(true)
         try {
             const res = await fetch('/api/tenant/fbr-credentials')
             if (res.ok) {
                 const config: DIConfig = await res.json()
                 setDiConfig(config)
-                setForm(createFormStateFromConfig(config))
             }
-        } catch {
-            // Ignore
-        } finally {
-            if (options?.showLoading ?? true) {
-                setLoading(false)
-            }
+        } catch { /* ignore */ } finally {
+            if (options?.showLoading ?? true) setLoading(false)
         }
     }
 
-    useEffect(() => {
-        void loadConfig({ showLoading: true })
-    }, [])
+    useEffect(() => { void loadConfig({ showLoading: true }) }, [])
 
     useEffect(() => {
         fetch('/api/tenant/profile')
@@ -120,80 +71,113 @@ export default function SettingsPage() {
             .catch(() => { })
     }, [])
 
-    async function handleSaveDI(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault()
-        setSaving(true)
+    async function handleSwitchEnvironment(newEnv: 'SANDBOX' | 'PRODUCTION') {
+        if (!diConfig?.configured) return
+        if (newEnv === 'PRODUCTION' && !diConfig?.hasProductionToken) {
+            setMessage({ type: 'error', text: 'Add a production token before switching to Live mode.' })
+            return
+        }
+        setSwitchingEnv(true)
         setMessage(null)
-
-        if (!isValidSellerNtn(form.sellerNTN)) {
-            setMessage({ type: 'error', text: 'Seller NTN/registration must be 7, 8, or 9 digits. Values like 6650624-2 are accepted.' })
-            setSaving(false)
-            return
-        }
-
-        if (normalizedSellerCnic && normalizedSellerCnic.length !== 13) {
-            setMessage({ type: 'error', text: 'Seller CNIC must be 13 digits when provided.' })
-            setSaving(false)
-            return
-        }
-
-        const data = {
-            sellerNTN: form.sellerNTN,
-            sellerCNIC: normalizedSellerCnic || undefined,
-            sellerBusinessName: form.sellerBusinessName,
-            sellerProvince: form.sellerProvince,
-            sellerAddress: form.sellerAddress,
-            businessActivity: form.businessActivity,
-            sector: form.sector,
-            sandboxToken: form.sandboxToken || undefined,
-            productionToken: form.productionToken || undefined,
-            environment: form.environment,
-        }
-
         try {
             const res = await fetch('/api/tenant/fbr-credentials', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
+                body: JSON.stringify({
+                    sellerNTN: diConfig.sellerNTN,
+                    sellerCNIC: diConfig.sellerCNIC ?? undefined,
+                    sellerBusinessName: diConfig.sellerBusinessName,
+                    sellerProvince: diConfig.sellerProvince,
+                    sellerAddress: diConfig.sellerAddress,
+                    businessActivity: diConfig.businessActivity,
+                    sector: diConfig.sector,
+                    environment: newEnv,
+                }),
             })
-
             if (res.ok) {
-                let successMessage = 'PRAL DI credentials saved successfully!'
-                if (data.sandboxToken || data.productionToken) {
-                    await update({ diConfigured: true })
-                }
-
-                const prefRes = await fetch('/api/tenant/profile', {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ preferredIdType }),
-                })
-
-                if (!prefRes.ok) {
-                    successMessage += ' Invoice ID type preference could not be updated.'
-                }
-
-                setMessage({ type: 'success', text: successMessage })
+                setMessage({ type: 'success', text: `Switched to ${newEnv === 'PRODUCTION' ? 'Live' : 'Sandbox'} mode.` })
                 await loadConfig({ showLoading: false })
             } else {
-                const result = await res.json()
-                setMessage({ type: 'error', text: result.error || 'Failed to save' })
+                const data = await res.json()
+                setMessage({ type: 'error', text: data.error || 'Failed to switch environment.' })
             }
         } catch {
             setMessage({ type: 'error', text: 'Network error' })
         } finally {
-            setSaving(false)
+            setSwitchingEnv(false)
+        }
+    }
+
+    async function handleSaveTokens(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault()
+        if (!tokenForm.sandboxToken && !tokenForm.productionToken) {
+            setMessage({ type: 'error', text: 'Enter at least one token to save.' })
+            return
+        }
+        setSavingTokens(true)
+        setMessage(null)
+        try {
+            const res = await fetch('/api/tenant/fbr-credentials', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sellerNTN: diConfig?.sellerNTN,
+                    sellerCNIC: diConfig?.sellerCNIC ?? undefined,
+                    sellerBusinessName: diConfig?.sellerBusinessName,
+                    sellerProvince: diConfig?.sellerProvince,
+                    sellerAddress: diConfig?.sellerAddress,
+                    businessActivity: diConfig?.businessActivity,
+                    sector: diConfig?.sector,
+                    sandboxToken: tokenForm.sandboxToken || undefined,
+                    productionToken: tokenForm.productionToken || undefined,
+                    environment: diConfig?.environment ?? 'SANDBOX',
+                }),
+            })
+            if (res.ok) {
+                if (tokenForm.sandboxToken || tokenForm.productionToken) {
+                    await update({ diConfigured: true })
+                }
+                setMessage({ type: 'success', text: 'Tokens saved successfully.' })
+                setTokenForm({ sandboxToken: '', productionToken: '' })
+                await loadConfig({ showLoading: false })
+            } else {
+                const data = await res.json()
+                setMessage({ type: 'error', text: data.error || 'Failed to save tokens.' })
+            }
+        } catch {
+            setMessage({ type: 'error', text: 'Network error' })
+        } finally {
+            setSavingTokens(false)
+        }
+    }
+
+    async function handleSaveIdType() {
+        setSavingIdType(true)
+        setMessage(null)
+        try {
+            const res = await fetch('/api/tenant/profile', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ preferredIdType }),
+            })
+            if (res.ok) {
+                setMessage({ type: 'success', text: 'Invoice ID type preference saved.' })
+            } else {
+                setMessage({ type: 'error', text: 'Failed to save preference.' })
+            }
+        } catch {
+            setMessage({ type: 'error', text: 'Network error' })
+        } finally {
+            setSavingIdType(false)
         }
     }
 
     async function handleVerify() {
         setVerifying(true)
         setMessage(null)
-
         try {
             const res = await fetch('/api/tenant/fbr-credentials/verify', { method: 'POST' })
             const data = await res.json()
-
             if (res.ok && data.success) {
                 await update({ diConfigured: true })
                 setMessage({ type: 'success', text: 'PRAL DI token verified successfully!' })
@@ -227,303 +211,237 @@ export default function SettingsPage() {
         }
     }
 
-    function updateFormField<K extends keyof DIFormState>(field: K, value: DIFormState[K]) {
-        setForm((current) => ({ ...current, [field]: value }))
-    }
-
     return (
-        <div className="p-6 lg:p-8">
-            <p className="text-xs font-medium uppercase tracking-caps text-muted">Compliance setup</p>
-            <h1 className="mb-6 text-page-title font-normal text-ink">Settings</h1>
+        <div className="p-6 lg:p-8 ">
+            {/* ── Page header ── */}
+            <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Compliance setup</p>
+                    <h1 className="text-page-title font-normal text-ink">Settings</h1>
+                </div>
 
-            {/* <div className="mb-6 grid grid-cols-1 gap-2 rounded-2xl border border-border bg-surface-subtle p-2 sm:grid-cols-2">
-                <button
-                    type="button"
-                    onClick={() => setActiveTab('business')}
-                    className={`rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors ${activeTab === 'business'
-                        ? 'bg-primary text-white'
-                        : 'bg-surface-subtle text-muted hover:bg-border'
-                        }`}
-                >
-                    1. PRAL Business Setup
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setActiveTab('sandbox')}
-                    className={`rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors ${activeTab === 'sandbox'
-                        ? 'bg-primary text-white'
-                        : 'bg-surface-subtle text-muted hover:bg-border'
-                        }`}
-                >
-                    2. Sandbox Test Scenarios
-                </button>
-            </div> */}
-
-            {activeTab === 'business' && (
-                <>
-
-                    {/* PRAL DI Credentials */}
-                    <div className="bg-white rounded-2xl shadow-card mb-6 p-6">
-                        <h2 className="text-lg font-semibold text-ink mb-4">PRAL Digital Invoicing</h2>
-                        <p className="mb-4 text-sm text-muted">
-                            Configure your PRAL DI credentials obtained from IRIS registration.
-                            Tokens are encrypted at rest with AES-256-GCM.
-                        </p>
-
-                        {loading ? (
-                            <div className="animate-pulse space-y-3">
-                                <div className="h-10 rounded bg-border" />
-                                <div className="h-10 rounded bg-border" />
-                            </div>
-                        ) : (
-                            <>
-                                {diConfig?.configured && (
-                                    <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 mb-4">
-                                        <p className="text-sm text-green-400">
-                                            DI configured — Environment: {diConfig.environment}
-                                            {diConfig.isProductionReady && ' (Production Ready)'}
-                                        </p>
-                                        {diConfig.irisRegistrationStatus && (
-                                            <p className="text-xs text-green-400/70 mt-1">
-                                                IRIS Status: {diConfig.irisRegistrationStatus}
-                                            </p>
-                                        )}
-                                        {isBusinessSetupLocked && (
-                                            <p className="mt-2 text-xs text-amber-300">
-                                                Business setup is locked because sandbox scenarios are completed. You can still update sandbox/production tokens and environment.
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
-
-                                <form onSubmit={handleSaveDI} className="space-y-3">
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="mb-1 block text-xs text-muted">Seller NTN / Registration No.</label>
-                                            <input
-                                                name="sellerNTN"
-                                                required
-                                                value={form.sellerNTN}
-                                                onChange={(e) => updateFormField('sellerNTN', e.target.value)}
-                                                disabled={isBusinessSetupLocked}
-                                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60"
-                                                placeholder="1234567 or 6650624-2"
-                                            />
-                                            {form.sellerNTN && !isValidSellerNtn(form.sellerNTN) && (
-                                                <p className="mt-1 text-xs text-amber-400">Use 7, 8, or 9 digits. Hyphenated values are normalized automatically.</p>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <label className="mb-1 block text-xs text-muted">CNIC (optional fallback)</label>
-                                            <input
-                                                name="sellerCNIC"
-                                                value={form.sellerCNIC}
-                                                onChange={(e) => updateFormField('sellerCNIC', e.target.value)}
-                                                disabled={isBusinessSetupLocked}
-                                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60"
-                                                placeholder="3520112345678"
-                                            />
-                                            {form.sellerCNIC && normalizedSellerCnic.length !== 13 && (
-                                                <p className="mt-1 text-xs text-amber-400">CNIC is optional, but if provided it must be 13 digits.</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="mb-1 block text-xs text-muted">Business Name</label>
-                                        <input
-                                            name="sellerBusinessName"
-                                            required
-                                            value={form.sellerBusinessName}
-                                            onChange={(e) => updateFormField('sellerBusinessName', e.target.value)}
-                                            disabled={isBusinessSetupLocked}
-                                            className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60"
-                                            placeholder="Your registered business name"
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="mb-1 block text-xs text-muted">Province</label>
-                                            <select
-                                                name="sellerProvince"
-                                                required
-                                                value={form.sellerProvince}
-                                                onChange={(e) => updateFormField('sellerProvince', e.target.value)}
-                                                disabled={isBusinessSetupLocked}
-                                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60"
-                                            >
-                                                <option value="">Select province</option>
-                                                <option value="Punjab">Punjab</option>
-                                                <option value="Sindh">Sindh</option>
-                                                <option value="Khyber Pakhtunkhwa">Khyber Pakhtunkhwa</option>
-                                                <option value="Balochistan">Balochistan</option>
-                                                <option value="Islamabad">Islamabad</option>
-                                                <option value="Azad Jammu & Kashmir">Azad Jammu & Kashmir</option>
-                                                <option value="Gilgit-Baltistan">Gilgit-Baltistan</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="mb-1 block text-xs text-muted">Business Activity</label>
-                                            <input
-                                                name="businessActivity"
-                                                required
-                                                value={form.businessActivity}
-                                                onChange={(e) => updateFormField('businessActivity', e.target.value)}
-                                                disabled={isBusinessSetupLocked}
-                                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60"
-                                                placeholder="e.g. Retail, Manufacturing"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="mb-1 block text-xs text-muted">Business Address</label>
-                                        <input
-                                            name="sellerAddress"
-                                            required
-                                            value={form.sellerAddress}
-                                            onChange={(e) => updateFormField('sellerAddress', e.target.value)}
-                                            disabled={isBusinessSetupLocked}
-                                            className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60"
-                                            placeholder="Full business address"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="mb-1 block text-xs text-muted">Sector</label>
-                                        <input
-                                            name="sector"
-                                            required
-                                            value={form.sector}
-                                            onChange={(e) => updateFormField('sector', e.target.value)}
-                                            disabled={isBusinessSetupLocked}
-                                            className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60"
-                                            placeholder="e.g. Tier-1 Retailer"
-                                        />
-                                    </div>
-
-                                    <label className="flex items-start gap-3 rounded-xl border border-border bg-surface-subtle px-3 py-3">
-                                        <input
-                                            type="checkbox"
-                                            checked={preferredIdType === 'CNIC'}
-                                            onChange={(e) => setPreferredIdType(e.target.checked ? 'CNIC' : 'NTN')}
-                                            disabled={isBusinessSetupLocked}
-                                            className="mt-0.5 h-4 w-4 rounded border-white/30 bg-surface text-accent focus:ring-accent disabled:cursor-not-allowed disabled:opacity-60"
-                                        />
-                                        <div>
-                                            <p className="text-sm font-medium text-white">Default Invoice ID Type</p>
-                                            <p className="mt-0.5 text-xs text-muted">
-                                                Check to use CNIC by default on invoices. Uncheck to use NTN by default.
-                                            </p>
-                                        </div>
-                                    </label>
-
-                                    <div>
-                                        <label className="mb-1 block text-xs text-muted">Sandbox Security Token (from IRIS)</label>
-                                        <input
-                                            name="sandboxToken"
-                                            type="password"
-                                            value={form.sandboxToken}
-                                            onChange={(e) => updateFormField('sandboxToken', e.target.value)}
-                                            className="w-full rounded-xl border border-border bg-surface-subtle px-3 py-2 text-sm font-mono text-white"
-                                            placeholder={diConfig?.hasSandboxToken ? 'A sandbox token is already stored. Enter a new token to replace it.' : 'Paste your sandbox IRIS security token'}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="mb-1 block text-xs text-muted">Production Security Token (from IRIS)</label>
-                                        <input
-                                            name="productionToken"
-                                            type="password"
-                                            value={form.productionToken}
-                                            onChange={(e) => updateFormField('productionToken', e.target.value)}
-                                            className="w-full rounded-xl border border-border bg-surface-subtle px-3 py-2 text-sm font-mono text-white"
-                                            placeholder={diConfig?.hasProductionToken ? 'A production token is already stored. Enter a new token to replace it.' : 'Paste your production IRIS security token'}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="mb-1 block text-xs text-muted">Environment</label>
-                                        <select
-                                            name="environment"
-                                            value={form.environment}
-                                            onChange={(e) => updateFormField('environment', e.target.value)}
-                                            className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink"
-                                        >
-                                            <option value="SANDBOX">Sandbox (Testing)</option>
-                                            <option value="PRODUCTION">Production</option>
-                                        </select>
-                                    </div>
-
-                                    {message && (
-                                        <div
-                                            className={`text-sm rounded-lg p-3 ${message.type === 'success'
-                                                ? 'bg-green-500/10 text-green-400 border border-green-500/30'
-                                                : 'bg-red-500/10 text-red-400 border border-red-500/30'
-                                                }`}
-                                        >
-                                            {message.text}
-                                        </div>
-                                    )}
-
-                                    <div className="flex gap-3 flex-wrap">
-                                        <button
-                                            type="submit"
-                                            disabled={saving}
-                                            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-70"
-                                        >
-                                            {saving ? 'Saving...' : 'Save Credentials'}
-                                        </button>
-                                        {diConfig?.configured && (
-                                            <button
-                                                type="button"
-                                                onClick={handleVerify}
-                                                disabled={verifying}
-                                                className="rounded-full border border-border bg-surface-subtle px-4 py-2 text-sm font-medium text-ink hover:bg-border"
-                                            >
-                                                {verifying ? 'Verifying...' : 'Verify Token'}
-                                            </button>
-                                        )}
-                                        {diConfig?.configured && (
-                                            <button
-                                                type="button"
-                                                onClick={handleResetCircuit}
-                                                disabled={resettingCircuit}
-                                                className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-300 hover:bg-amber-500/20"
-                                                title="Reset DI circuit if submissions are blocked with DI_CIRCUIT_OPEN"
-                                            >
-                                                {resettingCircuit ? 'Resetting...' : 'Reset DI Circuit'}
-                                            </button>
-                                        )}
-                                    </div>
-                                </form>
-                            </>
-                        )}
+                {/* Sandbox / Live mode toggle */}
+                {diConfig?.configured && !loading && (
+                    <div className="flex items-center gap-3 rounded-2xl border border-border bg-white px-4 py-2.5 shadow-sm">
+                        <span className={`text-xs font-semibold uppercase tracking-wide transition-colors ${!isLive ? 'text-gold' : 'text-muted'}`}>
+                            Sandbox
+                        </span>
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={isLive}
+                            onClick={() => handleSwitchEnvironment(isLive ? 'SANDBOX' : 'PRODUCTION')}
+                            disabled={switchingEnv}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus-visible:outline-none disabled:opacity-50 ${isLive ? 'bg-primary' : 'bg-border-strong'}`}
+                        >
+                            <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${isLive ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </button>
+                        <span className={`text-xs font-semibold uppercase tracking-wide transition-colors ${isLive ? 'text-primary' : 'text-muted'}`}>
+                            Live
+                        </span>
                     </div>
-                </>
+                )}
+            </div>
+
+            {/* Global alert */}
+            {message && (
+                <div className={`mb-5 rounded-xl border px-4 py-3 text-sm ${message.type === 'success'
+                    ? 'border-success-border bg-success-bg text-success'
+                    : 'border-error-border bg-error-bg text-error'}`}
+                >
+                    {message.text}
+                </div>
             )}
 
-            {activeTab === 'sandbox' && (
-                <div className="bg-white rounded-2xl shadow-card p-4 sm:p-6">
-                    {loading ? (
-                        <p className="text-sm text-muted">Loading sandbox configuration...</p>
-                    ) : !diConfig?.configured ? (
-                        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-300">
-                            Configure PRAL DI credentials first in the PRAL Business Setup tab.
+            {loading ? (
+                <div className="space-y-4">
+                    {[1, 2, 3].map((n) => (
+                        <div key={n} className="h-24 animate-pulse rounded-2xl bg-border" />
+                    ))}
+                </div>
+            ) : !diConfig?.configured ? (
+                <div className="rounded-2xl border border-warning-bg bg-warning-bg p-6 text-sm text-warning">
+                    PRAL DI credentials are not configured yet.{' '}
+                    <a href="/onboarding" className="font-medium underline">Complete onboarding</a> to set up your credentials.
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+                    {/* ── Business Information (read-only tile) ── */}
+                    <section className="rounded-2xl border border-border bg-white p-5">
+                        <div className="mb-4 flex items-center justify-between gap-2 flex-wrap">
+                            <h2 className="text-ui-sm font-semibold text-ink">Business Information</h2>
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-border-muted bg-surface-subtle px-2.5 py-1 text-xs text-muted">
+                                <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                Locked after onboarding
+                            </span>
                         </div>
-                    ) : diConfig.environment !== 'SANDBOX' ? (
-                        <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4 text-sm text-sky-300">
-                            Switch environment to Sandbox in PRAL Business Setup before running test scenarios.
-                        </div>
-                    ) : (
-                        <SandboxScenariosModal
-                            embedded
-                            diConfig={{
-                                businessActivity: diConfig.businessActivity,
-                                sector: diConfig.sector,
-                                sellerProvince: diConfig.sellerProvince,
-                                sandboxScenarios: diConfig.sandboxScenarios,
-                            }}
-                            onScenariosUpdated={() => void loadConfig({ showLoading: false })}
-                        />
-                    )}
+                        <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+                            <InfoField label="Business Name" value={diConfig.sellerBusinessName} />
+                            <InfoField label="Seller NTN" value={diConfig.sellerNTN} />
+                            {diConfig.sellerCNIC && <InfoField label="CNIC" value={diConfig.sellerCNIC} />}
+                            <InfoField label="Province" value={diConfig.sellerProvince} />
+                            <InfoField label="Business Activity" value={diConfig.businessActivity} />
+                            <InfoField label="Sector" value={diConfig.sector} />
+                            <div className="sm:col-span-2">
+                                <InfoField label="Business Address" value={diConfig.sellerAddress} />
+                            </div>
+                        </dl>
+                        {diConfig.irisRegistrationStatus && (
+                            <div className="mt-4 flex flex-wrap gap-2">
+                                <StatusPill label="IRIS" value={diConfig.irisRegistrationStatus} />
+                                {isOnboardingComplete && (
+                                    <StatusPill label="Sandbox" value="Completed" variant="success" />
+                                )}
+                                {diConfig.isProductionReady && (
+                                    <StatusPill label="Production" value="Ready" variant="success" />
+                                )}
+                            </div>
+                        )}
+                    </section>
+
+                    {/* ── Right column: tokens + preferences stacked ── */}
+                    <div className="flex flex-col gap-5">
+                        {/* ── Security Tokens ── */}
+                        <section className="rounded-2xl border border-border bg-white p-5">
+                            <h2 className="mb-1 text-ui-sm font-semibold text-ink">Security Tokens</h2>
+                            <p className="mb-4 text-xs text-muted">
+                                Tokens are encrypted at rest with AES-256-GCM. Leave a field blank to keep the existing token.
+                            </p>
+                            <form onSubmit={handleSaveTokens} className="space-y-3">
+                                <div>
+                                    <label className="mb-1 flex items-center gap-2 text-xs font-medium text-muted">
+                                        Sandbox Token (from IRIS)
+                                        {diConfig.hasSandboxToken && (
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-xs text-success">
+                                                <span className="h-1.5 w-1.5 rounded-full bg-success" /> Stored
+                                            </span>
+                                        )}
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={tokenForm.sandboxToken}
+                                        onChange={(e) => setTokenForm((f) => ({ ...f, sandboxToken: e.target.value }))}
+                                        className="w-full rounded-input border border-border bg-surface-subtle px-3 py-2 text-sm font-mono text-ink focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        placeholder={diConfig.hasSandboxToken ? 'Enter new token to replace existing…' : 'Paste your sandbox IRIS security token'}
+                                        autoComplete="new-password"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="mb-1 flex items-center gap-2 text-xs font-medium text-muted">
+                                        Production Token (from IRIS)
+                                        {diConfig.hasProductionToken && (
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-xs text-success">
+                                                <span className="h-1.5 w-1.5 rounded-full bg-success" /> Stored
+                                            </span>
+                                        )}
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={tokenForm.productionToken}
+                                        onChange={(e) => setTokenForm((f) => ({ ...f, productionToken: e.target.value }))}
+                                        className="w-full rounded-input border border-border bg-surface-subtle px-3 py-2 text-sm font-mono text-ink focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        placeholder={diConfig.hasProductionToken ? 'Enter new token to replace existing…' : 'Paste your production IRIS security token'}
+                                        autoComplete="new-password"
+                                    />
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 pt-1">
+                                    <button
+                                        type="submit"
+                                        disabled={savingTokens}
+                                        className="rounded-full bg-primary px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-primary-dark disabled:opacity-60"
+                                    >
+                                        {savingTokens ? 'Saving…' : 'Save Tokens'}
+                                    </button>
+                                    {diConfig.configured && (
+                                        <button
+                                            type="button"
+                                            onClick={handleVerify}
+                                            disabled={verifying}
+                                            className="rounded-full border border-border bg-white px-4 py-2 text-xs font-medium text-ink transition-colors hover:bg-surface disabled:opacity-60"
+                                        >
+                                            {verifying ? 'Verifying…' : 'Verify Active Token'}
+                                        </button>
+                                    )}
+                                    {diConfig.configured && (
+                                        <button
+                                            type="button"
+                                            onClick={handleResetCircuit}
+                                            disabled={resettingCircuit}
+                                            className="rounded-full border border-warning-bg bg-warning-bg px-4 py-2 text-xs font-medium text-warning transition-colors hover:opacity-80 disabled:opacity-60"
+                                            title="Reset DI circuit breaker if submissions are stuck with DI_CIRCUIT_OPEN"
+                                        >
+                                            {resettingCircuit ? 'Resetting…' : 'Reset DI Circuit'}
+                                        </button>
+                                    )}
+                                </div>
+                            </form>
+                        </section>
+
+                        {/* ── Invoice Preferences ── */}
+                        <section className="rounded-2xl border border-border bg-white p-5">
+                            <h2 className="mb-1 text-ui-sm font-semibold text-ink">Invoice Preferences</h2>
+                            <p className="mb-4 text-xs text-muted">Default buyer identifier shown on new invoices at POS.</p>
+                            <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-subtle px-4 py-3">
+                                <span className={`min-w-12 text-xs font-semibold ${preferredIdType === 'NTN' ? 'text-ink' : 'text-muted'}`}>NTN</span>
+                                <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={preferredIdType === 'CNIC'}
+                                    onClick={() => setPreferredIdType(preferredIdType === 'NTN' ? 'CNIC' : 'NTN')}
+                                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${preferredIdType === 'CNIC' ? 'bg-primary' : 'bg-border-strong'}`}
+                                >
+                                    <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${preferredIdType === 'CNIC' ? 'translate-x-5' : 'translate-x-0'}`} />
+                                </button>
+                                <span className={`min-w-12 text-xs font-semibold ${preferredIdType === 'CNIC' ? 'text-ink' : 'text-muted'}`}>CNIC</span>
+                                <span className="ml-1 text-xs text-muted">Default buyer ID type for new invoices</span>
+                            </div>
+                            <div className="mt-3 flex justify-end">
+                                <button
+                                    type="button"
+                                    onClick={handleSaveIdType}
+                                    disabled={savingIdType}
+                                    className="rounded-full bg-primary px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-primary-dark disabled:opacity-60"
+                                >
+                                    {savingIdType ? 'Saving…' : 'Save Preference'}
+                                </button>
+                            </div>
+                        </section>
+
+                    </div>
                 </div>
             )}
         </div>
+    )
+}
+
+function InfoField({ label, value }: { label: string; value?: string | null }) {
+    return (
+        <div>
+            <dt className="mb-0.5 text-xs text-muted">{label}</dt>
+            <dd className="text-sm font-medium text-ink">{value || <span className="text-subtle">—</span>}</dd>
+        </div>
+    )
+}
+
+function StatusPill({
+    label,
+    value,
+    variant = 'neutral',
+}: {
+    label: string
+    value: string
+    variant?: 'success' | 'neutral'
+}) {
+    const base =
+        variant === 'success'
+            ? 'bg-success-bg text-success border-success-border'
+            : 'bg-surface-subtle text-muted border-border'
+    return (
+        <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${base}`}>
+            <span className="h-1.5 w-1.5 rounded-full bg-current" />
+            {label}: {value}
+        </span>
     )
 }

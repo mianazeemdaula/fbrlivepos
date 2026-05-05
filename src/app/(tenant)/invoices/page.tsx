@@ -27,9 +27,17 @@ export default function InvoicesPage() {
     const [search, setSearch] = useState('')
     const [actionLoading, setActionLoading] = useState<string | null>(null)
     const [actionError, setActionError] = useState<string | null>(null)
+    const [environment, setEnvironment] = useState<'SANDBOX' | 'PRODUCTION' | null>(null)
 
     // Modals
     const [viewDIId, setViewDIId] = useState<string | null>(null)
+
+    useEffect(() => {
+        fetch('/api/tenant/fbr-credentials')
+            .then((r) => r.ok ? r.json() : null)
+            .then((d) => { if (d?.environment) setEnvironment(d.environment) })
+            .catch(() => { })
+    }, [])
 
     const loadInvoices = useCallback(async () => {
         setLoading(true)
@@ -85,10 +93,21 @@ export default function InvoicesPage() {
     return (
         <div className="p-6 lg:p-8">
             {/* Header */}
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
                 <div>
                     <p className="text-xs font-medium uppercase tracking-caps text-muted">Sales ledger</p>
-                    <h1 className="text-page-title font-normal text-ink">Invoices</h1>
+                    <div className="flex items-center gap-2.5">
+                        <h1 className="text-page-title font-normal text-ink">Invoices</h1>
+                        {environment && (
+                            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${environment === 'PRODUCTION'
+                                ? 'border-success-border bg-success-bg text-success'
+                                : 'border-border-muted bg-surface-subtle text-gold'}`}
+                            >
+                                <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                                {environment === 'PRODUCTION' ? 'Live' : 'Sandbox'}
+                            </span>
+                        )}
+                    </div>
                 </div>
                 <Link
                     href="/pos"

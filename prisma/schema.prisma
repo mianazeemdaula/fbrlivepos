@@ -165,7 +165,7 @@ model Product {
   taxRate                           Decimal        @db.Decimal(5, 2)
   unit                              String
   // DI scenario classification
-  diScenarioId                      String?        // e.g. "SN001" — which scenario this product uses
+  diScenarioId                      String? // e.g. "SN001" — which scenario this product uses
   diScenario                        DIScenario?    @relation(fields: [diScenarioId], references: [id])
   diSaleType                        String?
   diRate                            String?
@@ -218,9 +218,9 @@ model Invoice {
   items           InvoiceItem[]
 
   // Invoice type: Sale Invoice or Debit Note
-  invoiceType           String?   @default("Sale Invoice")
+  invoiceType  String? @default("Sale Invoice")
   // For Debit Notes — reference to original FBR invoice number
-  invoiceRefNo          String?
+  invoiceRefNo String?
 
   // PRAL DI specific fields
   buyerProvince         String?
@@ -239,6 +239,9 @@ model Invoice {
   lastValidationResult  Json? // Full validation response stored
   qrCodeData            String? // Data to encode in QR (version 2.0, 25×25, 1×1 inch)
   qrCodePrinted         Boolean   @default(false)
+
+  // Environment at time of creation — used to filter sandbox vs live invoices
+  diEnvironment DIEnvironment @default(SANDBOX)
 
   submissionLogs FBRSubmissionLog[]
 
@@ -610,7 +613,7 @@ model DIItemDescription {
 
 // All 28 scenarios with their saleType strings — seeded from documentation
 model DIScenario {
-  id          String @id // "SN001", "SN002", etc.
+  id          String  @id // "SN001", "SN002", etc.
   description String // Human-readable description
   saleType    String // Exact string to pass as saleType in invoice payload
   notes       String? // Additional rules/notes
@@ -623,9 +626,9 @@ model DIScenario {
 
 // Business Activity + Sector → applicable scenarios matrix
 model DIBusinessScenario {
-  id               String    @id @default(cuid())
-  businessActivity String    // "Manufacturer", "Retailer", etc.
-  sector           String    // "Steel", "FMCG", etc.
+  id               String     @id @default(cuid())
+  businessActivity String // "Manufacturer", "Retailer", etc.
+  sector           String // "Steel", "FMCG", etc.
   scenarioId       String
   scenario         DIScenario @relation(fields: [scenarioId], references: [id])
 

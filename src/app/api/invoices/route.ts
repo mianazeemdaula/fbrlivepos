@@ -113,6 +113,10 @@ export async function POST(req: NextRequest) {
     const totalAmount = subtotal - discountAmount + taxAmount
     const invoiceNumber = await getNextInvoiceNumber(tenant.id)
 
+    // Stamp the invoice with the tenant's current DI environment so sandbox and live invoices are separated
+    const diCreds = await prisma.dICredentials.findUnique({ where: { tenantId: tenant.id }, select: { environment: true } })
+    const diEnvironment = diCreds?.environment ?? 'SANDBOX'
+
     const invoice = await prisma.invoice.create({
         data: {
             tenantId: tenant.id,
@@ -133,6 +137,7 @@ export async function POST(req: NextRequest) {
             paymentMethod: body.paymentMethod,
             status: 'DRAFT',
             invoiceType: 'Sale Invoice',
+            diEnvironment,
             items: { create: invoiceItems },
         },
         include: { items: true },
@@ -150,8 +155,13 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status')
     const q = searchParams.get('q')?.trim()
 
+    // Filter invoices by the tenant's current DI environment so sandbox and live invoices are separated
+    const diCreds = await prisma.dICredentials.findUnique({ where: { tenantId: tenant.id }, select: { environment: true } })
+    const diEnvironment = diCreds?.environment ?? 'SANDBOX'
+
     const where = {
         tenantId: tenant.id,
+        diEnvironment,
         ...(status ? { status: status as 'PENDING' | 'QUEUED' | 'SUBMITTED' | 'FAILED' } : {}),
         ...(q ? {
             OR: [
