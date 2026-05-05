@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import { BadgeCheck, Building2, ShieldCheck } from 'lucide-react'
 
 export default function SignupPage() {
@@ -35,6 +36,20 @@ export default function SignupPage() {
 
             if (!res.ok) {
                 setError(result.error || 'Something went wrong')
+                return
+            }
+
+            // Automatically sign the user in so session-protected onboarding
+            // API routes (/api/tenant/di/scenarios, /api/tenant/di/setup) work.
+            const signInResult = await signIn('credentials', {
+                email: data.email,
+                password: data.password,
+                redirect: false,
+            })
+
+            if (signInResult?.error) {
+                // Account created but sign-in failed – send to login
+                router.push('/login')
                 return
             }
 
