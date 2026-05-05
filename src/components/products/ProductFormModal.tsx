@@ -27,6 +27,7 @@ export interface SavedProduct {
     id: string; name: string; hsCode: string; price: number
     taxRate: number; unit: string; diSaleType: string | null
     diRate: string | null; diUOM: string | null
+    diFixedNotifiedValueOrRetailPrice: number | null
 }
 
 interface Props {

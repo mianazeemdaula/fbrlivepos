@@ -15,8 +15,9 @@ interface Product {
     price: number
     taxRate: number
     diRate?: string | null // FBR rate string e.g. "18%", "Exempt"
-    unit: string
     diSaleType?: string | null
+    diFixedNotifiedValueOrRetailPrice?: number | null // 3rd Schedule: retail/notified price per unit
+    unit: string
 }
 
 export default function POSPage() {
@@ -71,16 +72,16 @@ export default function POSPage() {
     }, [items, customerId, paymentMethod, buyerNTN, buyerRegistrationType, invoiceType, invoiceRefNo])
 
     function handleAddProduct(product: Product) {
-        addItem({ productId: product.id, name: product.name, hsCode: product.hsCode, price: product.price, taxRate: product.taxRate, diRate: product.diRate ?? null, unit: product.unit })
+        addItem({ productId: product.id, name: product.name, hsCode: product.hsCode, price: product.price, taxRate: product.taxRate, diRate: product.diRate ?? null, diSaleType: product.diSaleType ?? null, diFixedNotifiedValueOrRetailPrice: product.diFixedNotifiedValueOrRetailPrice ?? null, unit: product.unit })
     }
 
     function handleProductSaved(p: SavedProduct) {
         setShowProductModal(false)
         setProducts(prev => {
             if (prev.some(x => x.id === p.id)) return prev
-            return [{ id: p.id, name: p.name, hsCode: p.hsCode, price: p.price, taxRate: p.taxRate, diRate: p.diRate ?? null, unit: p.unit }, ...prev]
+            return [{ id: p.id, name: p.name, hsCode: p.hsCode, price: p.price, taxRate: p.taxRate, diRate: p.diRate ?? null, diSaleType: p.diSaleType ?? null, diFixedNotifiedValueOrRetailPrice: p.diFixedNotifiedValueOrRetailPrice ?? null, unit: p.unit }, ...prev]
         })
-        addItem({ productId: p.id, name: p.name, hsCode: p.hsCode, price: p.price, taxRate: p.taxRate, diRate: p.diRate ?? null, unit: p.unit })
+        addItem({ productId: p.id, name: p.name, hsCode: p.hsCode, price: p.price, taxRate: p.taxRate, diRate: p.diRate ?? null, diSaleType: p.diSaleType ?? null, diFixedNotifiedValueOrRetailPrice: p.diFixedNotifiedValueOrRetailPrice ?? null, unit: p.unit })
     }
 
     async function handleSaveNewCustomerFromModal(form: {
@@ -313,7 +314,10 @@ export default function POSPage() {
                                 <tbody>
                                     {items.map((item, idx) => {
                                         const lineBase = item.price * item.quantity
-                                        const lineTax = ((lineBase - item.discount) * item.taxRate) / 100
+                                        const isThirdSchedule = item.diSaleType?.trim().toLowerCase() === '3rd schedule goods'
+                                        const lineTax = isThirdSchedule && item.diFixedNotifiedValueOrRetailPrice != null
+                                            ? (item.diFixedNotifiedValueOrRetailPrice * item.quantity * item.taxRate) / 100
+                                            : ((lineBase - item.discount) * item.taxRate) / 100
                                         const lineTotal = lineBase - item.discount + lineTax
                                         return (
                                             <tr key={item.productId} className={`border-b border-border-muted transition-colors hover:bg-surface-subtle ${idx % 2 === 0 ? '' : 'bg-surface-subtle/40'}`}>
