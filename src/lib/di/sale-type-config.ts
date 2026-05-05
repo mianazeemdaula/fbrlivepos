@@ -147,7 +147,7 @@ export const SALE_TYPE_CONFIG: Record<string, SaleTypeConfig> = {
         transTypeId: 26, requiresSRO: true, requiresSR: false,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
         taxBase: 'value', uomLocked: 'KWH', fallbackRates: ['5%', '7.5%', '13%', '17%'],
-        fallbackSROs: [{ id: -1, desc: 'SRO 1125(I)/2011 - Electricity Retailers', srItems: [] }],
+        fallbackSROs: [],
     },
     SN014: {
         id: 'SN014', scenarioId: 'SN014', label: 'Gas to CNG stations',
@@ -162,7 +162,7 @@ export const SALE_TYPE_CONFIG: Record<string, SaleTypeConfig> = {
         showFT: false, showFED: false, showEXT: true, showEXMT: false,
         taxBase: 'value', uomLocked: null, fallbackRates: ['17%', '18%'],
         fallbackSROs: [
-            { id: -1, desc: 'SRO 1125(I)/2011 - Mobile Phones', srItems: REDUCED_SR_ITEMS },
+            { "id": 445, "desc": "NINTH SCHEDULE", srItems: [{ "id": 18248, "desc": "1(A)" }, { "id": 18250, "desc": "1(B)" }, { "id": 18161, "desc": "1(E)" }, { "id": 18160, "desc": "1(F)" }] }
         ],
     },
     SN016: {
@@ -170,27 +170,23 @@ export const SALE_TYPE_CONFIG: Record<string, SaleTypeConfig> = {
         transTypeId: 29, requiresSRO: false, requiresSR: false,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
         taxBase: 'value', uomLocked: null,
-        fallbackRates: ['5%', '8%', '10%', '13%', '18%'], fallbackSROs: [],
+        fallbackRates: ['0%', '3%', '5%', '18%'], fallbackSROs: [],
     },
     SN017: {
         id: 'SN017', scenarioId: 'SN017', label: 'Goods (FED in ST Mode)',
         transTypeId: 30, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: true, showEXT: false, showEXMT: false,
         taxBase: 'value', uomLocked: null,
-        fallbackRates: ['8%', '13%', '16%', '17%', '18%'],
-        fallbackSROs: [
-            { id: -1, desc: 'SRO 551(I)/2008 - FED in ST Mode (Goods)', srItems: REDUCED_SR_ITEMS },
-        ],
+        fallbackRates: ['0.5%', '8%', '17%'],
+        fallbackSROs: [],
     },
     SN018: {
         id: 'SN018', scenarioId: 'SN018', label: 'Services (FED in ST Mode)',
         transTypeId: 31, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: true, showEXT: false, showEXMT: false,
         taxBase: 'value', uomLocked: null,
-        fallbackRates: ['8%', '13%', '16%', '17%', '18%'],
-        fallbackSROs: [
-            { id: -1, desc: 'SRO 551(I)/2008 - FED in ST Mode (Services)', srItems: REDUCED_SR_ITEMS },
-        ],
+        fallbackRates: ['8%', '16%', '17%', '19.5%', '200/bill'],
+        fallbackSROs: [],
     },
     SN019: {
         id: 'SN019', scenarioId: 'SN019', label: 'Services',
@@ -262,7 +258,9 @@ export const SALE_TYPE_CONFIG: Record<string, SaleTypeConfig> = {
         id: 'SN027', scenarioId: 'SN027', label: '3rd Schedule Goods',
         transTypeId: 22, requiresSRO: false, requiresSR: false,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'retailPrice', uomLocked: null, fallbackRates: ['18%'], fallbackSROs: [],
+        taxBase: 'retailPrice', uomLocked: null, fallbackRates: ['18%'], fallbackSROs: [
+            { id: 454, desc: '3rd Schedule goods', srItems: [{ "id": 18251, "desc": "51" }] },
+        ],
     },
     SN028: {
         id: 'SN028', scenarioId: 'SN028', label: 'Goods at Reduced Rate',
