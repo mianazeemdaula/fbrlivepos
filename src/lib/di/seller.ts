@@ -35,6 +35,14 @@ type SellerIdentityContext = {
     preferredIdType?: string | null
 }
 
+function sanitizeTextField(value: string | null | undefined): string {
+    return (value ?? '').trim()
+}
+
+function sanitizeAddressField(value: string | null | undefined): string {
+    return (value ?? '').replace(/\r?\n/g, ' ').trim()
+}
+
 export function getSellerIdentity(
     creds: SellerCredentialFields,
     tenant?: SellerIdentityContext,
@@ -48,8 +56,8 @@ export function getSellerIdentity(
 
     return {
         sellerNTNCNIC: getSellerNTNCNIC(creds, normalizedPreference),
-        sellerBusinessName: tenant?.name?.trim() || creds.sellerBusinessName,
-        sellerProvince: creds.sellerProvince,
-        sellerAddress: tenant?.address?.trim() || creds.sellerAddress,
+        sellerBusinessName: sanitizeTextField(tenant?.name) || sanitizeTextField(creds.sellerBusinessName),
+        sellerProvince: sanitizeTextField(creds.sellerProvince),
+        sellerAddress: sanitizeAddressField(tenant?.address) || sanitizeAddressField(creds.sellerAddress),
     }
 }
