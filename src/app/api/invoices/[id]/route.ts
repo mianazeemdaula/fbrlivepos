@@ -2,6 +2,40 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getTenantFromSession } from '@/lib/tenant/context'
 import { prisma } from '@/lib/db/prisma'
 
+export async function DELETE(
+    _req: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+) {
+    const { tenant } = await getTenantFromSession()
+    const { id } = await params
+
+    const invoice = await prisma.invoice.findFirst({
+        where: { id, tenantId: tenant.id },
+        select: { id: true, status: true, invoiceNumber: true },
+    })
+
+    if (!invoice) {
+        return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+    }
+
+    const deletableStatuses = ['DRAFT', 'FAILED']
+    if (!deletableStatuses.includes(invoice.status)) {
+        return NextResponse.json(
+            { error: `Only DRAFT or FAILED invoices can be deleted. This invoice is ${invoice.status}.` },
+            { status: 409 },
+        )
+    }
+
+    // Delete submission logs then invoice (items are cascade-deleted via schema)
+    await prisma.$transaction([
+        prisma.fBRSubmissionLog.deleteMany({ where: { invoiceId: id, tenantId: tenant.id } }),
+        prisma.invoiceItem.deleteMany({ where: { invoiceId: id } }),
+        prisma.invoice.delete({ where: { id } }),
+    ])
+
+    return NextResponse.json({ success: true, deleted: invoice.invoiceNumber })
+}
+
 export async function GET(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> },

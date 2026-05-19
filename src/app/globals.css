@@ -55,7 +55,7 @@
   /* ── Contextual / special-purpose colors ── */
   --color-gold:      #c8a45a;   /* amber/gold — onboarding steps, sandbox labels */
   --color-cream:     #f6e7bf;   /* warm cream — link hover text on dark bg       */
-  --color-code-bg:   gray;   /* dark terminal / JSON preview blocks           */
+  --color-code-bg:   #1A1A1A;   /* dark terminal / JSON preview blocks           */
   --color-print-bg:  #0d140f;   /* dark print-preview header                     */
 
   /* ── Nav frosted glass background ── */

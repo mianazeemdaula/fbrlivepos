@@ -21,7 +21,7 @@ const navItems = [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/pos', label: 'POS Terminal' },
     { href: '/invoices', label: 'Invoices' },
-    { href: '/products', label: 'Products' },
+    { href: '/invoices/report', label: 'Report' },
     { href: '/customers', label: 'Customers' },
     { href: '/hs-codes', label: 'HS Codes' },
     { href: '/sandbox-scenarios', label: 'Sandbox' },
@@ -48,8 +48,9 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                             <span className="font-semibold text-ui-sm text-ink">AAZIFY FBR</span>
                         </div>
                         <nav className="hidden lg:flex items-center gap-1">
-                            {navItems.map((item) => {
-                                const active = pathname === item.href || pathname.startsWith(item.href + '/')
+            {navItems.map((item) => {
+                                const active = pathname === item.href ||
+                                    (item.href !== '/invoices' && pathname.startsWith(item.href + '/'))
                                 return (
                                     <Link
                                         key={item.href}
@@ -94,7 +95,8 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                     <div className="lg:hidden border-t border-border bg-surface px-4 py-3">
                         <nav className="flex flex-col gap-1">
                             {navItems.map((item) => {
-                                const active = pathname === item.href || pathname.startsWith(item.href + '/')
+                                const active = pathname === item.href ||
+                                    (item.href !== '/invoices' && pathname.startsWith(item.href + '/'))
                                 return (
                                     <Link
                                         key={item.href}

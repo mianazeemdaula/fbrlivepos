@@ -154,21 +154,34 @@ export async function GET(req: NextRequest) {
     const limit = Number(searchParams.get('limit') ?? 25)
     const status = searchParams.get('status')
     const q = searchParams.get('q')?.trim()
+    const fromParam = searchParams.get('from')
+    const toParam = searchParams.get('to')
+    const paymentMethod = searchParams.get('paymentMethod')
 
     // Filter invoices by the tenant's current DI environment so sandbox and live invoices are separated
     const diCreds = await prisma.dICredentials.findUnique({ where: { tenantId: tenant.id }, select: { environment: true } })
     const diEnvironment = diCreds?.environment ?? 'SANDBOX'
 
+    const dateFilter = fromParam || toParam ? {
+        createdAt: {
+            ...(fromParam ? { gte: new Date(fromParam) } : {}),
+            ...(toParam ? { lte: new Date(new Date(toParam).setHours(23, 59, 59, 999)) } : {}),
+        },
+    } : {}
+
     const where = {
         tenantId: tenant.id,
         diEnvironment,
-        ...(status ? { status: status as 'PENDING' | 'QUEUED' | 'SUBMITTED' | 'FAILED' } : {}),
+        ...(status ? { status: status as 'PENDING' | 'QUEUED' | 'SUBMITTED' | 'FAILED' | 'CONFIRMED' | 'DRAFT' | 'VALIDATED' | 'CANCELLED' } : {}),
+        ...(paymentMethod ? { paymentMethod: paymentMethod as 'CASH' | 'CARD' | 'BANK_TRANSFER' } : {}),
         ...(q ? {
             OR: [
                 { invoiceNumber: { contains: q, mode: 'insensitive' as const } },
                 { buyerName: { contains: q, mode: 'insensitive' as const } },
+                { buyerNTN: { contains: q, mode: 'insensitive' as const } },
             ],
         } : {}),
+        ...dateFilter,
     }
 
     // Date boundaries for stats
@@ -176,7 +189,7 @@ export async function GET(req: NextRequest) {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
 
-    const [invoices, total, todayAgg, monthAgg] = await Promise.all([
+    const [invoices, total, todayAgg, monthAgg, invoiceLimit] = await Promise.all([
         prisma.invoice.findMany({
             where,
             include: { items: true, user: { select: { name: true } } },
@@ -195,6 +208,7 @@ export async function GET(req: NextRequest) {
             _count: true,
             _sum: { totalAmount: true },
         }),
+        checkPlanLimit(tenant.id, 'maxInvoicesMonth'),
     ])
 
     return NextResponse.json({
@@ -210,6 +224,11 @@ export async function GET(req: NextRequest) {
             monthSales: Number(monthAgg._sum.totalAmount ?? 0),
             total,
             totalPages: Math.ceil(total / limit),
+            invoiceLimit: {
+                current: invoiceLimit.current,
+                max: invoiceLimit.max,
+                allowed: invoiceLimit.allowed,
+            },
         },
     })
 }

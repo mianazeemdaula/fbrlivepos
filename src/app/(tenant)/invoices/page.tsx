@@ -28,6 +28,10 @@ export default function InvoicesPage() {
     const [actionLoading, setActionLoading] = useState<string | null>(null)
     const [actionError, setActionError] = useState<string | null>(null)
     const [environment, setEnvironment] = useState<'SANDBOX' | 'PRODUCTION' | null>(null)
+    const [invoiceLimit, setInvoiceLimit] = useState<{ current: number; max: number | null } | null>(null)
+
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+    const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
 
     // Modals
     const [viewDIId, setViewDIId] = useState<string | null>(null)
@@ -49,6 +53,7 @@ export default function InvoicesPage() {
                 const data = await res.json()
                 setInvoices(data.invoices ?? data.data ?? [])
                 setTotalPages(data.pages ?? data.meta?.totalPages ?? 1)
+                if (data.meta?.invoiceLimit) setInvoiceLimit(data.meta.invoiceLimit)
             }
         } catch {
             // Ignore
@@ -90,6 +95,25 @@ export default function InvoicesPage() {
         window.open(`/invoice-print/${invoiceId}`, '_blank', 'noopener,noreferrer')
     }
 
+    async function handleDelete(invoiceId: string) {
+        setDeleteLoading(invoiceId)
+        setActionError(null)
+        try {
+            const res = await fetch(`/api/invoices/${invoiceId}`, { method: 'DELETE' })
+            const data = await res.json()
+            if (!res.ok) {
+                setActionError(data.error || `Delete failed (${res.status})`)
+            } else {
+                await loadInvoices()
+            }
+        } catch {
+            setActionError('Network error. Please try again.')
+        } finally {
+            setDeleteLoading(null)
+            setDeleteConfirm(null)
+        }
+    }
+
     return (
         <div className="p-6 lg:p-8">
             {/* Header */}
@@ -109,12 +133,24 @@ export default function InvoicesPage() {
                         )}
                     </div>
                 </div>
-                <Link
-                    href="/pos"
-                    className="rounded-full bg-primary px-4 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors"
-                >
-                    + New Invoice
-                </Link>
+                <div className="flex items-center gap-3">
+                    {invoiceLimit && (
+                        <span className={`text-xs font-medium ${
+                            invoiceLimit.max !== null && invoiceLimit.current >= invoiceLimit.max
+                                ? 'text-error'
+                                : 'text-muted'
+                        }`}>
+                            {invoiceLimit.current}
+                            {invoiceLimit.max !== null ? ` / ${invoiceLimit.max}` : ''} this month
+                        </span>
+                    )}
+                    <Link
+                        href="/pos"
+                        className="rounded-full bg-primary px-4 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors"
+                    >
+                        + New Invoice
+                    </Link>
+                </div>
             </div>
 
             {/* Search */}
@@ -209,6 +245,35 @@ export default function InvoicesPage() {
                                                 >
                                                     {actionLoading === inv.id + 'validate' ? '...' : 'Retry'}
                                                 </button>
+                                            )}
+                                            {(inv.status === 'DRAFT' || inv.status === 'FAILED') && (
+                                                deleteConfirm === inv.id ? (
+                                                    <span className="flex items-center gap-1">
+                                                        <button
+                                                            onClick={() => handleDelete(inv.id)}
+                                                            disabled={deleteLoading === inv.id}
+                                                            className="rounded-full border border-error bg-error px-2 py-1 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50 transition-colors"
+                                                        >
+                                                            {deleteLoading === inv.id ? '...' : 'Confirm'}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setDeleteConfirm(null)}
+                                                            className="rounded-full border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface transition-colors"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </span>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => setDeleteConfirm(inv.id)}
+                                                        className="flex h-7 w-7 items-center justify-center rounded-input border border-border text-muted hover:border-error hover:bg-error-bg hover:text-error transition-colors"
+                                                        title="Delete invoice"
+                                                    >
+                                                        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                )
                                             )}
                                             <button
                                                 onClick={() => setViewDIId(inv.id)}
