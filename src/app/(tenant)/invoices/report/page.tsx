@@ -7,10 +7,10 @@ interface ReportInvoice {
     invoiceNumber: string
     buyerName: string | null
     buyerNTN: string | null
-    subtotal: number
-    taxAmount: number
-    discountAmount: number
-    totalAmount: number
+    subtotal: number | string
+    taxAmount: number | string
+    discountAmount: number | string
+    totalAmount: number | string
     paymentMethod: string
     status: string
     diInvoiceNumber: string | null
@@ -26,8 +26,8 @@ interface ReportMeta {
 
 const PAYMENT_METHODS = ['', 'CASH', 'CARD', 'BANK_TRANSFER']
 
-function fmt(n: number) {
-    return n.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+function fmt(n: number | string) {
+    return Number(n).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 export default function InvoiceReportPage() {
@@ -85,13 +85,14 @@ export default function InvoiceReportPage() {
 
     useEffect(() => { void loadReport() }, [loadReport])
 
-    // Aggregate totals
+    // Aggregate totals — coerce to Number because Prisma Decimal fields
+    // serialize as strings in JSON and would concatenate instead of adding.
     const totals = invoices.reduce(
         (acc, inv) => ({
-            subtotal: acc.subtotal + inv.subtotal,
-            tax: acc.tax + inv.taxAmount,
-            discount: acc.discount + inv.discountAmount,
-            total: acc.total + inv.totalAmount,
+            subtotal: acc.subtotal + Number(inv.subtotal),
+            tax: acc.tax + Number(inv.taxAmount),
+            discount: acc.discount + Number(inv.discountAmount),
+            total: acc.total + Number(inv.totalAmount),
         }),
         { subtotal: 0, tax: 0, discount: 0, total: 0 },
     )
@@ -112,10 +113,10 @@ export default function InvoiceReportPage() {
             inv.buyerName ?? '',
             inv.buyerNTN ?? '',
             inv.paymentMethod,
-            inv.subtotal.toFixed(2),
-            inv.discountAmount.toFixed(2),
-            inv.taxAmount.toFixed(2),
-            inv.totalAmount.toFixed(2),
+            Number(inv.subtotal).toFixed(2),
+            Number(inv.discountAmount).toFixed(2),
+            Number(inv.taxAmount).toFixed(2),
+            Number(inv.totalAmount).toFixed(2),
         ])
         // Summary row
         rows.push([])
@@ -305,7 +306,7 @@ export default function InvoiceReportPage() {
                                         <td className="px-4 py-2.5 text-xs text-muted">{inv.paymentMethod}</td>
                                         <td className="px-4 py-2.5 text-right text-ink">PKR {fmt(inv.subtotal)}</td>
                                         <td className="px-4 py-2.5 text-right text-muted">
-                                            {inv.discountAmount > 0 ? `PKR ${fmt(inv.discountAmount)}` : '—'}
+                                            {Number(inv.discountAmount) > 0 ? `PKR ${fmt(inv.discountAmount)}` : '—'}
                                         </td>
                                         <td className="px-4 py-2.5 text-right text-ink">PKR {fmt(inv.taxAmount)}</td>
                                         <td className="px-4 py-2.5 text-right font-semibold text-ink">PKR {fmt(inv.totalAmount)}</td>
