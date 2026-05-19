@@ -7,6 +7,8 @@ interface CartItem {
     price: number
     taxRate: number
     diRate: string | null // FBR rate string e.g. "18%", "Exempt"
+    diSaleType: string | null
+    diFixedNotifiedValueOrRetailPrice: number | null // 3rd Schedule: tax base price per unit
     unit: string
     quantity: number
     discount: number // per-item discount amount
@@ -138,6 +140,13 @@ export const useCartStore = create<CartStore>((set, get) => ({
     discountTotal: () => get().items.reduce((sum, i) => sum + i.discount, 0),
     taxAmount: () =>
         get().items.reduce((sum, i) => {
+            // 3rd Schedule Goods: tax is on fixedNotifiedValueOrRetailPrice × qty, not on the transaction value.
+            // Auto-falls back to the product's sale price if no explicit retail/notified price is stored.
+            const isThirdSchedule = i.diSaleType?.trim().toLowerCase() === '3rd schedule goods'
+            if (isThirdSchedule) {
+                const retailBase = i.diFixedNotifiedValueOrRetailPrice ?? i.price
+                return sum + (retailBase * i.quantity * i.taxRate) / 100
+            }
             const lineSubtotal = i.price * i.quantity - i.discount
             return sum + (lineSubtotal * i.taxRate) / 100
         }, 0),

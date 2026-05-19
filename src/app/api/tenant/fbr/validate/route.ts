@@ -4,6 +4,8 @@ import { getDIClientForTenant, DIAuthError, DIConfigError, DIServerError } from 
 import { buildDIPayload } from '@/lib/di/payload-builder'
 import { mapDIErrorCodes } from '@/lib/di/error-codes'
 import { evaluateDISubmissionEligibility } from '@/lib/di/eligibility'
+import { inferSandboxScenario } from '@/lib/di/scenario-catalog'
+import { getScenarioId, getSaleTypeIdFromLabel } from '@/lib/di/sale-type-config'
 import { prisma } from '@/lib/db/prisma'
 import { stringifyError } from '@/lib/fbr/submission-log'
 
@@ -45,21 +47,29 @@ export async function POST(req: NextRequest) {
 
         const isSandbox = creds.environment === 'SANDBOX'
         if (isSandbox) {
-            let dbScenarioId: string | undefined = undefined;
-            if (invoice.items.length > 0 && invoice.items[0].diSaleType) {
-                const dbScenario = await prisma.dIScenario.findFirst({
-                    where: { saleType: invoice.items[0].diSaleType },
-                    select: { id: true }
-                });
-                if (dbScenario) {
-                    dbScenarioId = dbScenario.id;
+            if (scenarioId) {
+                resolvedScenarioId = scenarioId
+            } else if (invoice.diScenarioId) {
+                resolvedScenarioId = invoice.diScenarioId
+            } else {
+                // Derive from the first item's diSaleType + buyer registration type (same logic as submit route)
+                const firstItemSaleType = invoice.items[0]?.diSaleType ?? null
+                const saleTypeId = firstItemSaleType ? getSaleTypeIdFromLabel(firstItemSaleType) : null
+                if (saleTypeId) {
+                    resolvedScenarioId = getScenarioId(
+                        saleTypeId,
+                        invoice.buyerRegistrationType ?? 'Unregistered',
+                    )
+                } else {
+                    // Legacy fallback — infer from scenario catalog
+                    resolvedScenarioId = inferSandboxScenario({
+                        buyerRegistrationType: invoice.buyerRegistrationType,
+                        items: invoice.items,
+                        businessActivity: creds.businessActivity,
+                        sector: creds.sector,
+                    }).scenarioId ?? (invoice.buyerRegistrationType === 'Registered' ? 'SN001' : 'SN002')
                 }
             }
-
-            const fallbackScenarioId = invoice.buyerRegistrationType === 'Registered'
-                ? 'SN001'
-                : 'SN002'
-            resolvedScenarioId = scenarioId ?? invoice.diScenarioId ?? dbScenarioId ?? fallbackScenarioId
         } else {
             resolvedScenarioId = undefined
         }
@@ -89,7 +99,7 @@ export async function POST(req: NextRequest) {
         })
 
         const validation = await diClient.validateInvoice(payload)
-        
+
         if (validation.validationResponse.statusCode === '01') {
             const errors = mapDIErrorCodes(validation.validationResponse)
             return NextResponse.json(

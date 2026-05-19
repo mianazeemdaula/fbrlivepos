@@ -5,6 +5,7 @@ import { buildDIPayload } from '@/lib/di/payload-builder'
 import { mapDIErrorCodes } from '@/lib/di/error-codes'
 import { evaluateDISubmissionEligibility } from '@/lib/di/eligibility'
 import { inferSandboxScenario } from '@/lib/di/scenario-catalog'
+import { getScenarioId, getSaleTypeIdFromLabel } from '@/lib/di/sale-type-config'
 import { prisma } from '@/lib/db/prisma'
 import { Prisma } from '@/generated/prisma/client'
 import {
@@ -69,28 +70,30 @@ export async function POST(
         }
 
         const isSandbox = creds.environment === 'SANDBOX'
-        // Resolve sandbox scenarioId
+        // Resolve sandbox scenarioId using the same logic as the submit route
         let scenarioId: string | undefined
         if (isSandbox) {
-            let dbScenarioId: string | undefined = undefined;
-            if (invoice.items.length > 0 && invoice.items[0].diSaleType) {
-                const dbScenario = await prisma.dIScenario.findFirst({
-                    where: { saleType: {
-                        equals: invoice.items[0].diSaleType.toLowerCase(),
-                        mode: 'insensitive'
-                    }},
-                    select: { id: true }
-                });
-                if (dbScenario) {
-                    dbScenarioId = dbScenario.id;
-                    invoice.diScenarioId = dbScenarioId;
+            if (invoice.diScenarioId) {
+                scenarioId = invoice.diScenarioId
+            } else {
+                // Derive from the first item's diSaleType + buyer registration type
+                const firstItemSaleType = invoice.items[0]?.diSaleType ?? null
+                const saleTypeId = firstItemSaleType ? getSaleTypeIdFromLabel(firstItemSaleType) : null
+                if (saleTypeId) {
+                    scenarioId = getScenarioId(
+                        saleTypeId,
+                        invoice.buyerRegistrationType ?? 'Unregistered',
+                    )
+                } else {
+                    // Legacy fallback — infer from scenario catalog
+                    scenarioId = inferSandboxScenario({
+                        buyerRegistrationType: invoice.buyerRegistrationType,
+                        items: invoice.items,
+                        businessActivity: creds.businessActivity,
+                        sector: creds.sector,
+                    }).scenarioId ?? (invoice.buyerRegistrationType === 'Registered' ? 'SN001' : 'SN002')
                 }
             }
-
-            const fallbackScenarioId = invoice.buyerRegistrationType === 'Registered'
-                ? 'SN001'
-                : 'SN002'
-            scenarioId = scenarioId ?? invoice.diScenarioId ?? dbScenarioId ?? fallbackScenarioId
         }
 
         // Update stored scenarioId if it changed
