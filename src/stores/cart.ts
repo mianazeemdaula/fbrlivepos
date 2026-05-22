@@ -35,6 +35,11 @@ interface CartStore {
     updateDiscount: (productId: string, discount: number) => void
     updatePrice: (productId: string, price: number) => void
     updateTaxRate: (productId: string, taxRate: number) => void
+    updateDiRate: (productId: string, diRate: string) => void
+    updateDiSaleType: (productId: string, diSaleType: string) => void
+    updateSroScheduleNo: (productId: string, sroScheduleNo: string) => void
+    updateSroItemSerialNo: (productId: string, sroItemSerialNo: string) => void
+    updateRetailPrice: (productId: string, retailPrice: number | null) => void
     setBuyerInfo: (info: { buyerName?: string; buyerNTN?: string; buyerPhone?: string; buyerProvince?: string; buyerAddress?: string; buyerRegistrationType?: 'Registered' | 'Unregistered' | '' }) => void
     setCustomer: (customer: { id: string; name: string; ntnCnic?: string | null; phone?: string | null; province?: string | null; address?: string | null; registrationType?: string | null } | null) => void
     setPaymentMethod: (method: 'CASH' | 'CARD' | 'BANK_TRANSFER') => void
@@ -105,6 +110,43 @@ export const useCartStore = create<CartStore>((set, get) => ({
         set((state) => ({
             items: state.items.map((i) =>
                 i.productId === productId ? { ...i, taxRate: Math.max(0, taxRate) } : i,
+            ),
+        })),
+
+    updateDiRate: (productId, diRate) =>
+        set((state) => ({
+            items: state.items.map((i) =>
+                i.productId === productId ? { ...i, diRate } : i,
+            ),
+        })),
+
+    updateDiSaleType: (productId, diSaleType) =>
+        set((state) => ({
+            items: state.items.map((i) =>
+                i.productId === productId ? { ...i, diSaleType } : i,
+            ),
+        })),
+
+    updateSroScheduleNo: (productId, sroScheduleNo) =>
+        set((state) => ({
+            items: state.items.map((i) =>
+                i.productId === productId ? { ...i, sroScheduleNo } : i,
+            ),
+        })),
+
+    updateSroItemSerialNo: (productId, sroItemSerialNo) =>
+        set((state) => ({
+            items: state.items.map((i) =>
+                i.productId === productId ? { ...i, sroItemSerialNo } : i,
+            ),
+        })),
+
+    updateRetailPrice: (productId, retailPrice) =>
+        set((state) => ({
+            items: state.items.map((i) =>
+                i.productId === productId
+                    ? { ...i, diFixedNotifiedValueOrRetailPrice: retailPrice }
+                    : i,
             ),
         })),
 

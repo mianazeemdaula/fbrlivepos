@@ -43,7 +43,7 @@ export default function POSPage() {
     const {
         items, buyerName, buyerNTN, buyerProvince, buyerAddress,
         buyerRegistrationType, customerId, paymentMethod,
-        addItem, removeItem, updateQuantity, updateDiscount, updatePrice, updateTaxRate,
+        addItem, removeItem,
         setBuyerInfo, setCustomer, setPaymentMethod,
         subtotal, discountTotal, taxAmount, total, clearCart,
     } = useCartStore()
@@ -187,27 +187,36 @@ export default function POSPage() {
             invoiceType,
             invoiceRefNo: invoiceType === 'Debit Note' ? (invoiceRefNo || undefined) : undefined,
             items: items.map((i) => {
+                const resolvedRate = (i.diRate ?? '').trim() || `${i.taxRate}%`
+                const resolvedSaleType = (i.diSaleType ?? '').trim() || 'Goods at standard rate (default)'
+
                 if (!i.isLocalOnly) {
                     return {
                         productId: i.productId,
                         quantity: i.quantity,
                         discount: i.discount,
+                        taxRate: i.taxRate,
+                        diRate: resolvedRate,
+                        diSaleType: resolvedSaleType,
+                        diFixedNotifiedValueOrRetailPrice: i.diFixedNotifiedValueOrRetailPrice ?? null,
+                        sroScheduleNo: i.sroScheduleNo ?? undefined,
+                        sroItemSerialNo: i.sroItemSerialNo ?? undefined,
                     }
                 }
 
                 return {
                     quantity: i.quantity,
                     discount: i.discount,
+                    taxRate: i.taxRate,
+                    diRate: resolvedRate,
+                    diSaleType: resolvedSaleType,
+                    diFixedNotifiedValueOrRetailPrice: i.diFixedNotifiedValueOrRetailPrice ?? null,
+                    sroScheduleNo: i.sroScheduleNo ?? undefined,
+                    sroItemSerialNo: i.sroItemSerialNo ?? undefined,
                     name: i.name,
                     hsCode: i.hsCode,
                     unit: i.unit,
                     price: i.price,
-                    taxRate: i.taxRate,
-                    diRate: i.diRate ?? `${i.taxRate}%`,
-                    diSaleType: i.diSaleType ?? 'Goods at standard rate (default)',
-                    diFixedNotifiedValueOrRetailPrice: i.diFixedNotifiedValueOrRetailPrice ?? null,
-                    sroScheduleNo: i.sroScheduleNo ?? undefined,
-                    sroItemSerialNo: i.sroItemSerialNo ?? undefined,
                 }
             }),
         }
@@ -267,8 +276,8 @@ export default function POSPage() {
                         quantity: item.quantity,
                         discount: item.discount,
                         taxRate: item.taxRate,
-                        diRate: item.diRate ?? `${item.taxRate}%`,
-                        diSaleType: item.diSaleType ?? 'Goods at standard rate (default)',
+                        diRate: (item.diRate ?? '').trim() || `${item.taxRate}%`,
+                        diSaleType: (item.diSaleType ?? '').trim() || 'Goods at standard rate (default)',
                         unit: item.unit,
                         diFixedNotifiedValueOrRetailPrice: item.diFixedNotifiedValueOrRetailPrice ?? null,
                         sroScheduleNo: item.sroScheduleNo ?? null,
@@ -468,16 +477,16 @@ export default function POSPage() {
                             <p className="text-sm text-muted">Search and add products above</p>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full min-w-180 border-collapse text-sm">
+                        <div>
+                            <table className="w-full border-collapse text-sm table-fixed">
                                 <thead>
                                     <tr className="border-b border-border bg-surface sticky top-0 z-10">
-                                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted">Product</th>
-                                        <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-32">Unit Price</th>
-                                        <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-caps text-muted w-32">Qty</th>
-                                        <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-24">Tax %</th>
-                                        <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-28">Discount</th>
-                                        <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-caps text-muted w-36">Total</th>
+                                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[34%]">Product</th>
+                                        <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[14%]">Unit Price</th>
+                                        <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-caps text-muted w-[8%]">Qty</th>
+                                        <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[12%]">Rate</th>
+                                        <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[12%]">Discount</th>
+                                        <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-caps text-muted w-[16%]">Total</th>
                                         <th className="px-3 py-2.5 w-10" />
                                     </tr>
                                 </thead>
@@ -494,57 +503,35 @@ export default function POSPage() {
                                             <tr key={item.productId} className={`border-b border-border-muted transition-colors hover:bg-surface-subtle ${idx % 2 === 0 ? '' : 'bg-surface-subtle/40'}`}>
                                                 {/* Product */}
                                                 <td className="px-4 py-2.5">
-                                                    <p className="font-medium text-ink truncate max-w-45">{item.name}</p>
-                                                    <p className="text-xs text-muted font-mono">{item.hsCode}</p>
+                                                    <p className="font-medium text-ink truncate">{item.name}</p>
+                                                    <p className="text-xs text-muted font-mono truncate">{item.hsCode}</p>
+                                                    <p className="text-[11px] text-muted truncate">{item.diSaleType || 'Goods at standard rate (default)'}</p>
+                                                    {(item.sroScheduleNo || item.sroItemSerialNo) && (
+                                                        <p className="text-[11px] text-muted truncate">
+                                                            SRO: {item.sroScheduleNo || 'N/A'} · SR#: {item.sroItemSerialNo || 'N/A'}
+                                                        </p>
+                                                    )}
                                                 </td>
 
                                                 {/* Unit Price */}
                                                 <td className="px-3 py-2.5">
-                                                    <div className="flex items-center rounded-lg border border-border bg-card px-2 py-1.5 focus-within:border-primary">
-                                                        <span className="shrink-0 text-xs text-muted mr-1">PKR</span>
-                                                        <input
-                                                            type="number" min={0} step="0.01" value={item.price}
-                                                            onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= 0) updatePrice(item.productId, v) }}
-                                                            className="min-w-0 w-full bg-transparent text-sm font-medium text-ink focus:outline-none"
-                                                        />
-                                                    </div>
+                                                    <span className="text-sm font-medium text-ink">PKR {item.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                                                 </td>
 
                                                 {/* Qty */}
                                                 <td className="px-3 py-2.5">
-                                                    <div className="flex items-center gap-1">
-                                                        <button
-                                                            onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                                                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-surface text-sm text-ink-secondary hover:bg-canvas"
-                                                        >−</button>
-                                                        <input
-                                                            type="number" min={1} value={item.quantity}
-                                                            onChange={e => { const v = parseInt(e.target.value, 10); if (!isNaN(v) && v > 0) updateQuantity(item.productId, v) }}
-                                                            className="h-7 w-10 rounded-md border border-border bg-card text-center text-sm font-medium text-ink focus:outline-none focus:border-primary"
-                                                        />
-                                                        <button
-                                                            onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                                                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-surface text-sm text-ink-secondary hover:bg-canvas"
-                                                        >+</button>
-                                                    </div>
+                                                    <span className="text-sm font-medium text-ink">{item.quantity}</span>
                                                 </td>
 
-                                                {/* Tax % */}
+                                                {/* Rate */}
                                                 <td className="px-3 py-2.5">
-                                                    <span className="text-sm font-medium text-ink">{item.diRate ?? `${item.taxRate}%`}</span>
+                                                    <p className="text-sm font-medium text-ink">{(item.diRate ?? '').trim() || `${item.taxRate}%`}</p>
+                                                    <p className="text-xs text-muted">Tax {item.taxRate}%</p>
                                                 </td>
 
                                                 {/* Discount */}
                                                 <td className="px-3 py-2.5">
-                                                    <div className="flex items-center rounded-lg border border-border bg-card px-2 py-1.5 focus-within:border-primary">
-                                                        <span className="shrink-0 text-xs text-muted mr-1">PKR</span>
-                                                        <input
-                                                            type="number" min={0} step="0.01" value={item.discount || ''}
-                                                            onChange={e => updateDiscount(item.productId, Number(e.target.value) || 0)}
-                                                            placeholder="0"
-                                                            className="min-w-0 w-full bg-transparent text-sm text-ink placeholder:text-muted focus:outline-none"
-                                                        />
-                                                    </div>
+                                                    <span className="text-sm text-ink">PKR {item.discount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                                                 </td>
 
                                                 {/* Total */}
@@ -570,7 +557,7 @@ export default function POSPage() {
                 </div>
 
                 {/* ══ FIXED BOTTOM PANEL ══ */}
-                <div className="shrink-0 border-t border-border bg-surface shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+                <div className="shrink-0 sticky bottom-0 z-20 border-t border-border bg-surface shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
 
                     {/* Invoice type + payment */}
                     <div className="flex items-center gap-3 border-b border-border-muted px-4 py-2.5">

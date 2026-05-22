@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db/prisma'
 import { getNextInvoiceNumber } from '@/lib/invoices/numbering'
 import { checkPlanLimit } from '@/lib/features/flags'
 import { isValidMobile, isValidNtnCnic, normalizeMobile, normalizeNtnCnic } from '@/lib/validation/pakistan'
+import { resolveDIRateDescriptor } from '@/lib/di/rate'
 
 const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
 
@@ -191,6 +192,12 @@ export async function POST(req: NextRequest) {
             const taxRate = Number(item.taxRate ?? product.taxRate)
             const directSaleType = normalizeOptionalText(item.diSaleType)
             const productSaleType = normalizeOptionalText(product.diSaleType)
+            const resolvedSaleType = directSaleType ?? productSaleType
+            const resolvedRate = resolveDIRateDescriptor({
+                diRate: normalizeOptionalText(item.diRate) ?? product.diRate,
+                taxRate,
+                diSaleType: resolvedSaleType,
+            })
 
             // 3rd Schedule Goods: tax is on fixedNotifiedValueOrRetailPrice × qty, NOT on the taxable value.
             // Auto-falls back to unitPrice if no explicit retail/notified price is stored.
@@ -219,9 +226,9 @@ export async function POST(req: NextRequest) {
                 unitPrice,
                 taxRate,
                 taxAmount: lineTax,
-                diRate: normalizeOptionalText(item.diRate) ?? product.diRate,
+                diRate: resolvedRate || null,
                 diUOM: unit,
-                diSaleType: directSaleType ?? product.diSaleType,
+                diSaleType: resolvedSaleType,
                 diFixedNotifiedValueOrRetailPrice: item.diFixedNotifiedValueOrRetailPrice != null
                     ? Number(item.diFixedNotifiedValueOrRetailPrice)
                     : product.diFixedNotifiedValueOrRetailPrice != null

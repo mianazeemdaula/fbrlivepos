@@ -1,6 +1,7 @@
 import type { Invoice, InvoiceItem, DICredentials } from '@/generated/prisma/client'
 import type { DIInvoicePayload } from './types'
 import { getSellerIdentity } from './seller'
+import { resolveDIRateDescriptor } from './rate'
 
 const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
 
@@ -74,10 +75,15 @@ export function buildDIPayload(
             const lineDiscount = Number(item.discount ?? 0)
             const lineValue = Number(item.unitPrice) * Number(item.quantity) - lineDiscount
             const salesTaxApplicable = Number(Number(item.taxAmount).toFixed(2))
+            const resolvedRate = resolveDIRateDescriptor({
+                diRate: item.diRate,
+                taxRate: Number(item.taxRate),
+                diSaleType: item.diSaleType,
+            })
             return {
                 hsCode: item.hsCode, // e.g. "8471.3000"
                 productDescription: item.name,
-                rate: item.diRate ?? `${Number(item.taxRate)}%`, // Must be exact string from Reference API 5.8
+                rate: resolvedRate, // Must be exact string from Reference API 5.8
                 uoM: item.diUOM ?? item.unit ?? DEFAULT_FALLBACK_UOM, // Must be exact string from Reference API 5.6
                 quantity: Number(Number(item.quantity).toFixed(4)),
                 totalValues: resolveTotalValues(item, lineValue, salesTaxApplicable),

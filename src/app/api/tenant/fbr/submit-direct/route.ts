@@ -8,6 +8,7 @@ import { getSellerIdentity } from '@/lib/di/seller'
 import { getScenarioId, getSaleTypeIdFromLabel } from '@/lib/di/sale-type-config'
 import { evaluateDIItemReadiness } from '@/lib/di/eligibility'
 import { mapDIErrorCodes } from '@/lib/di/error-codes'
+import { resolveDIRateDescriptor } from '@/lib/di/rate'
 import { stringifyError } from '@/lib/fbr/submission-log'
 
 const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
@@ -80,11 +81,16 @@ function buildDirectPayload(input: z.infer<typeof DirectSubmissionSchema>, creds
             const lineValue = Number((item.price * item.quantity - lineDiscount).toFixed(2))
             const salesTaxApplicable = Number(((lineValue * item.taxRate) / 100).toFixed(2))
             const isThirdSchedule = normalizeText(item.diSaleType).toLowerCase() === '3rd schedule goods'
+            const resolvedRate = resolveDIRateDescriptor({
+                diRate: item.diRate,
+                taxRate: item.taxRate,
+                diSaleType: item.diSaleType,
+            })
 
             return {
                 hsCode: item.hsCode,
                 productDescription: item.name,
-                rate: item.diRate,
+                rate: resolvedRate,
                 uoM: normalizeText(item.unit) || DEFAULT_FALLBACK_UOM,
                 quantity: Number(item.quantity.toFixed(4)),
                 totalValues: isThirdSchedule ? Number((lineValue + salesTaxApplicable).toFixed(2)) : 0,
@@ -130,7 +136,11 @@ export async function POST(req: NextRequest) {
                 name: item.name,
                 hsCode: item.hsCode,
                 diSaleType: item.diSaleType,
-                diRate: item.diRate,
+                diRate: resolveDIRateDescriptor({
+                    diRate: item.diRate,
+                    taxRate: item.taxRate,
+                    diSaleType: item.diSaleType,
+                }),
                 diUOM: item.unit,
                 unit: item.unit,
                 diFixedNotifiedValueOrRetailPrice: item.diFixedNotifiedValueOrRetailPrice ?? null,
