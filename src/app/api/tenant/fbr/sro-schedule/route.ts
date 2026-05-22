@@ -58,7 +58,22 @@ export async function GET(req: NextRequest) {
     // Helper: config-based last resort fallback
     const configFallback = () => {
         const cfg = SALE_TYPE_CONFIG[saleTypeId]
-        const sros = cfg?.fallbackSROs.map(s => ({ id: s.id, desc: s.desc })) ?? []
+        if (!cfg) return NextResponse.json({ sros: [], source: 'config_fallback' })
+        const rateIdNum = Number(rateId)
+        let sros: { id: number; desc: string }[] = []
+        if (rateIdNum < 0) {
+            // Negative rate_id = fallback rate at index |rate_id| - 1
+            const fallbackRate = cfg.fallbackRates[Math.abs(rateIdNum) - 1]
+            sros = fallbackRate?.sros.map(s => ({ id: s.id, desc: s.desc })) ?? []
+        } else {
+            // Real rate ID — return all unique SROs across all rates as fallback
+            const seen = new Set<number>()
+            for (const rate of cfg.fallbackRates) {
+                for (const sro of rate.sros) {
+                    if (!seen.has(sro.id)) { sros.push({ id: sro.id, desc: sro.desc }); seen.add(sro.id) }
+                }
+            }
+        }
         return NextResponse.json({ sros, source: 'config_fallback' })
     }
 

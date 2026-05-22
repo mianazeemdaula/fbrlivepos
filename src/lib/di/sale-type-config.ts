@@ -3,6 +3,17 @@
  * Based on PRAL DI API v1.12 — fbr-cascade-spec.md §3
  */
 
+export interface FallbackSRO {
+    id: number       // negative = local only, positive = real PRAL ID
+    desc: string     // srO_DESC — goes into sroScheduleNo payload field
+    srItems: { id: number; desc: string }[]
+}
+
+export interface FallbackRate {
+    desc: string         // rate description e.g. "18%"
+    sros: FallbackSRO[]  // SROs available when this rate is selected
+}
+
 export interface SaleTypeConfig {
     id: string           // SN001 … SN028
     scenarioId: string   // sandbox scenarioId (same as id in most cases)
@@ -16,12 +27,7 @@ export interface SaleTypeConfig {
     showEXMT: boolean    // show Exempt checkbox
     taxBase: 'value' | 'retailPrice' | 'zero'
     uomLocked: string | null // forced UOM override; null = derive from HS_UOM API
-    fallbackRates: string[]  // shown when FBR SaleTypeToRate API is unavailable
-    fallbackSROs: {
-        id: number       // negative = fallback (not a real PRAL ID)
-        desc: string     // srO_DESC — goes into sroScheduleNo payload field
-        srItems: { id: number; desc: string }[] // srO_ITEM_DESC entries for this SRO
-    }[]
+    fallbackRates: FallbackRate[] // cascade: rate selected → SROs → SR# items
 }
 
 // Common SR# items reused across multiple SROs
@@ -48,230 +54,226 @@ const REDUCED_SR_ITEMS = [
     { id: -213, desc: '50' },
 ]
 
+/** Helper: attach the same SRO list to every rate in a list */
+function ratesWithSROs(descs: string[], sros: FallbackSRO[]): FallbackRate[] {
+    return descs.map(desc => ({ desc, sros }))
+}
+
 export const SALE_TYPE_CONFIG: Record<string, SaleTypeConfig> = {
     SN001: {
         id: 'SN001', scenarioId: 'SN001', label: 'Goods at standard rate (default)',
         transTypeId: 75, requiresSRO: false, requiresSR: false,
         showFT: true, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'value', uomLocked: null, fallbackRates: ['18%'], fallbackSROs: [],
+        taxBase: 'value', uomLocked: null, fallbackRates: [{ desc: '18%', sros: [] }],
     },
     SN002: {
         id: 'SN002', scenarioId: 'SN002', label: 'Goods at standard rate (default)',
         transTypeId: 75, requiresSRO: false, requiresSR: false,
         showFT: true, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'value', uomLocked: null, fallbackRates: ['18%'], fallbackSROs: [],
+        taxBase: 'value', uomLocked: null, fallbackRates: [{ desc: '18%', sros: [] }],
     },
     SN003: {
         id: 'SN003', scenarioId: 'SN003', label: 'Steel melting and re-rolling',
         transTypeId: 123, requiresSRO: false, requiresSR: false,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'value', uomLocked: 'MT', fallbackRates: ['18%'], fallbackSROs: [],
+        taxBase: 'value', uomLocked: 'MT', fallbackRates: [{ desc: '18%', sros: [] }],
     },
     SN004: {
         id: 'SN004', scenarioId: 'SN004', label: 'Ship breaking',
         transTypeId: 125, requiresSRO: false, requiresSR: false,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'value', uomLocked: 'MT', fallbackRates: ['18%'], fallbackSROs: [],
+        taxBase: 'value', uomLocked: 'MT', fallbackRates: [{ desc: '18%', sros: [] }],
     },
     SN005: {
         id: 'SN005', scenarioId: 'SN005', label: 'Goods at Reduced Rate',
         transTypeId: 24, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
         taxBase: 'value', uomLocked: null,
-        fallbackRates: ['1%', '2%', '5%', '7%', '10%', '12%', '17%'],
-        fallbackSROs: [{ id: -1, desc: 'EIGHTH SCHEDULE Table 1', srItems: [] }],
+        fallbackRates: ratesWithSROs(['1%', '2%', '5%', '7%', '10%', '12%', '17%'], [{ id: -1, desc: 'EIGHTH SCHEDULE Table 1', srItems: [] }]),
     },
     SN006: {
         id: 'SN006', scenarioId: 'SN006', label: 'Exempt goods',
         transTypeId: 81, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: false, showEXMT: true,
-        taxBase: 'zero', uomLocked: null, fallbackRates: ['Exempt'],
-        fallbackSROs: [
+        taxBase: 'zero', uomLocked: null,
+        fallbackRates: [{ desc: 'Exempt', sros: [
             { id: -1, desc: '6th Schd Table I', srItems: TableI },
             { id: -2, desc: '6th Schd Table II', srItems: TableII },
             { id: -3, desc: '6th Schd Table III', srItems: TableIII },
             { id: -4, desc: 'Eighth Schedule Table 1', srItems: EIGHTH_SCHEDULE },
             { id: -5, desc: 'NINTH SCHEDULE', srItems: NINTH_SCHEDULE },
-        ],
+        ]}],
     },
     SN007: {
         id: 'SN007', scenarioId: 'SN007', label: 'Goods at zero-rate',
         transTypeId: 21, requiresSRO: true, requiresSR: false,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'zero', uomLocked: null, fallbackRates: ['0%'],
-        fallbackSROs: [
-            { id: 106, desc: "327(I)/2008", srItems: _327_1_2008 },
-            { id: 386, desc: "FIFTH SCHEDULE", srItems: FIFTH_SCHEDULE },
-            { id: 396, desc: "SECTION 49", srItems: SECTION49 },
-            { id: 65, desc: "Section 4(b)", srItems: SECTION4B },
-        ],
+        taxBase: 'zero', uomLocked: null,
+        fallbackRates: [{ desc: '0%', sros: [
+            { id: -1, desc: "327(I)/2008", srItems: _327_1_2008 },
+            { id: -1, desc: "FIFTH SCHEDULE", srItems: FIFTH_SCHEDULE },
+            { id: -1, desc: "SECTION 49", srItems: SECTION49 },
+            { id: -1, desc: "Section 4(b)", srItems: SECTION4B },
+        ]}],
     },
     SN008: {
         id: 'SN008', scenarioId: 'SN008', label: '3rd Schedule Goods',
-        transTypeId: 22, requiresSRO: false, requiresSR: false,
+        transTypeId: 22, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'retailPrice', uomLocked: null, fallbackRates: ['18%'], fallbackSROs: [],
+        taxBase: 'retailPrice', uomLocked: null, fallbackRates: [
+            { desc: '15%', sros: [
+                { id: -1, desc: '3rd Schedule goods', srItems: [{id: -1, desc: '51'}] },
+            ] },
+            { desc: '18%', sros: [] },
+            { desc: '25%', sros:
+                [{
+                    "id": -1, "desc": "297(I)/2023-Table-I",
+                    srItems: [{"id":-1,"desc":"1"},{"id":-1,"desc":"10"},{"id":-1,"desc":"11"},{"id":-1,"desc":"2"},{"id":-1,"desc":"20"},{"id":-1,"desc":"21"},{"id":-1,"desc":"22"},{"id":-1,"desc":"24"},{"id":-1,"desc":"29"},{"id":-1,"desc":"8"}]
+                }]
+             },
+        ],
     },
     SN009: {
         id: 'SN009', scenarioId: 'SN009', label: 'Cotton ginners',
         transTypeId: 87, requiresSRO: false, requiresSR: false,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'value', uomLocked: 'KG', fallbackRates: ['18%'], fallbackSROs: [],
+        taxBase: 'value', uomLocked: 'KG', fallbackRates: [{ desc: '18%', sros: [] }],
     },
     SN010: {
         id: 'SN010', scenarioId: 'SN010', label: 'Telecommunication services',
         transTypeId: 23, requiresSRO: true, requiresSR: false,
         showFT: false, showFED: true, showEXT: true, showEXMT: false,
-        taxBase: 'value', uomLocked: null, fallbackRates: ['16%', '17%', '18%'],
-        fallbackSROs: [{ id: -1, desc: 'SRO 1125(I)/2011 - Telecom Services', srItems: [] }],
+        taxBase: 'value', uomLocked: null,
+        fallbackRates: ratesWithSROs(['16%', '17%', '18%'], [{ id: -1, desc: 'SRO 1125(I)/2011 - Telecom Services', srItems: [] }]),
     },
     SN011: {
         id: 'SN011', scenarioId: 'SN011', label: 'Toll Manufacturing',
         transTypeId: 24, requiresSRO: false, requiresSR: false,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'value', uomLocked: 'MT', fallbackRates: ['18%'], fallbackSROs: [],
+        taxBase: 'value', uomLocked: 'MT', fallbackRates: [{ desc: '18%', sros: [] }],
     },
     SN012: {
         id: 'SN012', scenarioId: 'SN012', label: 'Petroleum Products',
         transTypeId: 25, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
         taxBase: 'value', uomLocked: 'KG',
-        fallbackRates: ["0%", "0.20%", "0.46%", "1.43%", "1.63%", "2.5%", "2.70%", "2.74%", "3.67%", "4.77%", "5.44%", "6.70%", "6.75%", "6.84%", "7.20%", "7.37%", "7.56%", "8.19%", "8.30%", "9.08%", "9.15%", "10.07%", "10.32%", "10.54%", "10.77%", "11.64%", "12.5%", "15.44%", "16.40%", "18%"],
-        fallbackSROs: [
-            { "id": 405, "desc": "1579(1)/2021", srItems: _1579_1_2021 },
-            { "id": 429, "desc": "321(I)/2022", srItems: _321_I_2022 }
-        ],
+        fallbackRates: ratesWithSROs(["0%", "0.20%", "0.46%", "1.43%", "1.63%", "2.5%", "2.70%", "2.74%", "3.67%", "4.77%", "5.44%", "6.70%", "6.75%", "6.84%", "7.20%", "7.37%", "7.56%", "8.19%", "8.30%", "9.08%", "9.15%", "10.07%", "10.32%", "10.54%", "10.77%", "11.64%", "12.5%", "15.44%", "16.40%", "18%"], [
+            { id: 405, desc: "1579(1)/2021", srItems: _1579_1_2021 },
+            { id: 429, desc: "321(I)/2022", srItems: _321_I_2022 },
+        ]),
     },
     SN013: {
         id: 'SN013', scenarioId: 'SN013', label: 'Electricity Supply to Retailers',
         transTypeId: 26, requiresSRO: true, requiresSR: false,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'value', uomLocked: 'KWH', fallbackRates: ['5%', '7.5%', '13%', '17%'],
-        fallbackSROs: [],
+        taxBase: 'value', uomLocked: 'KWH',
+        fallbackRates: [{ desc: '5%', sros: [] }, { desc: '7.5%', sros: [] }, { desc: '13%', sros: [] }, { desc: '17%', sros: [] }],
     },
     SN014: {
         id: 'SN014', scenarioId: 'SN014', label: 'Gas to CNG stations',
         transTypeId: 27, requiresSRO: true, requiresSR: false,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'value', uomLocked: 'MMBTU', fallbackRates: ['18%'],
-        fallbackSROs: [{ id: -1, desc: 'SRO 1125(I)/2011 - Gas/CNG', srItems: [] }],
+        taxBase: 'value', uomLocked: 'MMBTU',
+        fallbackRates: [{ desc: '18%', sros: [{ id: -1, desc: 'SRO 1125(I)/2011 - Gas/CNG', srItems: [] }] }],
     },
     SN015: {
         id: 'SN015', scenarioId: 'SN015', label: 'Mobile Phones',
         transTypeId: 28, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: true, showEXMT: false,
-        taxBase: 'value', uomLocked: null, fallbackRates: ['17%', '18%'],
-        fallbackSROs: [
-            { "id": 445, "desc": "NINTH SCHEDULE", srItems: [{ "id": 18248, "desc": "1(A)" }, { "id": 18250, "desc": "1(B)" }, { "id": 18161, "desc": "1(E)" }, { "id": 18160, "desc": "1(F)" }] }
-        ],
+        taxBase: 'value', uomLocked: null,
+        fallbackRates: ratesWithSROs(['17%', '18%'], [{ id: 445, desc: "NINTH SCHEDULE", srItems: [{ "id": 18248, "desc": "1(A)" }, { "id": 18250, "desc": "1(B)" }, { "id": 18161, "desc": "1(E)" }, { "id": 18160, "desc": "1(F)" }] }]),
     },
     SN016: {
         id: 'SN016', scenarioId: 'SN016', label: 'Processing/ Conversion of Goods',
         transTypeId: 29, requiresSRO: false, requiresSR: false,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
         taxBase: 'value', uomLocked: null,
-        fallbackRates: ['0%', '3%', '5%', '18%'], fallbackSROs: [],
+        fallbackRates: [{ desc: '0%', sros: [] }, { desc: '3%', sros: [] }, { desc: '5%', sros: [] }, { desc: '18%', sros: [] }],
     },
     SN017: {
         id: 'SN017', scenarioId: 'SN017', label: 'Goods (FED in ST Mode)',
         transTypeId: 30, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: true, showEXT: false, showEXMT: false,
         taxBase: 'value', uomLocked: null,
-        fallbackRates: ['0.5%', '8%', '17%'],
-        fallbackSROs: [],
+        fallbackRates: [{ desc: '0.5%', sros: [] }, { desc: '8%', sros: [] }, { desc: '17%', sros: [] }],
     },
     SN018: {
         id: 'SN018', scenarioId: 'SN018', label: 'Services (FED in ST Mode)',
         transTypeId: 31, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: true, showEXT: false, showEXMT: false,
         taxBase: 'value', uomLocked: null,
-        fallbackRates: ['8%', '16%', '17%', '19.5%', '200/bill'],
-        fallbackSROs: [],
+        fallbackRates: [{ desc: '8%', sros: [] }, { desc: '16%', sros: [] }, { desc: '17%', sros: [] }, { desc: '19.5%', sros: [] }, { desc: '200/bill', sros: [] }],
     },
     SN019: {
         id: 'SN019', scenarioId: 'SN019', label: 'Services',
         transTypeId: 32, requiresSRO: false, requiresSR: false,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
         taxBase: 'value', uomLocked: null,
-        fallbackRates: ['5%', '8%', '13%', '16%', '18%'], fallbackSROs: [],
+        fallbackRates: [{ desc: '5%', sros: [] }, { desc: '8%', sros: [] }, { desc: '13%', sros: [] }, { desc: '16%', sros: [] }, { desc: '18%', sros: [] }],
     },
     SN020: {
         id: 'SN020', scenarioId: 'SN020', label: 'Electric Vehicle',
         transTypeId: 33, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'value', uomLocked: null, fallbackRates: ['1%', '5%', '12.5%'],
-        fallbackSROs: [
-            { id: -1, desc: 'SRO 642(I)/2021 - Electric Vehicles', srItems: REDUCED_SR_ITEMS },
-        ],
+        taxBase: 'value', uomLocked: null, fallbackRates: ratesWithSROs(['1%', '5%', '12.5%'], [{ id: -1, desc: 'SRO 642(I)/2021 - Electric Vehicles', srItems: REDUCED_SR_ITEMS }]),
     },
     SN021: {
         id: 'SN021', scenarioId: 'SN021', label: 'Cement /Concrete Block',
         transTypeId: 34, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'value', uomLocked: 'MT', fallbackRates: ['rupees 3 per Kg', '18%'],
-        fallbackSROs: [
-            { id: -1, desc: 'SRO 940(I)/2007 - Cement/Concrete', srItems: REDUCED_SR_ITEMS },
-        ],
+        taxBase: 'value', uomLocked: 'MT',
+        fallbackRates: ratesWithSROs(['rupees 3 per Kg', '18%'], [{ id: -1, desc: 'SRO 940(I)/2007 - Cement/Concrete', srItems: REDUCED_SR_ITEMS }]),
     },
     SN022: {
         id: 'SN022', scenarioId: 'SN022', label: 'Potassium Chlorate',
         transTypeId: 35, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: true, showEXMT: false,
         taxBase: 'value', uomLocked: 'KG',
-        fallbackRates: ['18% along with rupees 60 per kilogram'],
-        fallbackSROs: [
-            { id: -1, desc: 'SRO 940(I)/2007 - Potassium Chlorate', srItems: REDUCED_SR_ITEMS },
-        ],
+        fallbackRates: [{ desc: '18% along with rupees 60 per kilogram', sros: [{ id: -1, desc: 'SRO 940(I)/2007 - Potassium Chlorate', srItems: REDUCED_SR_ITEMS }] }],
     },
     SN023: {
         id: 'SN023', scenarioId: 'SN023', label: 'CNG Sales',
         transTypeId: 36, requiresSRO: true, requiresSR: false,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'value', uomLocked: 'KG', fallbackRates: ['18%'],
-        fallbackSROs: [{ id: -1, desc: 'SRO 1125(I)/2011 - CNG Sales', srItems: [] }],
+        taxBase: 'value', uomLocked: 'KG',
+        fallbackRates: [{ desc: '18%', sros: [{ id: -1, desc: 'SRO 1125(I)/2011 - CNG Sales', srItems: [] }] }],
     },
     SN024: {
         id: 'SN024', scenarioId: 'SN024', label: 'Goods as per SRO.297(I)/2023',
         transTypeId: 37, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'value', uomLocked: null, fallbackRates: ['5%', '10%', '18%'],
-        fallbackSROs: [
-            { id: -1, desc: 'SRO 297(I)/2023 - Specified Goods', srItems: REDUCED_SR_ITEMS },
-        ],
+        taxBase: 'value', uomLocked: null,
+        fallbackRates: ratesWithSROs(['5%', '10%', '18%'], [{ id: -1, desc: 'SRO 297(I)/2023 - Specified Goods', srItems: REDUCED_SR_ITEMS }]),
     },
     SN025: {
         id: 'SN025', scenarioId: 'SN025', label: 'Non-Adjustable Supplies',
         transTypeId: 38, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'retailPrice', uomLocked: null, fallbackRates: ['18%'],
-        fallbackSROs: [
-            { id: -1, desc: 'SRO 1125(I)/2011 - Non-Adjustable', srItems: REDUCED_SR_ITEMS },
-        ],
+        taxBase: 'retailPrice', uomLocked: null,
+        fallbackRates: [{ desc: '18%', sros: [{ id: -1, desc: 'SRO 1125(I)/2011 - Non-Adjustable', srItems: REDUCED_SR_ITEMS }] }],
     },
     SN026: {
         id: 'SN026', scenarioId: 'SN026', label: 'Goods at standard rate (default)',
         transTypeId: 18, requiresSRO: false, requiresSR: false,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'value', uomLocked: null, fallbackRates: ['18%'], fallbackSROs: [],
+        taxBase: 'value', uomLocked: null, fallbackRates: [{ desc: '18%', sros: [] }],
     },
     SN027: {
         id: 'SN027', scenarioId: 'SN027', label: '3rd Schedule Goods',
-        transTypeId: 22, requiresSRO: false, requiresSR: false,
+        transTypeId: 22, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'retailPrice', uomLocked: null, fallbackRates: ['18%'], fallbackSROs: [
-            { id: 454, desc: '3rd Schedule goods', srItems: [{ "id": 18251, "desc": "51" }] },
-        ],
+        taxBase: 'retailPrice', uomLocked: null,
+        fallbackRates: [{ desc: '18%', sros: [{ id: 454, desc: '3rd Schedule goods', srItems: [{ id: 18251, desc: "51" }] }] }],
     },
     SN028: {
         id: 'SN028', scenarioId: 'SN028', label: 'Goods at Reduced Rate',
         transTypeId: 19, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
         taxBase: 'value', uomLocked: null,
-        fallbackRates: ['1%', '2%', '5%', '7%', '10%', '12%', '17%'],
-        fallbackSROs: [
+        fallbackRates: ratesWithSROs(['1%', '2%', '5%', '7%', '10%', '12%', '17%'], [
             { id: -1, desc: 'SRO 1125(I)/2011 - Reduced Rate Retailers', srItems: REDUCED_SR_ITEMS },
             { id: -2, desc: 'SRO 678(I)/2004 - Export Oriented', srItems: REDUCED_SR_ITEMS },
-        ],
+        ]),
     },
 }
 

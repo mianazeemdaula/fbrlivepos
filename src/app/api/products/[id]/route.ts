@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { getTenantFromSession } from '@/lib/tenant/context'
 import { prisma } from '@/lib/db/prisma'
 
+const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
+
 const UpdateProductSchema = z.object({
     name: z.string().min(1),
     sku: z.string().optional(),
@@ -30,7 +32,7 @@ function cleanOptionalString(value: string | undefined) {
 }
 
 function resolveSharedUnit(body: z.infer<typeof UpdateProductSchema>) {
-    return cleanOptionalString(body.diUOM) ?? cleanOptionalString(body.unit)
+    return cleanOptionalString(body.diUOM) ?? cleanOptionalString(body.unit) ?? DEFAULT_FALLBACK_UOM
 }
 
 function buildProductDIFields(body: z.infer<typeof UpdateProductSchema>, sharedUnit: string) {

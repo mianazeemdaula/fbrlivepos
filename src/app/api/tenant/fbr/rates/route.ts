@@ -40,7 +40,7 @@ async function resolveProvinceCode(sellerProvince: string | null): Promise<numbe
 function getFallbackRates(transTypeId: number): { id: number; desc: string; value: number }[] {
     const cfg = SALE_TYPE_LIST.find(c => c.transTypeId === transTypeId)
     if (!cfg) return []
-    return cfg.fallbackRates.map((desc, i) => ({ id: -(i + 1), desc, value: 0 }))
+    return cfg.fallbackRates.map((rate, i) => ({ id: -(i + 1), desc: rate.desc, value: 0 }))
 }
 
 export async function GET(req: NextRequest) {

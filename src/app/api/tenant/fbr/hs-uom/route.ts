@@ -10,6 +10,14 @@ interface PRALUOMEntry {
     description: string
 }
 
+function resolveEnvToken() {
+    const raw = process.env.PRAL_PLATFORM_TOKEN
+        ?? process.env.FBR_API_TOKEN
+        ?? process.env.FBR_TOKEN
+    const token = raw?.trim()
+    return token ? token : null
+}
+
 export async function GET(req: NextRequest) {
     const { tenant } = await getTenantFromSession()
 
@@ -45,20 +53,19 @@ export async function GET(req: NextRequest) {
         where: { tenantId: tenant.id },
     })
 
-    if (!creds) {
-        return NextResponse.json({ error: 'No DI credentials configured' }, { status: 422 })
-    }
-
-    const tokenField = creds.environment === 'SANDBOX'
-        ? creds.encryptedSandboxToken
-        : creds.encryptedProductionToken
-
-    if (!tokenField) {
-        return NextResponse.json({ error: 'No token configured for current environment' }, { status: 422 })
-    }
-
     try {
-        const token = decryptCredential(tokenField)
+        const tokenField = creds
+            ? (creds.environment === 'SANDBOX' ? creds.encryptedSandboxToken : creds.encryptedProductionToken)
+            : null
+        const token = tokenField ? decryptCredential(tokenField) : resolveEnvToken()
+
+        if (!token) {
+            return NextResponse.json(
+                { error: 'No DI credentials or environment token configured' },
+                { status: 422 },
+            )
+        }
+
         const url = `${FBR_BASE}/pdi/v2/HS_UOM?hs_code=${encodeURIComponent(hsCode)}&annexure_id=${annexureId}`
         const res = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` },

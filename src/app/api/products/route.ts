@@ -6,6 +6,8 @@ import { checkPlanLimit } from '@/lib/features/flags'
 import { evaluateDIItemReadiness } from '@/lib/di/eligibility'
 import { SALE_TYPE_LIST } from '@/lib/di/sale-type-config'
 
+const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
+
 // Derive valid sale types from SALE_TYPE_CONFIG to stay always in sync
 const rawLabels = [...new Set(SALE_TYPE_LIST.map(t => t.label))]
 const validSaleTypes = rawLabels as [string, ...string[]]
@@ -37,7 +39,7 @@ function cleanOptionalString(value: string | undefined) {
 }
 
 function resolveSharedUnit(body: z.infer<typeof CreateProductSchema>) {
-    return cleanOptionalString(body.diUOM) ?? cleanOptionalString(body.unit)
+    return cleanOptionalString(body.diUOM) ?? cleanOptionalString(body.unit) ?? DEFAULT_FALLBACK_UOM
 }
 
 function buildProductDIFields(body: z.infer<typeof CreateProductSchema>, sharedUnit: string) {

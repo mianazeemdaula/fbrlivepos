@@ -6,6 +6,13 @@ import { getNextInvoiceNumber } from '@/lib/invoices/numbering'
 import { checkPlanLimit } from '@/lib/features/flags'
 import { isValidMobile, isValidNtnCnic, normalizeMobile, normalizeNtnCnic } from '@/lib/validation/pakistan'
 
+const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
+
+function normalizeOptionalText(value?: string | null) {
+    const trimmed = value?.trim()
+    return trimmed?.length ? trimmed : undefined
+}
+
 const CreateInvoiceSchema = z.object({
     terminalId: z.string().optional(),
     buyerNTN: z.string().optional().transform((value) => {
@@ -24,9 +31,53 @@ const CreateInvoiceSchema = z.object({
     paymentMethod: z.enum(['CASH', 'CARD', 'BANK_TRANSFER']),
     items: z.array(
         z.object({
-            productId: z.string(),
+            productId: z.string().optional(),
+            name: z.string().optional(),
+            hsCode: z.string().optional(),
+            price: z.number().min(0).optional(),
+            taxRate: z.number().min(0).max(100).optional(),
+            unit: z.string().optional(),
+            diRate: z.string().optional(),
+            diSaleType: z.string().optional(),
+            diFixedNotifiedValueOrRetailPrice: z.number().min(0).nullable().optional(),
+            sroScheduleNo: z.string().optional(),
+            sroItemSerialNo: z.string().optional(),
             quantity: z.number().positive(),
             discount: z.number().min(0).default(0),
+        }).superRefine((value, ctx) => {
+            if (value.productId) return
+
+            if (!normalizeOptionalText(value.hsCode)) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: 'HS code is required when productId is not provided.',
+                    path: ['hsCode'],
+                })
+            }
+
+            if (!normalizeOptionalText(value.name)) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: 'Product name is required when productId is not provided.',
+                    path: ['name'],
+                })
+            }
+
+            if (value.price == null) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: 'Price is required when productId is not provided.',
+                    path: ['price'],
+                })
+            }
+
+            if (value.taxRate == null) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: 'Tax rate is required when productId is not provided.',
+                    path: ['taxRate'],
+                })
+            }
         }),
     ).min(1),
 })
@@ -46,18 +97,23 @@ export async function POST(req: NextRequest) {
         )
     }
 
-    const body = CreateInvoiceSchema.parse(await req.json())
+    const parsed = CreateInvoiceSchema.safeParse(await req.json())
+    if (!parsed.success) {
+        return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid invoice input.' }, { status: 400 })
+    }
+    const body = parsed.data
 
-    // Fetch products with tenant guard
+    // Fetch catalog products with tenant guard
+    const productIds = [...new Set(body.items.map((i) => i.productId).filter((id): id is string => Boolean(id)))]
     const products = await prisma.product.findMany({
         where: {
             tenantId: tenant.id,
-            id: { in: body.items.map((i) => i.productId) },
+            id: { in: productIds },
             isActive: true,
         },
     })
 
-    if (products.length !== body.items.length) {
+    if (products.length !== productIds.length) {
         return NextResponse.json({ error: 'One or more products not found' }, { status: 400 })
     }
 
@@ -68,89 +124,149 @@ export async function POST(req: NextRequest) {
     let taxAmount = 0
     let discountAmount = 0
 
-    const invoiceItems = body.items.map((item) => {
-        const product = productMap.get(item.productId)!
-        const unitPrice = Number(product.price)
-        const qty = item.quantity
-        const itemDiscount = item.discount ?? 0
-        const lineSubtotal = unitPrice * qty
-        const taxableAmount = lineSubtotal - itemDiscount
-        const taxRate = Number(product.taxRate)
-
-        // 3rd Schedule Goods: tax is on fixedNotifiedValueOrRetailPrice × qty, NOT on the taxable value.
-        // Auto-falls back to unitPrice if no explicit retail/notified price is stored.
-        const isThirdSchedule = product.diSaleType?.trim().toLowerCase() === '3rd schedule goods'
-        const retailBase = product.diFixedNotifiedValueOrRetailPrice != null
-            ? Number(product.diFixedNotifiedValueOrRetailPrice)
-            : unitPrice
-        const lineTax = isThirdSchedule
-            ? (retailBase * qty * taxRate) / 100
-            : (taxableAmount * taxRate) / 100
-        const lineTotal = taxableAmount + lineTax
-
-        subtotal += lineSubtotal
-        taxAmount += lineTax
-        discountAmount += itemDiscount
-
-        return {
-            productId: product.id,
-            hsCode: product.hsCode,
-            name: product.name,
-            quantity: qty,
-            unit: product.unit,
-            unitPrice,
-            taxRate: Number(product.taxRate),
-            taxAmount: lineTax,
-            diRate: product.diRate,
-            diUOM: product.diUOM ?? product.unit,
-            diSaleType: product.diSaleType,
-            diFixedNotifiedValueOrRetailPrice: product.diFixedNotifiedValueOrRetailPrice != null
-                ? Number(product.diFixedNotifiedValueOrRetailPrice)
-                : null,
-            diSalesTaxWithheldAtSource: product.diSalesTaxWithheldAtSource != null
-                ? Number(product.diSalesTaxWithheldAtSource)
-                : null,
-            extraTax: product.extraTax != null ? Number(product.extraTax) : null,
-            furtherTax: product.furtherTax != null ? Number(product.furtherTax) : null,
-            fedPayable: product.fedPayable != null ? Number(product.fedPayable) : null,
-            sroScheduleNo: product.sroScheduleNo,
-            sroItemSerialNo: product.sroItemSerialNo,
-            discount: itemDiscount,
-            lineTotal,
-        }
-    })
-
-    const totalAmount = subtotal - discountAmount + taxAmount
     const invoiceNumber = await getNextInvoiceNumber(tenant.id)
 
     // Stamp the invoice with the tenant's current DI environment so sandbox and live invoices are separated
     const diCreds = await prisma.dICredentials.findUnique({ where: { tenantId: tenant.id }, select: { environment: true } })
     const diEnvironment = diCreds?.environment ?? 'SANDBOX'
 
-    const invoice = await prisma.invoice.create({
-        data: {
-            tenantId: tenant.id,
-            userId,
-            terminalId: body.terminalId,
-            invoiceNumber,
-            buyerNTN: body.buyerNTN,
-            buyerName: body.buyerName,
-            buyerPhone: body.buyerPhone,
-            buyerProvince: body.buyerProvince,
-            buyerAddress: body.buyerAddress,
-            buyerRegistrationType: body.buyerRegistrationType,
-            customerId: body.customerId,
-            subtotal,
-            taxAmount,
-            discountAmount,
-            totalAmount,
-            paymentMethod: body.paymentMethod,
-            status: 'DRAFT',
-            invoiceType: 'Sale Invoice',
-            diEnvironment,
-            items: { create: invoiceItems },
-        },
-        include: { items: true },
+    const invoice = await prisma.$transaction(async (tx) => {
+        const invoiceItems = [] as Array<{
+            productId: string
+            hsCode: string
+            name: string
+            quantity: number
+            unit: string
+            unitPrice: number
+            taxRate: number
+            taxAmount: number
+            diRate: string | null
+            diUOM: string
+            diSaleType: string | null
+            diFixedNotifiedValueOrRetailPrice: number | null
+            diSalesTaxWithheldAtSource: number | null
+            extraTax: number | null
+            furtherTax: number | null
+            fedPayable: number | null
+            sroScheduleNo: string | null
+            sroItemSerialNo: string | null
+            discount: number
+            lineTotal: number
+        }>
+
+        for (const [index, item] of body.items.entries()) {
+            let product = item.productId ? productMap.get(item.productId) : null
+
+            if (!product) {
+                const directName = normalizeOptionalText(item.name) ?? `POS Item ${index + 1}`
+                const directHSCode = normalizeOptionalText(item.hsCode)!
+
+                const directUnit = normalizeOptionalText(item.unit) ?? DEFAULT_FALLBACK_UOM
+                const createdProduct = await tx.product.create({
+                    data: {
+                        tenantId: tenant.id,
+                        name: directName,
+                        sku: `POS-DRAFT-${Date.now()}-${index + 1}`,
+                        hsCode: directHSCode,
+                        price: item.price ?? 0,
+                        taxRate: item.taxRate ?? 0,
+                        unit: directUnit,
+                        diUOM: directUnit,
+                        diRate: normalizeOptionalText(item.diRate),
+                        diSaleType: normalizeOptionalText(item.diSaleType),
+                        diFixedNotifiedValueOrRetailPrice: item.diFixedNotifiedValueOrRetailPrice ?? null,
+                        sroScheduleNo: normalizeOptionalText(item.sroScheduleNo),
+                        sroItemSerialNo: normalizeOptionalText(item.sroItemSerialNo),
+                        isActive: false,
+                    },
+                })
+                product = createdProduct
+            }
+
+            const unitPrice = Number(item.price ?? product.price)
+            const qty = item.quantity
+            const itemDiscount = item.discount ?? 0
+            const lineSubtotal = unitPrice * qty
+            const taxableAmount = lineSubtotal - itemDiscount
+            const taxRate = Number(item.taxRate ?? product.taxRate)
+            const directSaleType = normalizeOptionalText(item.diSaleType)
+            const productSaleType = normalizeOptionalText(product.diSaleType)
+
+            // 3rd Schedule Goods: tax is on fixedNotifiedValueOrRetailPrice × qty, NOT on the taxable value.
+            // Auto-falls back to unitPrice if no explicit retail/notified price is stored.
+            const isThirdSchedule = (directSaleType ?? productSaleType ?? '').toLowerCase() === '3rd schedule goods'
+            const retailBase = item.diFixedNotifiedValueOrRetailPrice != null
+                ? Number(item.diFixedNotifiedValueOrRetailPrice)
+                : product.diFixedNotifiedValueOrRetailPrice != null
+                    ? Number(product.diFixedNotifiedValueOrRetailPrice)
+                    : unitPrice
+            const lineTax = isThirdSchedule
+                ? (retailBase * qty * taxRate) / 100
+                : (taxableAmount * taxRate) / 100
+            const lineTotal = taxableAmount + lineTax
+            const unit = normalizeOptionalText(item.unit) ?? product.unit ?? DEFAULT_FALLBACK_UOM
+
+            subtotal += lineSubtotal
+            taxAmount += lineTax
+            discountAmount += itemDiscount
+
+            invoiceItems.push({
+                productId: product.id,
+                hsCode: normalizeOptionalText(item.hsCode) ?? product.hsCode,
+                name: normalizeOptionalText(item.name) ?? product.name,
+                quantity: qty,
+                unit,
+                unitPrice,
+                taxRate,
+                taxAmount: lineTax,
+                diRate: normalizeOptionalText(item.diRate) ?? product.diRate,
+                diUOM: unit,
+                diSaleType: directSaleType ?? product.diSaleType,
+                diFixedNotifiedValueOrRetailPrice: item.diFixedNotifiedValueOrRetailPrice != null
+                    ? Number(item.diFixedNotifiedValueOrRetailPrice)
+                    : product.diFixedNotifiedValueOrRetailPrice != null
+                        ? Number(product.diFixedNotifiedValueOrRetailPrice)
+                        : null,
+                diSalesTaxWithheldAtSource: product.diSalesTaxWithheldAtSource != null
+                    ? Number(product.diSalesTaxWithheldAtSource)
+                    : null,
+                extraTax: product.extraTax != null ? Number(product.extraTax) : null,
+                furtherTax: product.furtherTax != null ? Number(product.furtherTax) : null,
+                fedPayable: product.fedPayable != null ? Number(product.fedPayable) : null,
+                sroScheduleNo: normalizeOptionalText(item.sroScheduleNo) ?? product.sroScheduleNo,
+                sroItemSerialNo: normalizeOptionalText(item.sroItemSerialNo) ?? product.sroItemSerialNo,
+                discount: itemDiscount,
+                lineTotal,
+            })
+        }
+
+        const totalAmount = subtotal - discountAmount + taxAmount
+
+        return tx.invoice.create({
+            data: {
+                tenantId: tenant.id,
+                userId,
+                terminalId: body.terminalId,
+                invoiceNumber,
+                buyerNTN: body.buyerNTN,
+                buyerName: body.buyerName,
+                buyerPhone: body.buyerPhone,
+                buyerProvince: body.buyerProvince,
+                buyerAddress: body.buyerAddress,
+                buyerRegistrationType: body.buyerRegistrationType,
+                customerId: body.customerId,
+                subtotal,
+                taxAmount,
+                discountAmount,
+                totalAmount,
+                paymentMethod: body.paymentMethod,
+                status: 'DRAFT',
+                invoiceType: 'Sale Invoice',
+                diEnvironment,
+                items: { create: invoiceItems },
+            },
+            include: { items: true },
+        })
     })
 
     return NextResponse.json({ invoice }, { status: 201 })

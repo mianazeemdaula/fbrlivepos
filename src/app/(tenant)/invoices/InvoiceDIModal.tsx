@@ -67,16 +67,16 @@ export default function InvoiceDIModal({ invoiceId, onClose }: Props) {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
             onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
         >
-            <div className="bg-white rounded-card shadow-card relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden">
+            <div className="bg-card rounded-card shadow-card relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-6 py-4">
                     <div>
                         <p className="text-xs font-medium uppercase tracking-caps text-muted">FBR Response</p>
-                        {data && <h2 className="mt-1 text-lg font-bold text-white">{data.invoiceNumber}</h2>}
+                        {data && <h2 className="mt-1 text-lg font-bold text-ink">{data.invoiceNumber}</h2>}
                     </div>
                     <button
                         onClick={onClose}
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-muted hover:bg-white/14 hover:text-white"
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-muted hover:bg-surface-subtle hover:text-ink"
                     >
                         ✕
                     </button>
@@ -91,7 +91,7 @@ export default function InvoiceDIModal({ invoiceId, onClose }: Props) {
                             ))}
                         </div>
                     ) : !data ? (
-                        <p className="text-cente">Invoice not found.</p>
+                        <p className="text-center text-sm text-muted">Invoice not found.</p>
                     ) : (
                         <>
                             {/* Status summary */}
@@ -123,32 +123,34 @@ export default function InvoiceDIModal({ invoiceId, onClose }: Props) {
                                 </div>
                             )}
 
-                            {/* Per-item statuses */}
-                            <div>
-                                <p className="mb-2 text-xs">Per-item DI Statuses</p>
-                                <pre className="max-h-52 overflow-auto rounded-lg border border-border bg-code-bg p-3 text-xs text-ink whitespace-pre-wrap wrap-break-word">
-                                    {formatJson(data.diItemStatuses)}
-                                </pre>
-                            </div>
-
-                            {/* Latest PRAL response */}
-                            {data.latestSubmissionLog?.responseBody != null && (
+                            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                                {/* Per-item statuses */}
                                 <div>
-                                    <p className="mb-2 text-xs text-muted">
-                                        Latest PRAL Response
-                                        {data.latestSubmissionLog.responseCode
-                                            ? ` (${data.latestSubmissionLog.responseCode})`
-                                            : ''}
-                                        {data.latestSubmissionLog.durationMs != null
-                                            ? ` · ${data.latestSubmissionLog.durationMs} ms`
-                                            : ''}
-                                        {` · Attempt #${data.latestSubmissionLog.attempt}`}
-                                    </p>
-                                    <pre className="max-h-72 overflow-auto rounded-lg border border-border bg-code-bg p-3 text-xs text-ink whitespace-pre-wrap wrap-break-word">
-                                        {formatJson(data.latestSubmissionLog.responseBody)}
+                                    <p className="mb-2 text-xs text-muted">Per-item DI Statuses</p>
+                                    <pre className="max-h-72 overflow-auto rounded-lg border border-border-strong bg-surface p-3 font-mono text-xs leading-relaxed text-ink whitespace-pre-wrap break-words">
+                                        {formatJson(data.diItemStatuses)}
                                     </pre>
                                 </div>
-                            )}
+
+                                {/* Latest PRAL response */}
+                                {data.latestSubmissionLog?.responseBody != null && (
+                                    <div>
+                                        <p className="mb-2 text-xs text-muted">
+                                            Latest PRAL Response
+                                            {data.latestSubmissionLog.responseCode
+                                                ? ` (${data.latestSubmissionLog.responseCode})`
+                                                : ''}
+                                            {data.latestSubmissionLog.durationMs != null
+                                                ? ` · ${data.latestSubmissionLog.durationMs} ms`
+                                                : ''}
+                                            {` · Attempt #${data.latestSubmissionLog.attempt}`}
+                                        </p>
+                                        <pre className="max-h-72 overflow-auto rounded-lg border border-border-strong bg-surface p-3 font-mono text-xs leading-relaxed text-ink whitespace-pre-wrap break-words">
+                                            {formatJson(data.latestSubmissionLog.responseBody)}
+                                        </pre>
+                                    </div>
+                                )}
+                            </div>
                         </>
                     )}
                 </div>
@@ -172,7 +174,7 @@ function InfoCell({
         <div className="rounded-xl border border-border bg-surface-subtle p-3">
             <p className="mb-1 text-xs">{label}</p>
             <p
-                className={`break-all text-sm font-medium ${highlight ? 'text-green-400' : 'text-muted'} ${mono ? 'font-mono' : ''}`}
+                className={`break-all text-sm font-medium ${highlight ? 'text-success' : 'text-ink'} ${mono ? 'font-mono' : ''}`}
             >
                 {value}
             </p>

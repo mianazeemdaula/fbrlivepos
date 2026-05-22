@@ -9,6 +9,9 @@ interface CartItem {
     diRate: string | null // FBR rate string e.g. "18%", "Exempt"
     diSaleType: string | null
     diFixedNotifiedValueOrRetailPrice: number | null // 3rd Schedule: tax base price per unit
+    sroScheduleNo: string | null
+    sroItemSerialNo: string | null
+    isLocalOnly: boolean
     unit: string
     quantity: number
     discount: number // per-item discount amount

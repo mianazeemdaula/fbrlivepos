@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { useCartStore } from '@/stores/cart'
 import { isValidNtnCnic, normalizeNtnCnic } from '@/lib/validation/pakistan'
-import { ProductFormModal, type SavedProduct } from '@/components/products/ProductFormModal'
+import DirectProductModal, { type DirectPosProduct } from './DirectProductModal'
 
 const CustomerModal = dynamic(() => import('./CustomerModal'), { ssr: false })
 
@@ -17,11 +17,15 @@ interface Product {
     diRate?: string | null // FBR rate string e.g. "18%", "Exempt"
     diSaleType?: string | null
     diFixedNotifiedValueOrRetailPrice?: number | null // 3rd Schedule: retail/notified price per unit
+    sroScheduleNo?: string | null
+    sroItemSerialNo?: string | null
+    isLocalOnly?: boolean
     unit: string
 }
 
 export default function POSPage() {
-    const [products, setProducts] = useState<Product[]>([])
+    const [catalogProducts, setCatalogProducts] = useState<Product[]>([])
+    const [localProducts, setLocalProducts] = useState<Product[]>([])
     const [search, setSearch] = useState('')
     const [showCustomerModal, setShowCustomerModal] = useState(false)
     const [showProductModal, setShowProductModal] = useState(false)
@@ -49,10 +53,33 @@ export default function POSPage() {
             const res = await fetch(`/api/products?q=${encodeURIComponent(q)}&limit=30`)
             if (res.ok) {
                 const data = await res.json()
-                setProducts(data.data || [])
+                setCatalogProducts(data.data || [])
             }
         } catch { /* ignore */ }
     }, [])
+
+    const products = useMemo(() => {
+        const byId = new Map<string, Product>()
+        for (const product of localProducts) {
+            byId.set(product.id, product)
+        }
+        for (const product of catalogProducts) {
+            if (!byId.has(product.id)) {
+                byId.set(product.id, product)
+            }
+        }
+        return Array.from(byId.values())
+    }, [catalogProducts, localProducts])
+
+    const filteredProducts = useMemo(() => {
+        const term = search.trim().toLowerCase()
+        if (!term) return products
+        return products.filter((product) => (
+            product.name.toLowerCase().includes(term)
+            || product.hsCode.toLowerCase().includes(term)
+            || (product.diSaleType || '').toLowerCase().includes(term)
+        ))
+    }, [products, search])
 
     useEffect(() => { searchProducts('') }, [searchProducts])
     useEffect(() => {
@@ -72,17 +99,58 @@ export default function POSPage() {
     }, [items, customerId, paymentMethod, buyerNTN, buyerRegistrationType, invoiceType, invoiceRefNo])
 
     function handleAddProduct(product: Product) {
-        addItem({ productId: product.id, name: product.name, hsCode: product.hsCode, price: product.price, taxRate: product.taxRate, diRate: product.diRate ?? null, diSaleType: product.diSaleType ?? null, diFixedNotifiedValueOrRetailPrice: product.diFixedNotifiedValueOrRetailPrice ?? null, unit: product.unit })
+        addItem({
+            productId: product.id,
+            name: product.name,
+            hsCode: product.hsCode,
+            price: product.price,
+            taxRate: product.taxRate,
+            diRate: product.diRate ?? null,
+            diSaleType: product.diSaleType ?? null,
+            diFixedNotifiedValueOrRetailPrice: product.diFixedNotifiedValueOrRetailPrice ?? null,
+            sroScheduleNo: product.sroScheduleNo ?? null,
+            sroItemSerialNo: product.sroItemSerialNo ?? null,
+            isLocalOnly: Boolean(product.isLocalOnly),
+            unit: product.unit,
+        })
     }
 
-    function handleProductSaved(p: SavedProduct) {
+    function handleProductSaved(p: DirectPosProduct) {
         setShowProductModal(false)
-        setProducts(prev => {
-            if (prev.some(x => x.id === p.id)) return prev
-            return [{ id: p.id, name: p.name, hsCode: p.hsCode, price: p.price, taxRate: p.taxRate, diRate: p.diRate ?? null, diSaleType: p.diSaleType ?? null, diFixedNotifiedValueOrRetailPrice: p.diFixedNotifiedValueOrRetailPrice ?? null, unit: p.unit }, ...prev]
+        setLocalProducts((prev) => {
+            if (prev.some((existing) => existing.id === p.id)) return prev
+            return [{
+                id: p.id,
+                name: p.name,
+                hsCode: p.hsCode,
+                price: p.price,
+                taxRate: p.taxRate,
+                diRate: p.diRate ?? null,
+                diSaleType: p.diSaleType ?? null,
+                diFixedNotifiedValueOrRetailPrice: p.diFixedNotifiedValueOrRetailPrice ?? null,
+                sroScheduleNo: p.sroScheduleNo ?? null,
+                sroItemSerialNo: p.sroItemSerialNo ?? null,
+                isLocalOnly: true,
+                unit: p.unit,
+            }, ...prev]
         })
-        addItem({ productId: p.id, name: p.name, hsCode: p.hsCode, price: p.price, taxRate: p.taxRate, diRate: p.diRate ?? null, diSaleType: p.diSaleType ?? null, diFixedNotifiedValueOrRetailPrice: p.diFixedNotifiedValueOrRetailPrice ?? null, unit: p.unit })
+        addItem({
+            productId: p.id,
+            name: p.name,
+            hsCode: p.hsCode,
+            price: p.price,
+            taxRate: p.taxRate,
+            diRate: p.diRate ?? null,
+            diSaleType: p.diSaleType ?? null,
+            diFixedNotifiedValueOrRetailPrice: p.diFixedNotifiedValueOrRetailPrice ?? null,
+            sroScheduleNo: p.sroScheduleNo ?? null,
+            sroItemSerialNo: p.sroItemSerialNo ?? null,
+            isLocalOnly: true,
+            unit: p.unit,
+        })
     }
+
+    const hasLocalOnlyItems = items.some((item) => item.isLocalOnly)
 
     async function handleSaveNewCustomerFromModal(form: {
         name: string; ntnCnic: string; phone: string
@@ -118,7 +186,30 @@ export default function POSPage() {
             paymentMethod,
             invoiceType,
             invoiceRefNo: invoiceType === 'Debit Note' ? (invoiceRefNo || undefined) : undefined,
-            items: items.map(i => ({ productId: i.productId, quantity: i.quantity, discount: i.discount })),
+            items: items.map((i) => {
+                if (!i.isLocalOnly) {
+                    return {
+                        productId: i.productId,
+                        quantity: i.quantity,
+                        discount: i.discount,
+                    }
+                }
+
+                return {
+                    quantity: i.quantity,
+                    discount: i.discount,
+                    name: i.name,
+                    hsCode: i.hsCode,
+                    unit: i.unit,
+                    price: i.price,
+                    taxRate: i.taxRate,
+                    diRate: i.diRate ?? `${i.taxRate}%`,
+                    diSaleType: i.diSaleType ?? 'Goods at standard rate (default)',
+                    diFixedNotifiedValueOrRetailPrice: i.diFixedNotifiedValueOrRetailPrice ?? null,
+                    sroScheduleNo: i.sroScheduleNo ?? undefined,
+                    sroItemSerialNo: i.sroItemSerialNo ?? undefined,
+                }
+            }),
         }
     }
 
@@ -141,6 +232,84 @@ export default function POSPage() {
 
     async function handleValidate() {
         if (items.length === 0) return
+        if (hasLocalOnlyItems) {
+            setIsValidating(true)
+            setValidationLog(null)
+            setValidationState('IDLE')
+            setMessage(null)
+            try {
+                const draftBody = { ...(await buildInvoiceBody()), status: 'DRAFT' }
+                const draftRes = await fetch('/api/invoices', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(draftBody),
+                })
+                const draftData = await draftRes.json()
+                if (!draftRes.ok) {
+                    setValidationState('FAILED')
+                    setMessage({ type: 'error', text: draftData.error || 'Failed to save draft before direct submission.' })
+                    return
+                }
+                setDraftInvoiceId(draftData.invoice.id)
+
+                const directBody = {
+                    buyerName: buyerName || undefined,
+                    buyerNTN: normalizeNtnCnic(buyerNTN) || undefined,
+                    buyerProvince: buyerProvince || undefined,
+                    buyerAddress: buyerAddress || undefined,
+                    buyerRegistrationType: buyerRegistrationType || undefined,
+                    invoiceType,
+                    invoiceRefNo: invoiceType === 'Debit Note' ? (invoiceRefNo || undefined) : undefined,
+                    items: items.map((item) => ({
+                        name: item.name,
+                        hsCode: item.hsCode,
+                        price: item.price,
+                        quantity: item.quantity,
+                        discount: item.discount,
+                        taxRate: item.taxRate,
+                        diRate: item.diRate ?? `${item.taxRate}%`,
+                        diSaleType: item.diSaleType ?? 'Goods at standard rate (default)',
+                        unit: item.unit,
+                        diFixedNotifiedValueOrRetailPrice: item.diFixedNotifiedValueOrRetailPrice ?? null,
+                        sroScheduleNo: item.sroScheduleNo ?? null,
+                        sroItemSerialNo: item.sroItemSerialNo ?? null,
+                        furtherTax: 0,
+                        extraTax: 0,
+                        fedPayable: 0,
+                        diSalesTaxWithheldAtSource: 0,
+                    })),
+                }
+
+                const res = await fetch('/api/tenant/fbr/submit-direct', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(directBody),
+                })
+                const data = await res.json()
+
+                if (!res.ok) {
+                    setValidationState('FAILED')
+                    setValidationLog({
+                        error: data.error || 'Direct PRAL submission failed',
+                        details: data.errors || data.details,
+                        rawResponse: data.rawResponse,
+                        payload: data.payload,
+                    })
+                    setMessage({ type: 'error', text: data.error || 'Direct PRAL submission failed.' })
+                    return
+                }
+
+                setValidationState('VALID')
+                setMessage({ type: 'success', text: `Draft ${draftData.invoice.invoiceNumber || 'saved'} and invoice ${data.diInvoiceNumber || 'submitted'} directly to FBR successfully!` })
+                clearCart()
+                return
+            } catch {
+                setMessage({ type: 'error', text: 'Network error during direct FBR submission.' })
+                return
+            } finally {
+                setIsValidating(false)
+            }
+        }
         const norm = normalizeNtnCnic(buyerNTN)
         if (norm && !isValidNtnCnic(norm)) {
             setMessage({ type: 'error', text: `${preferredIdType} must be 7 digits (NTN) or 13 digits (CNIC).` })
@@ -252,9 +421,9 @@ export default function POSPage() {
                                     <button onClick={() => setSearch('')} className="shrink-0 text-muted hover:text-ink">✕</button>
                                 )}
                             </div>
-                            {search && products.length > 0 && (
+                            {search && filteredProducts.length > 0 && (
                                 <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-auto rounded-xl border border-border bg-card shadow-modal">
-                                    {products.map(product => (
+                                    {filteredProducts.map(product => (
                                         <button
                                             key={product.id}
                                             onClick={() => { handleAddProduct(product); setSearch('') }}
@@ -267,12 +436,13 @@ export default function POSPage() {
                                             <div className="shrink-0 text-right">
                                                 <p className="text-sm font-semibold text-ink">PKR {product.price.toLocaleString()}</p>
                                                 <p className="text-xs text-muted">{product.taxRate}% tax</p>
+                                                {product.isLocalOnly && <p className="text-micro font-medium uppercase tracking-wider text-amber-600">Local Only</p>}
                                             </div>
                                         </button>
                                     ))}
                                 </div>
                             )}
-                            {search && products.length === 0 && (
+                            {search && filteredProducts.length === 0 && (
                                 <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted shadow-card">
                                     No products found for &ldquo;{search}&rdquo;
                                 </div>
@@ -495,7 +665,7 @@ export default function POSPage() {
                                     disabled={items.length === 0 || isValidating || draftLoading || isConfirming}
                                     className="flex-2 rounded-full bg-primary py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-40"
                                 >
-                                    {isValidating ? 'Validating…' : `Validate & FBR · PKR ${total().toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+                                    {isValidating ? 'Submitting…' : `${hasLocalOnlyItems ? 'Direct Submit to FBR' : 'Validate & FBR'} · PKR ${total().toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
                                 </button>
                             </>
                         )}
@@ -546,8 +716,8 @@ export default function POSPage() {
 
             {/* Product Modal */}
             {showProductModal && (
-                <ProductFormModal
-                    onSave={handleProductSaved}
+                <DirectProductModal
+                    onCreate={handleProductSaved}
                     onClose={() => setShowProductModal(false)}
                 />
             )}

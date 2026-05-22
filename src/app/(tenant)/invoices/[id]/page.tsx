@@ -96,7 +96,6 @@ export default function InvoiceDetailPage() {
                 const res = await fetch(`/api/invoices/${params.id}`)
                 if (res.ok) {
                     const data = await res.json()
-                    console.log(data);
                     setInvoice(data.invoice)
                 }
             } catch {
@@ -131,16 +130,16 @@ export default function InvoiceDetailPage() {
     }
 
     return (
-        <div className=" p-6 lg:p-8">
-            <button onClick={() => router.back()} className="mb-4 inline-block text-sm text-muted hover:text-white">
+        <div className="p-6 lg:p-8">
+            <button onClick={() => router.back()} className="mb-4 inline-block text-sm text-muted hover:text-ink">
                 ← Back to Invoices
             </button>
 
-            <div className="bg-white rounded-card shadow-card p-6">
+            <div className="bg-card rounded-card shadow-card p-6">
                 <div className="flex justify-between items-start mb-6">
                     <div>
                         <p className="text-xs uppercase tracking-caps-xl text-muted">Invoice detail</p>
-                        <h1 className="mt-2 text-3xl font-bold text-white">{invoice.invoiceNumber}</h1>
+                        <h1 className="mt-2 text-3xl font-bold text-ink">{invoice.invoiceNumber}</h1>
                         <p className="mt-1 text-sm text-muted">
                             Created {new Date(invoice.createdAt).toLocaleString()}
                         </p>
@@ -161,36 +160,36 @@ export default function InvoiceDetailPage() {
                 <div className="grid grid-cols-2 gap-4 mb-6 text-sm md:grid-cols-4">
                     <div>
                         <p className="text-muted">Buyer</p>
-                        <p className="text-white">{invoice.buyerName || 'Walk-in Customer'}</p>
+                        <p className="text-ink">{invoice.buyerName || 'Walk-in Customer'}</p>
                     </div>
                     <div>
                         <p className="text-muted">NTN</p>
-                        <p className="text-white">{invoice.buyerNTN || '—'}</p>
+                        <p className="text-ink">{invoice.buyerNTN || '—'}</p>
                     </div>
                     <div>
                         <p className="text-muted">Payment</p>
-                        <p className="text-white">{invoice.paymentMethod}</p>
+                        <p className="text-ink">{invoice.paymentMethod}</p>
                     </div>
                     <div>
                         <p className="text-muted">Phone</p>
-                        <p className="text-white">{invoice.buyerPhone || invoice.customer?.phone || '—'}</p>
+                        <p className="text-ink">{invoice.buyerPhone || invoice.customer?.phone || '—'}</p>
                     </div>
                     <div>
                         <p className="text-muted">Province</p>
-                        <p className="text-white">{invoice.buyerProvince || invoice.customer?.province || '—'}</p>
+                        <p className="text-ink">{invoice.buyerProvince || invoice.customer?.province || '—'}</p>
                     </div>
                     <div>
                         <p className="text-muted">Registration</p>
-                        <p className="text-white">{invoice.buyerRegistrationType || invoice.customer?.registrationType || '—'}</p>
+                        <p className="text-ink">{invoice.buyerRegistrationType || invoice.customer?.registrationType || '—'}</p>
                     </div>
                     <div className="col-span-2 md:col-span-4">
                         <p className="text-muted">Address</p>
-                        <p className="text-white">{invoice.buyerAddress || invoice.customer?.address || '—'}</p>
+                        <p className="text-ink">{invoice.buyerAddress || invoice.customer?.address || '—'}</p>
                     </div>
                 </div>
 
                 {/* DI Info */}
-                <div className="bg-white rounded-card shadow-card-soft mb-6 p-4 space-y-4">
+                <div className="rounded-card border border-border bg-surface-subtle mb-6 p-4 space-y-4">
                     <div className="flex items-center justify-between gap-4">
                         <div>
                             <p className="mb-1 text-xs text-muted">PRAL DI Status</p>
@@ -209,15 +208,15 @@ export default function InvoiceDetailPage() {
                         </div>
                         <div>
                             <p className="mb-1 text-muted">Confirmed At</p>
-                            <p className="text-white">{invoice.diInvoiceDate ? new Date(invoice.diInvoiceDate).toLocaleString() : '—'}</p>
+                            <p className="text-ink">{invoice.diInvoiceDate ? new Date(invoice.diInvoiceDate).toLocaleString() : '—'}</p>
                         </div>
                         <div>
                             <p className="mb-1 text-muted">DI Error Code</p>
-                            <p className="text-white font-mono">{invoice.diErrorCode || '—'}</p>
+                            <p className="text-ink font-mono">{invoice.diErrorCode || '—'}</p>
                         </div>
                         <div>
                             <p className="mb-1 text-muted">Latest Attempt</p>
-                            <p className="text-white">
+                            <p className="text-ink">
                                 {invoice.latestSubmissionLog
                                     ? `#${invoice.latestSubmissionLog.attempt} · ${new Date(invoice.latestSubmissionLog.createdAt).toLocaleString()}`
                                     : '—'}
@@ -227,8 +226,8 @@ export default function InvoiceDetailPage() {
 
                     {displayError && (
                         <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 space-y-2">
-                            <p className="text-xs text-red-300 mb-1">Error Details</p>
-                            <p className="text-sm text-red-200 whitespace-pre-wrap">
+                            <p className="text-xs text-red-600 mb-1">Error Details</p>
+                            <p className="text-sm text-red-700 whitespace-pre-wrap">
                                 {displayError}
                             </p>
                             {isAuthError(invoice.submissionError || invoice.latestSubmissionLog?.error) && (
@@ -244,33 +243,36 @@ export default function InvoiceDetailPage() {
 
                     <div>
                         <p className="mb-2 text-xs text-muted">Per-item DI Statuses</p>
-                        <pre className="max-h-64 overflow-auto rounded-lg border border-border bg-code-bg p-3 text-xs text-ink whitespace-pre-wrap wrap-break-word">
+                        <pre className="max-h-64 overflow-auto rounded-lg border border-border-strong bg-surface p-3 font-mono text-xs leading-relaxed text-ink whitespace-pre-wrap break-words">
                             {formatJson(invoice.diItemStatuses)}
                         </pre>
                     </div>
 
-                    {invoice.latestSubmissionLog?.requestBody != null && (
-                        <div>
-                            <p className="mb-2 text-xs text-muted">
-                                Latest PRAL Response
-                                {invoice.latestSubmissionLog.responseCode ? ` (${invoice.latestSubmissionLog.responseCode})` : ''}
-                                {invoice.latestSubmissionLog.durationMs != null ? ` · ${invoice.latestSubmissionLog.durationMs} ms` : ''}
-                            </p>
-                            <pre className="max-h-80 overflow-auto rounded-lg border border-border bg-code-bg p-3 text-xs text-ink whitespace-pre-wrap wrap-break-word">
-                                {formatJson(invoice.latestSubmissionLog.requestBody)}
-                            </pre>
-                        </div>
-                    )}
-                    {invoice.latestSubmissionLog?.responseBody != null && (
-                        <div>
-                            <p className="mb-2 text-xs text-muted">
-                                Latest PRAL Response
-                                {invoice.latestSubmissionLog.responseCode ? ` (${invoice.latestSubmissionLog.responseCode})` : ''}
-                                {invoice.latestSubmissionLog.durationMs != null ? ` · ${invoice.latestSubmissionLog.durationMs} ms` : ''}
-                            </p>
-                            <pre className="max-h-80 overflow-auto rounded-lg border border-border bg-code-bg p-3 text-xs text-ink whitespace-pre-wrap wrap-break-word">
-                                {formatJson(invoice.latestSubmissionLog.responseBody)}
-                            </pre>
+                    {(invoice.latestSubmissionLog?.requestBody != null || invoice.latestSubmissionLog?.responseBody != null) && (
+                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                            {invoice.latestSubmissionLog?.requestBody != null && (
+                                <div>
+                                    <p className="mb-2 text-xs text-muted">
+                                        Latest PRAL Request
+                                        {invoice.latestSubmissionLog.durationMs != null ? ` · ${invoice.latestSubmissionLog.durationMs} ms` : ''}
+                                    </p>
+                                    <pre className="max-h-80 overflow-auto rounded-lg border border-border-strong bg-surface p-3 font-mono text-xs leading-relaxed text-ink whitespace-pre-wrap break-words">
+                                        {formatJson(invoice.latestSubmissionLog.requestBody)}
+                                    </pre>
+                                </div>
+                            )}
+                            {invoice.latestSubmissionLog?.responseBody != null && (
+                                <div>
+                                    <p className="mb-2 text-xs text-muted">
+                                        Latest PRAL Response
+                                        {invoice.latestSubmissionLog.responseCode ? ` (${invoice.latestSubmissionLog.responseCode})` : ''}
+                                        {invoice.latestSubmissionLog.durationMs != null ? ` · ${invoice.latestSubmissionLog.durationMs} ms` : ''}
+                                    </p>
+                                    <pre className="max-h-80 overflow-auto rounded-lg border border-border-strong bg-surface p-3 font-mono text-xs leading-relaxed text-ink whitespace-pre-wrap break-words">
+                                        {formatJson(invoice.latestSubmissionLog.responseBody)}
+                                    </pre>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -307,14 +309,14 @@ export default function InvoiceDetailPage() {
                 <div className="flex flex-col items-end gap-1">
                     <div className="flex gap-8 text-sm">
                         <span className="text-muted">Subtotal</span>
-                        <span className="text-white">PKR {invoice.subtotal.toLocaleString()}</span>
+                        <span className="text-ink">PKR {invoice.subtotal.toLocaleString()}</span>
                     </div>
                     <div className="flex gap-8 text-sm">
                         <span className="text-muted">Tax (GST)</span>
-                        <span className="text-white">PKR {invoice.totalTax.toLocaleString()}</span>
+                        <span className="text-ink">PKR {invoice.totalTax.toLocaleString()}</span>
                     </div>
                     <div className="flex gap-8 text-lg font-bold mt-1">
-                        <span className="text-white">Total</span>
+                        <span className="text-ink">Total</span>
                         <span className="text-muted">PKR {invoice.totalAmount.toLocaleString()}</span>
                     </div>
                 </div>

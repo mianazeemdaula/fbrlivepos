@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { SALE_TYPE_CONFIG, SALE_TYPE_LIST, FORCED_UOM, type SaleTypeConfig } from '@/lib/di/sale-type-config'
 
+const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
+
 interface HSCodeOption { id: string; code: string; description: string; shortName?: string | null; category: string; unit: string; defaultTaxRate: number | string }
 interface RateOption { id: number; desc: string; value: number }
 interface SROOption { id: number; desc: string }
@@ -90,7 +92,9 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
         }
         setUomLoading(true)
         try {
-            const res = await fetch(`/api/tenant/fbr/hs-uom?hs_code=${encodeURIComponent(hsCode)}`)
+            const res = await fetch(
+                `/api/tenant/fbr/hs-uom?hs_code=${encodeURIComponent(hsCode)}&sale_type_id=${encodeURIComponent(saleTypeId)}`
+            )
             if (res.ok) {
                 const d = await res.json()
                 const uoms: { id: number; description: string }[] = d.uoms || []
@@ -98,9 +102,16 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                 if (uoms.length === 1) {
                     setForm(c => ({ ...c, unit: uoms[0].description, diUOM: uoms[0].description, isUOMLocked: true }))
                 } else if (uoms.length > 1) {
-                    setForm(c => ({ ...c, isUOMLocked: false }))
+                    setForm(c => {
+                        const current = c.unit || c.diUOM
+                        const hasCurrent = !!current && uoms.some(
+                            (u) => u.description.trim().toLowerCase() === current.trim().toLowerCase()
+                        )
+                        const nextUom = hasCurrent ? current : uoms[0].description
+                        return { ...c, unit: nextUom, diUOM: nextUom, isUOMLocked: false }
+                    })
                 } else {
-                    setForm(c => ({ ...c, isUOMLocked: false }))
+                    setForm(c => ({ ...c, unit: c.unit || DEFAULT_FALLBACK_UOM, diUOM: c.diUOM || DEFAULT_FALLBACK_UOM, isUOMLocked: false }))
                 }
             }
         } catch { /* ignore */ } finally { setUomLoading(false) }
@@ -137,15 +148,15 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
         try {
             // Negative rateId = fallback rate — bypass API, use config directly
             if (rateId < 0) {
-                const sros = config.fallbackSROs.map(s => ({ id: s.id, desc: s.desc }))
+                const fallbackRate = config.fallbackRates[Math.abs(rateId) - 1]
+                const sros = fallbackRate?.sros.map(s => ({ id: s.id, desc: s.desc })) ?? []
                 setSroOptions(sros)
                 setSroSource('db_fallback')
                 if (sros.length > 0) {
                     const first = sros[0]
                     setForm(c => ({ ...c, sroScheduleNo: first.desc, sroScheduleId: first.id }))
                     if (config.requiresSR) {
-                        // Populate SR# from first SRO's srItems directly
-                        const srItems = config.fallbackSROs[0].srItems
+                        const srItems = fallbackRate?.sros[0]?.srItems ?? []
                         setSrOptions(srItems)
                     }
                 }
@@ -218,9 +229,13 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
         setSrOptions([])
         if (cfg.requiresSR) {
             if (sroId < 0) {
-                // Fallback SRO — read srItems directly from config
-                const fallbackSRO = cfg.fallbackSROs.find(s => s.id === sroId)
-                if (fallbackSRO) setSrOptions(fallbackSRO.srItems)
+                // Fallback SRO — find srItems in config's nested rate→sro structure
+                let srItems: { id: number; desc: string }[] = []
+                for (const rate of cfg.fallbackRates) {
+                    const found = rate.sros.find(s => s.id === sroId)
+                    if (found) { srItems = found.srItems; break }
+                }
+                setSrOptions(srItems)
             } else {
                 await fetchSRItems(sroId)
             }
@@ -345,7 +360,8 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                 <div>
                                     <label className={labelCls}>SRO Schedule <span className="text-red-400">*</span></label>
                                     <select
-                                        required value={form.sroScheduleId ?? ''}
+                                        required={sroOptions.length > 0}
+                                        value={form.sroScheduleId ?? ''}
                                         onChange={e => handleSROChange(Number(e.target.value))}
                                         className={inputCls}
                                         disabled={sroLoading}
@@ -365,7 +381,8 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
                                     <div>
                                         <label className={labelCls}>SR# Item <span className="text-red-400">*</span></label>
                                         <select
-                                            required value={form.sroItemSerialNo}
+                                            required={srOptions.length > 0}
+                                            value={form.sroItemSerialNo}
                                             onChange={e => handleSRChange(e.target.value)}
                                             className={inputCls}
                                             disabled={srLoading}

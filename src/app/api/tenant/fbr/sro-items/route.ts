@@ -17,8 +17,10 @@ interface PRALSROItemEntry {
  */
 function getFallbackSRItems(sroId: number): { id: number; desc: string }[] {
     for (const cfg of SALE_TYPE_LIST) {
-        const sro = cfg.fallbackSROs.find(s => s.id === sroId)
-        if (sro) return sro.srItems
+        for (const rate of cfg.fallbackRates) {
+            const sro = rate.sros.find(s => s.id === sroId)
+            if (sro) return sro.srItems
+        }
     }
     return []
 }

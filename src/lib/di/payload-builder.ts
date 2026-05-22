@@ -2,6 +2,8 @@ import type { Invoice, InvoiceItem, DICredentials } from '@/generated/prisma/cli
 import type { DIInvoicePayload } from './types'
 import { getSellerIdentity } from './seller'
 
+const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
+
 type PreferredIdType = 'NTN' | 'CNIC'
 
 type InvoiceWithItems = Invoice & { items: InvoiceItem[] }
@@ -76,7 +78,7 @@ export function buildDIPayload(
                 hsCode: item.hsCode, // e.g. "8471.3000"
                 productDescription: item.name,
                 rate: item.diRate ?? `${Number(item.taxRate)}%`, // Must be exact string from Reference API 5.8
-                uoM: item.diUOM ?? item.unit, // Must be exact string from Reference API 5.6
+                uoM: item.diUOM ?? item.unit ?? DEFAULT_FALLBACK_UOM, // Must be exact string from Reference API 5.6
                 quantity: Number(Number(item.quantity).toFixed(4)),
                 totalValues: resolveTotalValues(item, lineValue, salesTaxApplicable),
                 valueSalesExcludingST: Number(lineValue.toFixed(2)),
