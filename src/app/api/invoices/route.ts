@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
             const taxRate = Number(item.taxRate ?? product.taxRate)
             const directSaleType = normalizeOptionalText(item.diSaleType)
             const productSaleType = normalizeOptionalText(product.diSaleType)
-            const resolvedSaleType = directSaleType ?? productSaleType
+            const resolvedSaleType = directSaleType ?? productSaleType ?? null
             const resolvedRate = resolveDIRateDescriptor({
                 diRate: normalizeOptionalText(item.diRate) ?? product.diRate,
                 taxRate,
