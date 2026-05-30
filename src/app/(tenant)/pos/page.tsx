@@ -43,7 +43,7 @@ export default function POSPage() {
     const {
         items, buyerName, buyerNTN, buyerProvince, buyerAddress,
         buyerRegistrationType, customerId, paymentMethod,
-        addItem, removeItem,
+        addItem, removeItem, updateQuantity, updateDiscount,
         setBuyerInfo, setCustomer, setPaymentMethod,
         subtotal, discountTotal, taxAmount, total, clearCart,
     } = useCartStore()
@@ -148,6 +148,8 @@ export default function POSPage() {
             isLocalOnly: true,
             unit: p.unit,
         })
+        updateQuantity(p.id, p.qty)
+        updateDiscount(p.id, p.discount)
     }
 
     const hasLocalOnlyItems = items.some((item) => item.isLocalOnly)
@@ -380,7 +382,7 @@ export default function POSPage() {
 
     return (
         <>
-            <div className="flex h-screen flex-col overflow-hidden bg-canvas">
+            <div className="flex h-[calc(100vh-6rem)] flex-col overflow-hidden bg-canvas">
 
                 {/* ══ TOP BAR: Customer | Search | New Product ══ */}
                 <div className="shrink-0 border-b border-border bg-surface px-4 py-3">
@@ -557,7 +559,7 @@ export default function POSPage() {
                 </div>
 
                 {/* ══ FIXED BOTTOM PANEL ══ */}
-                <div className="shrink-0 sticky bottom-0 z-20 border-t border-border bg-surface shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+                <div className="shrink-0 z-20 border-t border-border bg-surface shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
 
                     {/* Invoice type + payment */}
                     <div className="flex items-center gap-3 border-b border-border-muted px-4 py-2.5">

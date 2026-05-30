@@ -57,6 +57,8 @@ export interface DirectPosProduct {
     sroScheduleNo: string | null
     sroItemSerialNo: string | null
     isLocalOnly: true
+    qty: number
+    discount: number
 }
 
 interface DirectProductModalProps {
@@ -381,6 +383,8 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
             sroScheduleNo: form.sroScheduleNo || null,
             sroItemSerialNo: form.sroItemSerialNo || null,
             isLocalOnly: true,
+            qty: Math.max(1, toNumber(form.qty)),
+            discount: Math.max(0, toNumber(form.discount)),
         }
 
         onCreate(localProduct)
