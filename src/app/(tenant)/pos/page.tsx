@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { useCartStore } from '@/stores/cart'
 import { isValidNtnCnic, normalizeNtnCnic } from '@/lib/validation/pakistan'
+import { calculateSalesTaxApplicable } from '@/lib/di/tax'
 import DirectProductModal, { type DirectPosProduct } from './DirectProductModal'
 
 const CustomerModal = dynamic(() => import('./CustomerModal'), { ssr: false })
@@ -495,11 +496,13 @@ export default function POSPage() {
                                 <tbody>
                                     {items.map((item, idx) => {
                                         const lineBase = item.price * item.quantity
-                                        const isThirdSchedule = item.diSaleType?.trim().toLowerCase() === '3rd schedule goods'
-                                        const retailBase = item.diFixedNotifiedValueOrRetailPrice ?? item.price
-                                        const lineTax = isThirdSchedule
-                                            ? (retailBase * item.quantity * item.taxRate) / 100
-                                            : ((lineBase - item.discount) * item.taxRate) / 100
+                                        const lineTax = calculateSalesTaxApplicable({
+                                            saleType: item.diSaleType,
+                                            taxRate: item.taxRate,
+                                            taxableValue: lineBase - item.discount,
+                                            retailPrice: item.diFixedNotifiedValueOrRetailPrice ?? item.price,
+                                            quantity: item.quantity,
+                                        })
                                         const lineTotal = lineBase - item.discount + lineTax
                                         return (
                                             <tr key={item.productId} className={`border-b border-border-muted transition-colors hover:bg-surface-subtle ${idx % 2 === 0 ? '' : 'bg-surface-subtle/40'}`}>

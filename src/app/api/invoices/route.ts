@@ -6,6 +6,7 @@ import { getNextInvoiceNumber } from '@/lib/invoices/numbering'
 import { checkPlanLimit } from '@/lib/features/flags'
 import { isValidMobile, isValidNtnCnic, normalizeMobile, normalizeNtnCnic } from '@/lib/validation/pakistan'
 import { resolveDIRateDescriptor } from '@/lib/di/rate'
+import { calculateSalesTaxApplicable } from '@/lib/di/tax'
 
 const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
 
@@ -199,17 +200,18 @@ export async function POST(req: NextRequest) {
                 diSaleType: resolvedSaleType,
             })
 
-            // 3rd Schedule Goods: tax is on fixedNotifiedValueOrRetailPrice × qty, NOT on the taxable value.
-            // Auto-falls back to unitPrice if no explicit retail/notified price is stored.
-            const isThirdSchedule = (directSaleType ?? productSaleType ?? '').toLowerCase() === '3rd schedule goods'
             const retailBase = item.diFixedNotifiedValueOrRetailPrice != null
                 ? Number(item.diFixedNotifiedValueOrRetailPrice)
                 : product.diFixedNotifiedValueOrRetailPrice != null
                     ? Number(product.diFixedNotifiedValueOrRetailPrice)
                     : unitPrice
-            const lineTax = isThirdSchedule
-                ? (retailBase * qty * taxRate) / 100
-                : (taxableAmount * taxRate) / 100
+            const lineTax = calculateSalesTaxApplicable({
+                saleType: resolvedSaleType,
+                taxRate,
+                taxableValue: taxableAmount,
+                retailPrice: retailBase,
+                quantity: qty,
+            })
             const lineTotal = taxableAmount + lineTax
             const unit = normalizeOptionalText(item.unit) ?? product.unit ?? DEFAULT_FALLBACK_UOM
 

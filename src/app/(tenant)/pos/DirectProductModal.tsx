@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { SALE_TYPE_CONFIG, SALE_TYPE_LIST, type SaleTypeConfig } from '@/lib/di/sale-type-config'
+import { calculateSalesTaxApplicable } from '@/lib/di/tax'
 
 const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
 
@@ -124,7 +125,13 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
     const discount = Math.max(0, toNumber(form.discount))
     const taxableValue = Math.max(0, salePrice * qty - discount)
     const gstPercent = form.exmt ? 0 : Math.max(0, toNumber(form.taxPercent))
-    const gstAmount = (taxableValue * gstPercent) / 100
+    const gstAmount = calculateSalesTaxApplicable({
+        saleType: cfg?.label,
+        taxRate: gstPercent,
+        taxableValue,
+        retailPrice: salePrice,
+        quantity: qty,
+    })
     const ftAmount = (taxableValue * Math.max(0, toNumber(form.ftPercent))) / 100
     const fedAmount = (taxableValue * Math.max(0, toNumber(form.fedPercent))) / 100
     const extAmount = (taxableValue * Math.max(0, toNumber(form.extPercent))) / 100

@@ -9,6 +9,7 @@ import { getScenarioId, getSaleTypeIdFromLabel } from '@/lib/di/sale-type-config
 import { evaluateDIItemReadiness } from '@/lib/di/eligibility'
 import { mapDIErrorCodes } from '@/lib/di/error-codes'
 import { resolveDIRateDescriptor } from '@/lib/di/rate'
+import { calculateSalesTaxApplicable } from '@/lib/di/tax'
 import { stringifyError } from '@/lib/fbr/submission-log'
 
 const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
@@ -79,12 +80,19 @@ function buildDirectPayload(input: z.infer<typeof DirectSubmissionSchema>, creds
         items: input.items.map((item) => {
             const lineDiscount = Number((item.discount ?? 0).toFixed(2))
             const lineValue = Number((item.price * item.quantity - lineDiscount).toFixed(2))
-            const salesTaxApplicable = Number(((lineValue * item.taxRate) / 100).toFixed(2))
             const isThirdSchedule = normalizeText(item.diSaleType).toLowerCase() === '3rd schedule goods'
             const resolvedRate = resolveDIRateDescriptor({
                 diRate: item.diRate,
                 taxRate: item.taxRate,
                 diSaleType: item.diSaleType,
+            })
+            const retailBase = item.diFixedNotifiedValueOrRetailPrice ?? item.price
+            const salesTaxApplicable = calculateSalesTaxApplicable({
+                saleType: item.diSaleType,
+                taxRate: item.taxRate,
+                taxableValue: lineValue,
+                retailPrice: retailBase,
+                quantity: item.quantity,
             })
 
             return {
