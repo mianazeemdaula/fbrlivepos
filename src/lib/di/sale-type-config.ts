@@ -120,18 +120,13 @@ export const SALE_TYPE_CONFIG: Record<string, SaleTypeConfig> = {
         id: 'SN008', scenarioId: 'SN008', label: '3rd Schedule Goods',
         transTypeId: 22, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'retailPrice', uomLocked: null, fallbackRates: [
-            { desc: '15%', sros: [
-                { id: -1, desc: '3rd Schedule goods', srItems: [{id: -1, desc: '51'}] },
-            ] },
-            { desc: '18%', sros: [] },
-            { desc: '25%', sros:
-                [{
-                    "id": -1, "desc": "297(I)/2023-Table-I",
-                    srItems: [{"id":-1,"desc":"1"},{"id":-1,"desc":"10"},{"id":-1,"desc":"11"},{"id":-1,"desc":"2"},{"id":-1,"desc":"20"},{"id":-1,"desc":"21"},{"id":-1,"desc":"22"},{"id":-1,"desc":"24"},{"id":-1,"desc":"29"},{"id":-1,"desc":"8"}]
-                }]
-             },
-        ],
+        taxBase: 'retailPrice', uomLocked: null,
+        fallbackRates: [{
+            desc: '18%',
+            sros: [
+                { id: -1, desc: '3rd Schedule goods', srItems: [{ id: -1, desc: '51' }] },
+            ],
+        }],
     },
     SN009: {
         id: 'SN009', scenarioId: 'SN009', label: 'Cotton ginners',
@@ -263,17 +258,12 @@ export const SALE_TYPE_CONFIG: Record<string, SaleTypeConfig> = {
         transTypeId: 22, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
         taxBase: 'retailPrice', uomLocked: null,
-        fallbackRates: [{ desc: '18%', sros: [{ id: 454, desc: '3rd Schedule goods', srItems: [{ id: 18251, desc: "51" }] }] }],
-    },
-    SN028: {
-        id: 'SN028', scenarioId: 'SN028', label: 'Goods at Reduced Rate',
-        transTypeId: 19, requiresSRO: true, requiresSR: true,
-        showFT: false, showFED: false, showEXT: false, showEXMT: false,
-        taxBase: 'value', uomLocked: null,
-        fallbackRates: ratesWithSROs(['1%', '2%', '5%', '7%', '10%', '12%', '17%'], [
-            { id: -1, desc: 'SRO 1125(I)/2011 - Reduced Rate Retailers', srItems: REDUCED_SR_ITEMS },
-            { id: -2, desc: 'SRO 678(I)/2004 - Export Oriented', srItems: REDUCED_SR_ITEMS },
-        ]),
+        fallbackRates: [{
+            desc: '18%',
+            sros: [
+                { id: -1, desc: '3rd Schedule goods', srItems: [{ id: -1, desc: '51' }] },
+            ],
+        }],
     },
 }
 
