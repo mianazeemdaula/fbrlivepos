@@ -23,7 +23,7 @@ export function calculateSalesTaxApplicable(params: {
             return 0
         }
 
-        return Number(((retailPrice * quantity * taxRate) / (100 + taxRate)).toFixed(2))
+        return Number(((retailPrice * taxRate) / 100).toFixed(2))
     }
 
     return Number((Math.max(0, Number(params.taxableValue) || 0) * taxRate / 100).toFixed(2))

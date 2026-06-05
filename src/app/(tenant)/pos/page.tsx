@@ -3,8 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { useCartStore } from '@/stores/cart'
-import { isValidNtnCnic, normalizeNtnCnic } from '@/lib/validation/pakistan'
-import { calculateSalesTaxApplicable } from '@/lib/di/tax'
+import { normalizeNtnCnic } from '@/lib/validation/pakistan'
 import DirectProductModal, { type DirectPosProduct } from './DirectProductModal'
 
 const CustomerModal = dynamic(() => import('./CustomerModal'), { ssr: false })
@@ -17,11 +16,22 @@ interface Product {
     taxRate: number
     diRate?: string | null // FBR rate string e.g. "18%", "Exempt"
     diSaleType?: string | null
-    diFixedNotifiedValueOrRetailPrice?: number | null // 3rd Schedule: retail/notified price per unit
+    diFixedNotifiedValueOrRetailPrice?: number | null // 3rd Schedule: retail/notified price per unit (callers multiply by qty for tax calc)
     sroScheduleNo?: string | null
     sroItemSerialNo?: string | null
     isLocalOnly?: boolean
     unit: string
+    valueSalesExcludingST?: number
+    salesTaxApplicable?: number
+    furtherTax?: number
+    fedPayable?: number
+    extraTax?: number
+    totalTax?: number
+    totalInvoiceValue?: number
+    furtherTaxPercent?: number
+    fedPercent?: number
+    extraTaxPercent?: number
+    isExempt?: boolean
 }
 
 export default function POSPage() {
@@ -32,19 +42,13 @@ export default function POSPage() {
     const [showProductModal, setShowProductModal] = useState(false)
     const [draftLoading, setDraftLoading] = useState(false)
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-    const [isValidating, setIsValidating] = useState(false)
-    const [validationState, setValidationState] = useState<'IDLE' | 'VALID' | 'FAILED'>('IDLE')
-    const [validationLog, setValidationLog] = useState<{ error: string, details?: any, rawResponse?: any, payload?: any } | null>(null)
-    const [draftInvoiceId, setDraftInvoiceId] = useState<string | null>(null)
-    const [isConfirming, setIsConfirming] = useState(false)
     const [invoiceType, setInvoiceType] = useState<'Sale Invoice' | 'Debit Note'>('Sale Invoice')
     const [invoiceRefNo, setInvoiceRefNo] = useState('')
-    const [preferredIdType, setPreferredIdType] = useState<string>('NTN')
 
     const {
         items, buyerName, buyerNTN, buyerProvince, buyerAddress,
         buyerRegistrationType, customerId, paymentMethod,
-        addItem, removeItem, updateQuantity, updateDiscount,
+        addItem, removeItem,
         setBuyerInfo, setCustomer, setPaymentMethod,
         subtotal, discountTotal, taxAmount, total, clearCart,
     } = useCartStore()
@@ -84,20 +88,9 @@ export default function POSPage() {
 
     useEffect(() => { searchProducts('') }, [searchProducts])
     useEffect(() => {
-        fetch('/api/tenant/profile').then(r => r.json()).then(d => {
-            if (d.preferredIdType) setPreferredIdType(d.preferredIdType)
-        }).catch(() => { })
-    }, [])
-
-    useEffect(() => {
         const timer = setTimeout(() => searchProducts(search), 300)
         return () => clearTimeout(timer)
     }, [search, searchProducts])
-
-    useEffect(() => {
-        setValidationState('IDLE')
-        setValidationLog(null)
-    }, [items, customerId, paymentMethod, buyerNTN, buyerRegistrationType, invoiceType, invoiceRefNo])
 
     function handleAddProduct(product: Product) {
         addItem({
@@ -113,6 +106,17 @@ export default function POSPage() {
             sroItemSerialNo: product.sroItemSerialNo ?? null,
             isLocalOnly: Boolean(product.isLocalOnly),
             unit: product.unit,
+            valueSalesExcludingST: product.valueSalesExcludingST,
+            salesTaxApplicable: product.salesTaxApplicable,
+            furtherTax: product.furtherTax,
+            fedPayable: product.fedPayable,
+            extraTax: product.extraTax,
+            totalTax: product.totalTax,
+            totalInvoiceValue: product.totalInvoiceValue,
+            furtherTaxPercent: product.furtherTaxPercent,
+            fedPercent: product.fedPercent,
+            extraTaxPercent: product.extraTaxPercent,
+            isExempt: product.isExempt,
         })
     }
 
@@ -133,6 +137,17 @@ export default function POSPage() {
                 sroItemSerialNo: p.sroItemSerialNo ?? null,
                 isLocalOnly: true,
                 unit: p.unit,
+                valueSalesExcludingST: p.valueSalesExcludingST,
+                salesTaxApplicable: p.salesTaxApplicable,
+                furtherTax: p.furtherTax,
+                fedPayable: p.fedPayable,
+                extraTax: p.extraTax,
+                totalTax: p.totalTax,
+                totalInvoiceValue: p.totalInvoiceValue,
+                furtherTaxPercent: p.furtherTaxPercent,
+                fedPercent: p.fedPercent,
+                extraTaxPercent: p.extraTaxPercent,
+                isExempt: p.isExempt,
             }, ...prev]
         })
         addItem({
@@ -148,12 +163,29 @@ export default function POSPage() {
             sroItemSerialNo: p.sroItemSerialNo ?? null,
             isLocalOnly: true,
             unit: p.unit,
+            quantity: p.qty,
+            discount: p.discount,
+            valueSalesExcludingST: p.valueSalesExcludingST,
+            salesTaxApplicable: p.salesTaxApplicable,
+            furtherTax: p.furtherTax,
+            fedPayable: p.fedPayable,
+            extraTax: p.extraTax,
+            totalTax: p.totalTax,
+            totalInvoiceValue: p.totalInvoiceValue,
+            furtherTaxPercent: p.furtherTaxPercent,
+            fedPercent: p.fedPercent,
+            extraTaxPercent: p.extraTaxPercent,
+            isExempt: p.isExempt,
         })
-        updateQuantity(p.id, p.qty)
-        updateDiscount(p.id, p.discount)
     }
 
-    const hasLocalOnlyItems = items.some((item) => item.isLocalOnly)
+    function getItemSalesTax(item: typeof items[number]) {
+        return item.totalTax ?? item.salesTaxApplicable ?? 0
+    }
+
+    function getItemLineTotal(item: typeof items[number]) {
+        return item.totalInvoiceValue ?? item.itemTotal ?? (item.price * item.quantity - item.discount + getItemSalesTax(item))
+    }
 
     async function handleSaveNewCustomerFromModal(form: {
         name: string; ntnCnic: string; phone: string
@@ -189,39 +221,28 @@ export default function POSPage() {
             paymentMethod,
             invoiceType,
             invoiceRefNo: invoiceType === 'Debit Note' ? (invoiceRefNo || undefined) : undefined,
-            items: items.map((i) => {
-                const resolvedRate = (i.diRate ?? '').trim() || `${i.taxRate}%`
-                const resolvedSaleType = (i.diSaleType ?? '').trim() || 'Goods at standard rate (default)'
-
-                if (!i.isLocalOnly) {
-                    return {
-                        productId: i.productId,
-                        quantity: i.quantity,
-                        discount: i.discount,
-                        taxRate: i.taxRate,
-                        diRate: resolvedRate,
-                        diSaleType: resolvedSaleType,
-                        diFixedNotifiedValueOrRetailPrice: i.diFixedNotifiedValueOrRetailPrice ?? null,
-                        sroScheduleNo: i.sroScheduleNo ?? undefined,
-                        sroItemSerialNo: i.sroItemSerialNo ?? undefined,
-                    }
-                }
-
-                return {
-                    quantity: i.quantity,
-                    discount: i.discount,
-                    taxRate: i.taxRate,
-                    diRate: resolvedRate,
-                    diSaleType: resolvedSaleType,
-                    diFixedNotifiedValueOrRetailPrice: i.diFixedNotifiedValueOrRetailPrice ?? null,
-                    sroScheduleNo: i.sroScheduleNo ?? undefined,
-                    sroItemSerialNo: i.sroItemSerialNo ?? undefined,
-                    name: i.name,
-                    hsCode: i.hsCode,
-                    unit: i.unit,
-                    price: i.price,
-                }
-            }),
+            items: items.map((i) => ({
+                productId: i.isLocalOnly ? undefined : i.productId,
+                name: i.name,
+                hsCode: i.hsCode,
+                price: i.price,
+                quantity: i.quantity,
+                discount: i.discount,
+                taxRate: i.taxRate,
+                diRate: i.diRate ?? undefined,
+                diSaleType: i.diSaleType ?? undefined,
+                unit: i.unit,
+                diFixedNotifiedValueOrRetailPrice: i.diFixedNotifiedValueOrRetailPrice ?? null,
+                sroScheduleNo: i.sroScheduleNo ?? null,
+                sroItemSerialNo: i.sroItemSerialNo ?? null,
+                valueSalesExcludingST: i.valueSalesExcludingST,
+                salesTaxApplicable: i.salesTaxApplicable,
+                furtherTax: i.furtherTax,
+                fedPayable: i.fedPayable,
+                extraTax: i.extraTax,
+                totalTax: i.totalTax,
+                totalInvoiceValue: i.totalInvoiceValue,
+            })),
         }
     }
 
@@ -235,146 +256,8 @@ export default function POSPage() {
             const data = await res.json()
             if (!res.ok) { setMessage({ type: 'error', text: data.error || 'Failed to save draft' }); return }
             setMessage({ type: 'success', text: `Draft ${data.invoice.invoiceNumber || 'saved locally'}.` })
-            setDraftInvoiceId(data.invoice.id)
-            setValidationState('IDLE')
-            setValidationLog(null)
             clearCart()
         } catch { setMessage({ type: 'error', text: 'Network error.' }) } finally { setDraftLoading(false) }
-    }
-
-    async function handleValidate() {
-        if (items.length === 0) return
-        if (hasLocalOnlyItems) {
-            setIsValidating(true)
-            setValidationLog(null)
-            setValidationState('IDLE')
-            setMessage(null)
-            try {
-                const draftBody = { ...(await buildInvoiceBody()), status: 'DRAFT' }
-                const draftRes = await fetch('/api/invoices', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(draftBody),
-                })
-                const draftData = await draftRes.json()
-                if (!draftRes.ok) {
-                    setValidationState('FAILED')
-                    setMessage({ type: 'error', text: draftData.error || 'Failed to save draft before direct submission.' })
-                    return
-                }
-                setDraftInvoiceId(draftData.invoice.id)
-
-                const directBody = {
-                    buyerName: buyerName || undefined,
-                    buyerNTN: normalizeNtnCnic(buyerNTN) || undefined,
-                    buyerProvince: buyerProvince || undefined,
-                    buyerAddress: buyerAddress || undefined,
-                    buyerRegistrationType: buyerRegistrationType || undefined,
-                    invoiceType,
-                    invoiceRefNo: invoiceType === 'Debit Note' ? (invoiceRefNo || undefined) : undefined,
-                    items: items.map((item) => ({
-                        name: item.name,
-                        hsCode: item.hsCode,
-                        price: item.price,
-                        quantity: item.quantity,
-                        discount: item.discount,
-                        taxRate: item.taxRate,
-                        diRate: (item.diRate ?? '').trim() || `${item.taxRate}%`,
-                        diSaleType: (item.diSaleType ?? '').trim() || 'Goods at standard rate (default)',
-                        unit: item.unit,
-                        diFixedNotifiedValueOrRetailPrice: item.diFixedNotifiedValueOrRetailPrice ?? null,
-                        sroScheduleNo: item.sroScheduleNo ?? null,
-                        sroItemSerialNo: item.sroItemSerialNo ?? null,
-                        furtherTax: 0,
-                        extraTax: 0,
-                        fedPayable: 0,
-                        diSalesTaxWithheldAtSource: 0,
-                    })),
-                }
-
-                const res = await fetch('/api/tenant/fbr/submit-direct', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(directBody),
-                })
-                const data = await res.json()
-
-                if (!res.ok) {
-                    setValidationState('FAILED')
-                    setValidationLog({
-                        error: data.error || 'Direct PRAL submission failed',
-                        details: data.errors || data.details,
-                        rawResponse: data.rawResponse,
-                        payload: data.payload,
-                    })
-                    setMessage({ type: 'error', text: data.error || 'Direct PRAL submission failed.' })
-                    return
-                }
-
-                setValidationState('VALID')
-                setMessage({ type: 'success', text: `Draft ${draftData.invoice.invoiceNumber || 'saved'} and invoice ${data.diInvoiceNumber || 'submitted'} directly to FBR successfully!` })
-                clearCart()
-                return
-            } catch {
-                setMessage({ type: 'error', text: 'Network error during direct FBR submission.' })
-                return
-            } finally {
-                setIsValidating(false)
-            }
-        }
-        const norm = normalizeNtnCnic(buyerNTN)
-        if (norm && !isValidNtnCnic(norm)) {
-            setMessage({ type: 'error', text: `${preferredIdType} must be 7 digits (NTN) or 13 digits (CNIC).` })
-            return
-        }
-        setIsValidating(true)
-        setValidationLog(null)
-        setValidationState('IDLE')
-        setMessage(null)
-        try {
-            const body = { ...(await buildInvoiceBody()), status: 'DRAFT' }
-            const res = await fetch('/api/invoices', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-            const data = await res.json()
-            if (!res.ok) { setMessage({ type: 'error', text: data.error || 'Failed to save invoice.' }); setIsValidating(false); return }
-            const currentInvoiceId = data.invoice.id
-            setDraftInvoiceId(currentInvoiceId)
-            const valRes = await fetch('/api/tenant/fbr/validate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ invoiceId: currentInvoiceId }) })
-            const valData = await valRes.json()
-            if (valRes.ok && valData.valid) {
-                setValidationState('VALID')
-                setMessage({ type: 'success', text: 'Invoice verified successfully by FBR! Ready to submit.' })
-            } else {
-                setValidationState('FAILED')
-                setValidationLog({ error: valData.error || 'Validation rejected by FBR', details: valData.errors || valData.details, rawResponse: valData.rawResponse, payload: valData.payload })
-                setMessage({ type: 'error', text: 'FBR Validation failed. Check logs below.' })
-            }
-        } catch {
-            setMessage({ type: 'error', text: 'Network error during validation.' })
-        } finally {
-            setIsValidating(false)
-        }
-    }
-
-    async function handleConfirmSubmit() {
-        if (!draftInvoiceId) return
-        setIsConfirming(true)
-        setMessage(null)
-        try {
-            const diRes = await fetch('/api/tenant/fbr/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ invoiceId: draftInvoiceId }) })
-            const d = await diRes.json().catch(() => ({}))
-            if (!diRes.ok) {
-                setMessage({ type: 'error', text: `DI submission failed: ${d.error ?? 'Unknown error.'}` })
-                setValidationLog({ error: d.error || 'Submission failed', details: d.details || d.errors, rawResponse: d.rawResponse, payload: d.payload })
-                setValidationState('FAILED')
-                setIsConfirming(false)
-                return
-            }
-            setMessage({ type: 'success', text: `Invoice ${d.diInvoiceNumber || 'submitted'} to FBR successfully!` })
-            setDraftInvoiceId(null)
-            setValidationState('IDLE')
-            setValidationLog(null)
-            clearCart()
-        } catch { setMessage({ type: 'error', text: 'Network error during submission.' }) } finally { setIsConfirming(false) }
     }
 
     const selectedCustomer = customerId
@@ -486,7 +369,7 @@ export default function POSPage() {
                                     <tr className="border-b border-border bg-surface sticky top-0 z-10">
                                         <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[34%]">Product</th>
                                         <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[14%]">Unit Price</th>
-                                        <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-caps text-muted w-[8%]">Qty</th>
+                                        <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[8%]">Qty</th>
                                         <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[12%]">Rate</th>
                                         <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[12%]">Discount</th>
                                         <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-caps text-muted w-[16%]">Total</th>
@@ -495,15 +378,6 @@ export default function POSPage() {
                                 </thead>
                                 <tbody>
                                     {items.map((item, idx) => {
-                                        const lineBase = item.price * item.quantity
-                                        const lineTax = calculateSalesTaxApplicable({
-                                            saleType: item.diSaleType,
-                                            taxRate: item.taxRate,
-                                            taxableValue: lineBase - item.discount,
-                                            retailPrice: item.diFixedNotifiedValueOrRetailPrice ?? item.price,
-                                            quantity: item.quantity,
-                                        })
-                                        const lineTotal = lineBase - item.discount + lineTax
                                         return (
                                             <tr key={item.productId} className={`border-b border-border-muted transition-colors hover:bg-surface-subtle ${idx % 2 === 0 ? '' : 'bg-surface-subtle/40'}`}>
                                                 {/* Product */}
@@ -541,8 +415,8 @@ export default function POSPage() {
 
                                                 {/* Total */}
                                                 <td className="px-3 py-2.5 text-right">
-                                                    <p className="text-sm font-bold text-ink">PKR {lineTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
-                                                    <p className="text-xs text-muted">+{lineTax.toLocaleString(undefined, { maximumFractionDigits: 2 })} tax</p>
+                                                    <p className="text-sm font-bold text-ink">PKR {getItemLineTotal(item).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                                                    <p className="text-xs text-muted">+{getItemSalesTax(item).toLocaleString(undefined, { maximumFractionDigits: 2 })} tax</p>
                                                 </td>
 
                                                 {/* Remove */}
@@ -629,69 +503,14 @@ export default function POSPage() {
 
                     {/* Action buttons */}
                     <div className="flex gap-2 px-4 pb-4">
-                        {validationState === 'VALID' ? (
-                            <>
-                                <button
-                                    onClick={() => setValidationState('IDLE')}
-                                    className="flex-1 rounded-full border border-border bg-canvas py-2.5 text-sm font-medium text-ink-secondary transition-colors hover:bg-surface"
-                                >Edit Details</button>
-                                <button
-                                    onClick={handleConfirmSubmit}
-                                    disabled={isConfirming}
-                                    className="flex-2 rounded-full bg-success py-2.5 text-sm font-bold text-white transition-colors hover:opacity-90 disabled:opacity-50"
-                                >
-                                    {isConfirming ? 'Submitting…' : 'Confirm & Submit to FBR'}
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <button
-                                    onClick={handleDraft}
-                                    disabled={items.length === 0 || draftLoading || isValidating || isConfirming}
-                                    className="flex-1 rounded-full border border-border bg-canvas py-2.5 text-sm font-medium text-ink-secondary transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
-                                >
-                                    {draftLoading ? 'Saving…' : 'Save Draft'}
-                                </button>
-                                <button
-                                    onClick={handleValidate}
-                                    disabled={items.length === 0 || isValidating || draftLoading || isConfirming}
-                                    className="flex-2 rounded-full bg-primary py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-40"
-                                >
-                                    {isValidating ? 'Submitting…' : `${hasLocalOnlyItems ? 'Direct Submit to FBR' : 'Validate & FBR'} · PKR ${total().toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
-                                </button>
-                            </>
-                        )}
+                        <button
+                            onClick={handleDraft}
+                            disabled={items.length === 0 || draftLoading}
+                            className="flex-1 rounded-full bg-primary py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                            {draftLoading ? 'Saving…' : 'Save Draft'}
+                        </button>
                     </div>
-
-                    {/* Validation error logs */}
-                    {validationState === 'FAILED' && validationLog && (
-                        <div className="mx-4 mb-4 rounded-xl border border-error-border bg-error-bg p-3 text-xs">
-                            <h4 className="font-bold text-error mb-1">Validation Errors</h4>
-                            <p className="text-error mb-2">{validationLog.error}</p>
-                            {validationLog.details && (
-                                <div className="max-h-32 overflow-y-auto mb-2 rounded bg-code-bg p-2">
-                                    <pre className="whitespace-pre-wrap font-mono text-micro text-green-400 m-0">{JSON.stringify(validationLog.details, null, 2)}</pre>
-                                </div>
-                            )}
-                            <details className="text-muted">
-                                <summary className="cursor-pointer hover:text-ink">View Payload &amp; Raw FBR Response</summary>
-                                <div className="mt-2 space-y-2">
-                                    <div>
-                                        <p className="font-semibold mb-1 text-ink-secondary">Requested Payload:</p>
-                                        <div className="max-h-40 overflow-y-auto rounded bg-code-bg p-2">
-                                            <pre className="whitespace-pre-wrap font-mono text-micro text-green-400 m-0">{JSON.stringify(validationLog.payload, null, 2)}</pre>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold mb-1 text-ink-secondary">FBR Raw Response:</p>
-                                        <div className="max-h-40 overflow-y-auto rounded bg-code-bg p-2">
-                                            <pre className="whitespace-pre-wrap font-mono text-micro text-green-400 m-0">{JSON.stringify(validationLog.rawResponse, null, 2)}</pre>
-                                        </div>
-                                    </div>
-                                </div>
-                            </details>
-                        </div>
-                    )}
                 </div>
             </div>
 

@@ -9,13 +9,30 @@ interface CartItem {
     taxRate: number
     diRate: string | null // FBR rate string e.g. "18%", "Exempt"
     diSaleType: string | null
-    diFixedNotifiedValueOrRetailPrice: number | null // 3rd Schedule: tax base price per unit
+    diFixedNotifiedValueOrRetailPrice: number | null // 3rd Schedule: retail/notified price per unit (callers multiply by qty for tax calc)
     sroScheduleNo: string | null
     sroItemSerialNo: string | null
     isLocalOnly: boolean
     unit: string
     quantity: number
     discount: number // per-item discount amount
+    valueSalesExcludingST?: number
+    salesTaxApplicable?: number
+    furtherTax?: number
+    fedPayable?: number
+    extraTax?: number
+    totalTax?: number
+    totalInvoiceValue?: number
+    furtherTaxPercent?: number
+    fedPercent?: number
+    extraTaxPercent?: number
+    isExempt?: boolean
+    itemTotal?: number
+}
+
+type CartItemInput = Omit<CartItem, 'quantity' | 'discount'> & {
+    quantity?: number
+    discount?: number
 }
 
 interface CartStore {
@@ -30,17 +47,8 @@ interface CartStore {
     paymentMethod: 'CASH' | 'CARD' | 'BANK_TRANSFER'
     terminalId: string | null
 
-    addItem: (item: Omit<CartItem, 'quantity' | 'discount'>) => void
+    addItem: (item: CartItemInput) => void
     removeItem: (productId: string) => void
-    updateQuantity: (productId: string, quantity: number) => void
-    updateDiscount: (productId: string, discount: number) => void
-    updatePrice: (productId: string, price: number) => void
-    updateTaxRate: (productId: string, taxRate: number) => void
-    updateDiRate: (productId: string, diRate: string) => void
-    updateDiSaleType: (productId: string, diSaleType: string) => void
-    updateSroScheduleNo: (productId: string, sroScheduleNo: string) => void
-    updateSroItemSerialNo: (productId: string, sroItemSerialNo: string) => void
-    updateRetailPrice: (productId: string, retailPrice: number | null) => void
     setBuyerInfo: (info: { buyerName?: string; buyerNTN?: string; buyerPhone?: string; buyerProvince?: string; buyerAddress?: string; buyerRegistrationType?: 'Registered' | 'Unregistered' | '' }) => void
     setCustomer: (customer: { id: string; name: string; ntnCnic?: string | null; phone?: string | null; province?: string | null; address?: string | null; registrationType?: string | null } | null) => void
     setPaymentMethod: (method: 'CASH' | 'CARD' | 'BANK_TRANSFER') => void
@@ -70,85 +78,23 @@ export const useCartStore = create<CartStore>((set, get) => ({
     addItem: (item) =>
         set((state) => {
             const existing = state.items.find((i) => i.productId === item.productId)
+            const quantityToAdd = item.quantity ?? 1
+            const discountToAdd = item.discount ?? 0
             if (existing) {
                 return {
                     items: state.items.map((i) =>
-                        i.productId === item.productId ? { ...i, quantity: i.quantity + 1 } : i,
+                        i.productId === item.productId
+                            ? { ...i, quantity: i.quantity + quantityToAdd, discount: i.discount + discountToAdd }
+                            : i,
                     ),
                 }
             }
-            return { items: [...state.items, { ...item, quantity: 1, discount: 0 }] }
+            return { items: [...state.items, { ...item, quantity: quantityToAdd, discount: discountToAdd }] }
         }),
 
     removeItem: (productId) =>
         set((state) => ({
             items: state.items.filter((i) => i.productId !== productId),
-        })),
-
-    updateQuantity: (productId, quantity) =>
-        set((state) => ({
-            items:
-                quantity <= 0
-                    ? state.items.filter((i) => i.productId !== productId)
-                    : state.items.map((i) => (i.productId === productId ? { ...i, quantity } : i)),
-        })),
-
-    updateDiscount: (productId, discount) =>
-        set((state) => ({
-            items: state.items.map((i) =>
-                i.productId === productId ? { ...i, discount: Math.max(0, discount) } : i,
-            ),
-        })),
-
-    updatePrice: (productId, price) =>
-        set((state) => ({
-            items: state.items.map((i) =>
-                i.productId === productId ? { ...i, price: Math.max(0, price) } : i,
-            ),
-        })),
-
-    updateTaxRate: (productId, taxRate) =>
-        set((state) => ({
-            items: state.items.map((i) =>
-                i.productId === productId ? { ...i, taxRate: Math.max(0, taxRate) } : i,
-            ),
-        })),
-
-    updateDiRate: (productId, diRate) =>
-        set((state) => ({
-            items: state.items.map((i) =>
-                i.productId === productId ? { ...i, diRate } : i,
-            ),
-        })),
-
-    updateDiSaleType: (productId, diSaleType) =>
-        set((state) => ({
-            items: state.items.map((i) =>
-                i.productId === productId ? { ...i, diSaleType } : i,
-            ),
-        })),
-
-    updateSroScheduleNo: (productId, sroScheduleNo) =>
-        set((state) => ({
-            items: state.items.map((i) =>
-                i.productId === productId ? { ...i, sroScheduleNo } : i,
-            ),
-        })),
-
-    updateSroItemSerialNo: (productId, sroItemSerialNo) =>
-        set((state) => ({
-            items: state.items.map((i) =>
-                i.productId === productId ? { ...i, sroItemSerialNo } : i,
-            ),
-        })),
-
-    updateRetailPrice: (productId, retailPrice) =>
-        set((state) => ({
-            items: state.items.map((i) =>
-                i.productId === productId
-                    ? { ...i, diFixedNotifiedValueOrRetailPrice: retailPrice }
-                    : i,
-            ),
         })),
 
     setBuyerInfo: (info) => set(info),
@@ -187,13 +133,13 @@ export const useCartStore = create<CartStore>((set, get) => ({
     taxAmount: () =>
         get().items.reduce((sum, i) => {
             const lineSubtotal = i.price * i.quantity - i.discount
-            return sum + calculateSalesTaxApplicable({
+            return sum + (i.totalTax ?? i.salesTaxApplicable ?? calculateSalesTaxApplicable({
                 saleType: i.diSaleType,
                 taxRate: i.taxRate,
                 taxableValue: lineSubtotal,
-                retailPrice: i.diFixedNotifiedValueOrRetailPrice ?? i.price,
+                retailPrice: (i.diFixedNotifiedValueOrRetailPrice ?? i.price) * i.quantity,
                 quantity: i.quantity,
-            })
+            }))
         }, 0),
     total: () => get().subtotal() - get().discountTotal() + get().taxAmount(),
     itemCount: () => get().items.reduce((sum, i) => sum + i.quantity, 0),

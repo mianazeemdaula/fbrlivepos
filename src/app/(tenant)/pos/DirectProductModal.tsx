@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { SALE_TYPE_CONFIG, SALE_TYPE_LIST, type SaleTypeConfig } from '@/lib/di/sale-type-config'
-import { calculateSalesTaxApplicable } from '@/lib/di/tax'
+import { calculateItemTax } from '@/lib/di/scenario-tax-calculator'
 
 const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
 
@@ -32,14 +32,6 @@ type TaxFormState = {
     ftPercent: string
     fedPercent: string
     extPercent: string
-    poNo: string
-    billNo: string
-    challanNo: string
-    grNo: string
-    gpNo: string
-    note: string
-    batchNo: string
-    batchExpiry: string
     sroScheduleId: number | null
     sroScheduleNo: string
     sroItemSerialNo: string
@@ -60,6 +52,17 @@ export interface DirectPosProduct {
     isLocalOnly: true
     qty: number
     discount: number
+    valueSalesExcludingST?: number
+    salesTaxApplicable?: number
+    furtherTax?: number
+    fedPayable?: number
+    extraTax?: number
+    totalTax?: number
+    totalInvoiceValue?: number
+    furtherTaxPercent?: number
+    fedPercent?: number
+    extraTaxPercent?: number
+    isExempt?: boolean
 }
 
 interface DirectProductModalProps {
@@ -83,14 +86,6 @@ const INIT: TaxFormState = {
     ftPercent: '',
     fedPercent: '',
     extPercent: '',
-    poNo: '',
-    billNo: '',
-    challanNo: '',
-    grNo: '',
-    gpNo: '',
-    note: '',
-    batchNo: '',
-    batchExpiry: '',
     sroScheduleId: null,
     sroScheduleNo: '',
     sroItemSerialNo: '',
@@ -123,20 +118,25 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
     const qty = Math.max(1, toNumber(form.qty))
     const salePrice = Math.max(0, toNumber(form.salePricePerUnit))
     const discount = Math.max(0, toNumber(form.discount))
-    const taxableValue = Math.max(0, salePrice * qty - discount)
-    const gstPercent = form.exmt ? 0 : Math.max(0, toNumber(form.taxPercent))
-    const gstAmount = calculateSalesTaxApplicable({
-        saleType: cfg?.label,
-        taxRate: gstPercent,
-        taxableValue,
-        retailPrice: salePrice,
+    const taxResult = calculateItemTax({
+        saleType: cfg?.label || '',
+        rateDesc: form.diRate,
         quantity: qty,
+        unitPrice: salePrice,
+        discount: discount,
+        fixedNotifiedValueOrRetailPrice: cfg?.taxBase === 'retailPrice' ? salePrice * qty : undefined,
+        furtherTaxPercent: toNumber(form.ftPercent),
+        fedPercent: toNumber(form.fedPercent),
+        extraTaxPercent: toNumber(form.extPercent),
+        isExempt: form.exmt,
     })
-    const ftAmount = (taxableValue * Math.max(0, toNumber(form.ftPercent))) / 100
-    const fedAmount = (taxableValue * Math.max(0, toNumber(form.fedPercent))) / 100
-    const extAmount = (taxableValue * Math.max(0, toNumber(form.extPercent))) / 100
-    const totalTax = gstAmount + ftAmount + fedAmount + extAmount
-    const valueInclTax = taxableValue + totalTax
+    const taxableValue = taxResult.valueSalesExcludingST
+    const gstAmount = taxResult.salesTaxApplicable
+    const ftAmount = taxResult.furtherTax
+    const fedAmount = taxResult.fedPayable
+    const extAmount = taxResult.extraTax
+    const totalTax = taxResult.totalTax
+    const valueInclTax = taxResult.totalInvoiceValue
 
     async function loadUomForHSCode(hsCode: string) {
         if (cfg?.uomLocked) {
@@ -392,8 +392,19 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
             isLocalOnly: true,
             qty: Math.max(1, toNumber(form.qty)),
             discount: Math.max(0, toNumber(form.discount)),
+            valueSalesExcludingST: taxResult.valueSalesExcludingST,
+            salesTaxApplicable: taxResult.salesTaxApplicable,
+            furtherTax: taxResult.furtherTax,
+            fedPayable: taxResult.fedPayable,
+            extraTax: taxResult.extraTax,
+            totalTax: taxResult.totalTax,
+            totalInvoiceValue: taxResult.totalInvoiceValue,
+            furtherTaxPercent: toNumber(form.ftPercent),
+            fedPercent: toNumber(form.fedPercent),
+            extraTaxPercent: toNumber(form.extPercent),
+            isExempt: form.exmt,
         }
-
+        console.log('Creating local product:', localProduct)
         onCreate(localProduct)
     }
 
@@ -566,41 +577,6 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-12 gap-3 rounded-2xl border border-border bg-surface p-4">
-                        <div className="col-span-2">
-                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">PO#</label>
-                            <input className={inputCls} value={form.poNo} onChange={(e) => setForm((current) => ({ ...current, poNo: e.target.value }))} />
-                        </div>
-                        <div className="col-span-2">
-                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Bill#</label>
-                            <input className={inputCls} value={form.billNo} onChange={(e) => setForm((current) => ({ ...current, billNo: e.target.value }))} />
-                        </div>
-                        <div className="col-span-1">
-                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">D. Challan#</label>
-                            <input className={inputCls} value={form.challanNo} onChange={(e) => setForm((current) => ({ ...current, challanNo: e.target.value }))} />
-                        </div>
-                        <div className="col-span-1">
-                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">G.R#</label>
-                            <input className={inputCls} value={form.grNo} onChange={(e) => setForm((current) => ({ ...current, grNo: e.target.value }))} />
-                        </div>
-                        <div className="col-span-1">
-                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">G.P#</label>
-                            <input className={inputCls} value={form.gpNo} onChange={(e) => setForm((current) => ({ ...current, gpNo: e.target.value }))} />
-                        </div>
-                        <div className="col-span-1">
-                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Batch#</label>
-                            <input className={inputCls} value={form.batchNo} onChange={(e) => setForm((current) => ({ ...current, batchNo: e.target.value }))} />
-                        </div>
-                        <div className="col-span-2">
-                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Note</label>
-                            <input className={inputCls} value={form.note} onChange={(e) => setForm((current) => ({ ...current, note: e.target.value }))} />
-                        </div>
-                        <div className="col-span-2">
-                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Batch Expiry</label>
-                            <input className={inputCls} type="date" value={form.batchExpiry} onChange={(e) => setForm((current) => ({ ...current, batchExpiry: e.target.value }))} />
-                        </div>
-                    </div>
-
                     <div className="rounded-2xl border border-primary bg-primary px-4 py-3 text-white">
                         <div className="grid grid-cols-12 items-center gap-3">
                             <div className="col-span-1 text-xs font-semibold uppercase tracking-wider">SRO</div>
@@ -646,7 +622,7 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
                             Cancel
                         </button>
                         <button type="submit" className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-white hover:bg-primary-dark">
-                            Add To POS
+                            Validate & Add
                         </button>
                     </div>
                 </form>

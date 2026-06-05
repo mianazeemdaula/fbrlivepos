@@ -13,25 +13,6 @@ function normalize(value: string | null | undefined) {
     return value?.trim().toLowerCase() ?? ''
 }
 
-function normalizeExtraTax(
-    saleType: string | null | undefined,
-    extraTax: number | { toString(): string } | null | undefined,
-): number | '' {
-    if (normalize(saleType) === 'goods at reduced rate' && Number(extraTax ?? 0) === 0) {
-        return ''
-    }
-
-    return Number(Number(extraTax ?? 0).toFixed(2))
-}
-
-function resolveTotalValues(item: InvoiceItem, lineValue: number, salesTaxApplicable: number) {
-    if (normalize(item.diSaleType) === '3rd schedule goods') {
-        return Number((lineValue + salesTaxApplicable).toFixed(2))
-    }
-
-    return 0
-}
-
 export function buildDIPayload(
     invoice: InvoiceWithItems,
     creds: DICredentials,
@@ -71,37 +52,28 @@ export function buildDIPayload(
         // Sandbox testing scenario (omit in production)
         scenarioId: options?.isSandbox ? options.scenarioId : undefined,
 
-        items: invoice.items.map((item) => {
-            const lineDiscount = Number(item.discount ?? 0)
-            const lineValue = Number(item.unitPrice) * Number(item.quantity) - lineDiscount
-            const salesTaxApplicable = Number(Number(item.taxAmount).toFixed(2))
-            const resolvedRate = resolveDIRateDescriptor({
+        items: invoice.items.map((item) => ({
+            hsCode: item.hsCode,
+            productDescription: item.name,
+            rate: item.diRate ?? resolveDIRateDescriptor({
                 diRate: item.diRate,
                 taxRate: Number(item.taxRate),
                 diSaleType: item.diSaleType,
-            })
-            return {
-                hsCode: item.hsCode, // e.g. "8471.3000"
-                productDescription: item.name,
-                rate: resolvedRate, // Must be exact string from Reference API 5.8
-                uoM: item.diUOM ?? item.unit ?? DEFAULT_FALLBACK_UOM, // Must be exact string from Reference API 5.6
-                quantity: Number(Number(item.quantity).toFixed(4)),
-                totalValues: resolveTotalValues(item, lineValue, salesTaxApplicable),
-                valueSalesExcludingST: Number(lineValue.toFixed(2)),
-                // 3rd Schedule: auto-fall back to unitPrice when no explicit retail/notified price is recorded
-                fixedNotifiedValueOrRetailPrice: normalize(item.diSaleType) === '3rd schedule goods'
-                    ? Number(Number(item.diFixedNotifiedValueOrRetailPrice ?? item.unitPrice).toFixed(2))
-                    : Number(Number(item.diFixedNotifiedValueOrRetailPrice ?? 0).toFixed(2)),
-                salesTaxApplicable,
-                salesTaxWithheldAtSource: Number(Number(item.diSalesTaxWithheldAtSource ?? 0).toFixed(2)),
-                extraTax: normalizeExtraTax(item.diSaleType, item.extraTax) == 0 ? '' : normalizeExtraTax(item.diSaleType, item.extraTax),
-                furtherTax: Number(Number(item.furtherTax ?? 0).toFixed(2)),
-                sroScheduleNo: item.sroScheduleNo ?? '',
-                fedPayable: Number(Number(item.fedPayable ?? 0).toFixed(2)),
-                discount: Number(lineDiscount.toFixed(2)),
-                saleType: item.diSaleType ?? 'Goods at standard rate (default)', // Exact string from Ref API (FBR docs: lowercase)
-                sroItemSerialNo: item.sroItemSerialNo ?? '',
-            }
-        }),
+            }),
+            uoM: item.diUOM ?? item.unit ?? DEFAULT_FALLBACK_UOM,
+            quantity: Number(item.quantity),
+            totalValues: normalize(item.diSaleType) === '3rd schedule goods' ? Number(item.lineTotal ?? 0) : 0,
+            valueSalesExcludingST: Number(item.lineTotal ?? 0) - Number(item.taxAmount ?? 0),
+            fixedNotifiedValueOrRetailPrice: Number(item.diFixedNotifiedValueOrRetailPrice ?? 0),
+            salesTaxApplicable: Number(item.taxAmount ?? 0),
+            salesTaxWithheldAtSource: Number(item.diSalesTaxWithheldAtSource ?? 0),
+            extraTax: Number(item.extraTax ?? 0),
+            furtherTax: Number(item.furtherTax ?? 0),
+            sroScheduleNo: item.sroScheduleNo ?? '',
+            fedPayable: Number(item.fedPayable ?? 0),
+            discount: Number(item.discount ?? 0),
+            saleType: item.diSaleType ?? 'Goods at standard rate (default)',
+            sroItemSerialNo: item.sroItemSerialNo ?? '',
+        })),
     }
 }

@@ -27,6 +27,10 @@ const DirectItemSchema = z.object({
     diFixedNotifiedValueOrRetailPrice: z.number().nullable().optional(),
     sroScheduleNo: z.string().nullable().optional(),
     sroItemSerialNo: z.string().nullable().optional(),
+    valueSalesExcludingST: z.number().min(0).optional(),
+    salesTaxApplicable: z.number().min(0).optional(),
+    totalValues: z.number().min(0).optional(),
+    totalInvoiceValue: z.number().min(0).optional(),
     furtherTax: z.number().min(0).optional().default(0),
     extraTax: z.number().min(0).optional().default(0),
     fedPayable: z.number().min(0).optional().default(0),
@@ -79,21 +83,24 @@ function buildDirectPayload(input: z.infer<typeof DirectSubmissionSchema>, creds
         scenarioId,
         items: input.items.map((item) => {
             const lineDiscount = Number((item.discount ?? 0).toFixed(2))
-            const lineValue = Number((item.price * item.quantity - lineDiscount).toFixed(2))
+            const lineValue = Number((item.valueSalesExcludingST ?? (item.price * item.quantity - lineDiscount)).toFixed(2))
             const isThirdSchedule = normalizeText(item.diSaleType).toLowerCase() === '3rd schedule goods'
             const resolvedRate = resolveDIRateDescriptor({
                 diRate: item.diRate,
                 taxRate: item.taxRate,
                 diSaleType: item.diSaleType,
             })
-            const retailBase = item.diFixedNotifiedValueOrRetailPrice ?? item.price
-            const salesTaxApplicable = calculateSalesTaxApplicable({
+            const retailBase = (item.diFixedNotifiedValueOrRetailPrice ?? item.price) * item.quantity
+            const salesTaxApplicable = item.salesTaxApplicable ?? calculateSalesTaxApplicable({
                 saleType: item.diSaleType,
                 taxRate: item.taxRate,
                 taxableValue: lineValue,
                 retailPrice: retailBase,
                 quantity: item.quantity,
             })
+            const furtherTax = Number((item.furtherTax ?? 0).toFixed(2))
+            const fedPayable = Number((item.fedPayable ?? 0).toFixed(2))
+            const extraTax = Number((item.extraTax ?? 0).toFixed(2))
 
             return {
                 hsCode: item.hsCode,
@@ -101,17 +108,17 @@ function buildDirectPayload(input: z.infer<typeof DirectSubmissionSchema>, creds
                 rate: resolvedRate,
                 uoM: normalizeText(item.unit) || DEFAULT_FALLBACK_UOM,
                 quantity: Number(item.quantity.toFixed(4)),
-                totalValues: isThirdSchedule ? Number((lineValue + salesTaxApplicable).toFixed(2)) : 0,
+                totalValues: item.totalValues ?? (isThirdSchedule ? Number((lineValue + salesTaxApplicable).toFixed(2)) : 0),
                 valueSalesExcludingST: lineValue,
                 fixedNotifiedValueOrRetailPrice: isThirdSchedule
                     ? Number((item.diFixedNotifiedValueOrRetailPrice ?? item.price).toFixed(2))
                     : Number((item.diFixedNotifiedValueOrRetailPrice ?? 0).toFixed(2)),
                 salesTaxApplicable,
                 salesTaxWithheldAtSource: Number((item.diSalesTaxWithheldAtSource ?? 0).toFixed(2)),
-                extraTax: Number(item.extraTax ?? 0) === 0 ? '' : Number((item.extraTax ?? 0).toFixed(2)),
-                furtherTax: Number((item.furtherTax ?? 0).toFixed(2)),
+                extraTax: extraTax === 0 ? '' : extraTax,
+                furtherTax,
                 sroScheduleNo: normalizeText(item.sroScheduleNo),
-                fedPayable: Number((item.fedPayable ?? 0).toFixed(2)),
+                fedPayable,
                 discount: lineDiscount,
                 saleType: item.diSaleType,
                 sroItemSerialNo: normalizeText(item.sroItemSerialNo),

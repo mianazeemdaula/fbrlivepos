@@ -46,6 +46,13 @@ const CreateInvoiceSchema = z.object({
             sroItemSerialNo: z.string().optional(),
             quantity: z.number().positive(),
             discount: z.number().min(0).default(0),
+            valueSalesExcludingST: z.number().min(0).optional(),
+            salesTaxApplicable: z.number().min(0).optional(),
+            furtherTax: z.number().min(0).optional(),
+            fedPayable: z.number().min(0).optional(),
+            extraTax: z.number().min(0).optional(),
+            totalTax: z.number().min(0).optional(),
+            totalInvoiceValue: z.number().min(0).optional(),
         }).superRefine((value, ctx) => {
             if (value.productId) return
 
@@ -189,7 +196,7 @@ export async function POST(req: NextRequest) {
             const qty = item.quantity
             const itemDiscount = item.discount ?? 0
             const lineSubtotal = unitPrice * qty
-            const taxableAmount = lineSubtotal - itemDiscount
+            const taxableAmount = item.valueSalesExcludingST ?? (lineSubtotal - itemDiscount)
             const taxRate = Number(item.taxRate ?? product.taxRate)
             const directSaleType = normalizeOptionalText(item.diSaleType)
             const productSaleType = normalizeOptionalText(product.diSaleType)
@@ -200,23 +207,27 @@ export async function POST(req: NextRequest) {
                 diSaleType: resolvedSaleType,
             })
 
-            const retailBase = item.diFixedNotifiedValueOrRetailPrice != null
-                ? Number(item.diFixedNotifiedValueOrRetailPrice)
-                : product.diFixedNotifiedValueOrRetailPrice != null
-                    ? Number(product.diFixedNotifiedValueOrRetailPrice)
-                    : unitPrice
-            const lineTax = calculateSalesTaxApplicable({
+            const retailBase = (item.diFixedNotifiedValueOrRetailPrice != null
+                ? Number(item.diFixedNotifiedValueOrRetailPrice) * qty
+                 : product.diFixedNotifiedValueOrRetailPrice != null
+                    ? Number(product.diFixedNotifiedValueOrRetailPrice) * qty
+                    : unitPrice * qty)
+            const salesTaxApplicable = item.salesTaxApplicable ?? calculateSalesTaxApplicable({
                 saleType: resolvedSaleType,
                 taxRate,
                 taxableValue: taxableAmount,
                 retailPrice: retailBase,
                 quantity: qty,
             })
-            const lineTotal = taxableAmount + lineTax
+            const furtherTax = item.furtherTax ?? Number(product.furtherTax ?? 0)
+            const fedPayable = item.fedPayable ?? Number(product.fedPayable ?? 0)
+            const extraTax = item.extraTax ?? Number(product.extraTax ?? 0)
+            const totalTaxLine = item.totalTax ?? (salesTaxApplicable + furtherTax + fedPayable + extraTax)
+            const lineTotal = item.totalInvoiceValue ?? (taxableAmount + totalTaxLine)
             const unit = normalizeOptionalText(item.unit) ?? product.unit ?? DEFAULT_FALLBACK_UOM
 
             subtotal += lineSubtotal
-            taxAmount += lineTax
+            taxAmount += totalTaxLine
             discountAmount += itemDiscount
 
             invoiceItems.push({
@@ -227,21 +238,21 @@ export async function POST(req: NextRequest) {
                 unit,
                 unitPrice,
                 taxRate,
-                taxAmount: lineTax,
+                taxAmount: totalTaxLine,
                 diRate: resolvedRate || null,
                 diUOM: unit,
                 diSaleType: resolvedSaleType,
                 diFixedNotifiedValueOrRetailPrice: item.diFixedNotifiedValueOrRetailPrice != null
-                    ? Number(item.diFixedNotifiedValueOrRetailPrice)
+                    ? Number(item.diFixedNotifiedValueOrRetailPrice) * qty
                     : product.diFixedNotifiedValueOrRetailPrice != null
                         ? Number(product.diFixedNotifiedValueOrRetailPrice)
                         : null,
                 diSalesTaxWithheldAtSource: product.diSalesTaxWithheldAtSource != null
                     ? Number(product.diSalesTaxWithheldAtSource)
                     : null,
-                extraTax: product.extraTax != null ? Number(product.extraTax) : null,
-                furtherTax: product.furtherTax != null ? Number(product.furtherTax) : null,
-                fedPayable: product.fedPayable != null ? Number(product.fedPayable) : null,
+                extraTax: item.extraTax != null ? Number(item.extraTax) : product.extraTax != null ? Number(product.extraTax) : null,
+                furtherTax: item.furtherTax != null ? Number(item.furtherTax) : product.furtherTax != null ? Number(product.furtherTax) : null,
+                fedPayable: item.fedPayable != null ? Number(item.fedPayable) : product.fedPayable != null ? Number(product.fedPayable) : null,
                 sroScheduleNo: normalizeOptionalText(item.sroScheduleNo) ?? product.sroScheduleNo,
                 sroItemSerialNo: normalizeOptionalText(item.sroItemSerialNo) ?? product.sroItemSerialNo,
                 discount: itemDiscount,
