@@ -63,7 +63,7 @@ export function buildDIPayload(
             uoM: item.diUOM ?? item.unit ?? DEFAULT_FALLBACK_UOM,
             quantity: Number(item.quantity),
             totalValues: normalize(item.diSaleType) === '3rd schedule goods' ? Number(item.lineTotal ?? 0) : 0,
-            valueSalesExcludingST: Number(item.lineTotal ?? 0) - Number(item.taxAmount ?? 0),
+            valueSalesExcludingST: Number((Number(item.lineTotal ?? 0) - Number(item.taxAmount ?? 0)).toFixed(2)),
             fixedNotifiedValueOrRetailPrice: Number(item.diFixedNotifiedValueOrRetailPrice ?? 0),
             salesTaxApplicable: Number(item.taxAmount ?? 0),
             salesTaxWithheldAtSource: Number(item.diSalesTaxWithheldAtSource ?? 0),
