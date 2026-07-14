@@ -92,9 +92,9 @@ export default async function HomePage() {
               </div>
 
               <div className="rounded-chip bg-white/10 border border-white/15 p-4">
-                <p className="text-sm font-semibold text-white">Compliance banner</p>
+                <p className="text-sm font-semibold text-white">Advisory &amp; Setup Assistance</p>
                 <p className="mt-2 text-sm leading-6 text-white/75">
-                  FBR mandates digital invoicing under SRO 709. The platform packages compliance workflows, package controls, and operational visibility into one coordinated product surface.
+                  FBR mandates digital invoicing under SRO 709. For setup help or compliance queries, talk to our desk: <a href="tel:+923007395147" className="font-semibold text-white hover:underline">+92 300 7395147</a> or <a href="tel:+923334103160" className="font-semibold text-white hover:underline">+92 333 4103160</a>.
                 </p>
               </div>
             </div>
@@ -186,12 +186,18 @@ export default async function HomePage() {
       </main>
 
       <footer className="border-t border-border bg-surface-subtle">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-8 text-sm text-muted md:flex-row md:items-center md:justify-between">
-          <p>FBR Live POS - Pakistan GST compliance, digital invoicing, and package-led operations.</p>
-          <div className="flex gap-5">
-            <Link href="/pricing">Pricing</Link>
-            <Link href="/login">Login</Link>
-            <Link href="/signup">Register</Link>
+        <div className="mx-auto max-w-7xl px-6 py-8">
+          <div className="flex flex-col gap-4 text-sm text-muted md:flex-row md:items-center md:justify-between">
+            <p>FBR Live POS - Pakistan GST compliance, digital invoicing, and package-led operations.</p>
+            <div className="flex gap-5">
+              <Link href="/pricing">Pricing</Link>
+              <Link href="/login">Login</Link>
+              <Link href="/signup">Register</Link>
+            </div>
+          </div>
+          <div className="mt-4 border-t border-border-muted pt-4 flex flex-col sm:flex-row sm:justify-between text-xs text-muted gap-2">
+            <p>Support / Sales helpline: <a href="tel:+923007395147" className="font-medium text-ink hover:underline">+92 300 7395147</a> or <a href="tel:+923334103160" className="font-medium text-ink hover:underline">+92 333 4103160</a></p>
+            <p>© {new Date().getFullYear()} FBR Live POS. All rights reserved.</p>
           </div>
         </div>
       </footer>
