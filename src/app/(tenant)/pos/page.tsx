@@ -35,9 +35,7 @@ interface Product {
 }
 
 export default function POSPage() {
-    const [catalogProducts, setCatalogProducts] = useState<Product[]>([])
     const [localProducts, setLocalProducts] = useState<Product[]>([])
-    const [search, setSearch] = useState('')
     const [showCustomerModal, setShowCustomerModal] = useState(false)
     const [showProductModal, setShowProductModal] = useState(false)
     const [draftLoading, setDraftLoading] = useState(false)
@@ -52,73 +50,6 @@ export default function POSPage() {
         setBuyerInfo, setCustomer, setPaymentMethod,
         subtotal, discountTotal, taxAmount, total, clearCart,
     } = useCartStore()
-
-    const searchProducts = useCallback(async (q: string) => {
-        try {
-            const res = await fetch(`/api/products?q=${encodeURIComponent(q)}&limit=30`)
-            if (res.ok) {
-                const data = await res.json()
-                setCatalogProducts(data.data || [])
-            }
-        } catch { /* ignore */ }
-    }, [])
-
-    const products = useMemo(() => {
-        const byId = new Map<string, Product>()
-        for (const product of localProducts) {
-            byId.set(product.id, product)
-        }
-        for (const product of catalogProducts) {
-            if (!byId.has(product.id)) {
-                byId.set(product.id, product)
-            }
-        }
-        return Array.from(byId.values())
-    }, [catalogProducts, localProducts])
-
-    const filteredProducts = useMemo(() => {
-        const term = search.trim().toLowerCase()
-        if (!term) return products
-        return products.filter((product) => (
-            product.name.toLowerCase().includes(term)
-            || product.hsCode.toLowerCase().includes(term)
-            || (product.diSaleType || '').toLowerCase().includes(term)
-        ))
-    }, [products, search])
-
-    useEffect(() => { searchProducts('') }, [searchProducts])
-    useEffect(() => {
-        const timer = setTimeout(() => searchProducts(search), 300)
-        return () => clearTimeout(timer)
-    }, [search, searchProducts])
-
-    function handleAddProduct(product: Product) {
-        addItem({
-            productId: product.id,
-            name: product.name,
-            hsCode: product.hsCode,
-            price: product.price,
-            taxRate: product.taxRate,
-            diRate: product.diRate ?? null,
-            diSaleType: product.diSaleType ?? null,
-            diFixedNotifiedValueOrRetailPrice: product.diFixedNotifiedValueOrRetailPrice ?? null,
-            sroScheduleNo: product.sroScheduleNo ?? null,
-            sroItemSerialNo: product.sroItemSerialNo ?? null,
-            isLocalOnly: Boolean(product.isLocalOnly),
-            unit: product.unit,
-            valueSalesExcludingST: product.valueSalesExcludingST,
-            salesTaxApplicable: product.salesTaxApplicable,
-            furtherTax: product.furtherTax,
-            fedPayable: product.fedPayable,
-            extraTax: product.extraTax,
-            totalTax: product.totalTax,
-            totalInvoiceValue: product.totalInvoiceValue,
-            furtherTaxPercent: product.furtherTaxPercent,
-            fedPercent: product.fedPercent,
-            extraTaxPercent: product.extraTaxPercent,
-            isExempt: product.isExempt,
-        })
-    }
 
     function handleProductSaved(p: DirectPosProduct) {
         setShowProductModal(false)
@@ -266,251 +197,241 @@ export default function POSPage() {
 
     return (
         <>
-            <div className="flex h-[calc(100vh-6rem)] flex-col overflow-hidden bg-canvas">
+            <div className="flex h-[calc(100vh-6rem)] flex-col lg:flex-row overflow-hidden bg-canvas">
 
-                {/* ══ TOP BAR: Customer | Search | New Product ══ */}
-                <div className="shrink-0 border-b border-border bg-surface px-4 py-3">
-                    <div className="flex items-center gap-3">
+                {/* ══ LEFT SIDE: Cart Items ══ */}
+                <div className="flex-1 flex flex-col min-h-0 min-w-0 bg-canvas">
+                    {/* TOP BAR */}
+                    <div className="shrink-0 border-b border-border bg-surface px-6 py-4 flex items-center justify-between gap-4">
+                        <div>
+                            <h1 className="text-lg font-semibold text-ink">POS Terminal</h1>
+                            <p className="text-xs text-muted">Manage items and draft FBR invoices</p>
+                        </div>
+                        <button
+                            onClick={() => setShowProductModal(true)}
+                            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark shadow-sm shrink-0 flex items-center gap-1.5"
+                        >
+                            <span>+ Add Product</span>
+                        </button>
+                    </div>
 
-                        {/* Customer selector */}
+                    {/* CART ITEMS (scrollable) */}
+                    <div className="min-h-0 flex-1 overflow-auto">
+                        {items.length === 0 ? (
+                            <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center bg-card m-6 rounded-2xl border border-dashed border-border-strong">
+                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-surface text-3xl">🛒</div>
+                                <div>
+                                    <p className="text-base font-medium text-ink-secondary">Cart is empty</p>
+                                    <p className="text-sm text-muted">Click the button below to add your first product to this sale</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowProductModal(true)}
+                                    className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark shadow-sm"
+                                >
+                                    + Add Product
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="p-6">
+                                <table className="w-full border-collapse text-sm table-fixed bg-white rounded-2xl overflow-hidden border border-border shadow-card">
+                                    <thead>
+                                        <tr className="border-b border-border bg-surface sticky top-0 z-10">
+                                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[34%]">Product</th>
+                                            <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[14%]">Unit Price</th>
+                                            <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[8%]">Qty</th>
+                                            <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[12%]">Rate</th>
+                                            <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[12%]">Discount</th>
+                                            <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-caps text-muted w-[16%]">Total</th>
+                                            <th className="px-3 py-3 w-10" />
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {items.map((item, idx) => {
+                                            return (
+                                                <tr key={item.productId} className={`border-b border-border-muted transition-colors hover:bg-surface-subtle ${idx % 2 === 0 ? '' : 'bg-surface-subtle/40'}`}>
+                                                    {/* Product */}
+                                                    <td className="px-4 py-3">
+                                                        <p className="font-medium text-ink truncate">{item.name}</p>
+                                                        <p className="text-xs text-muted font-mono truncate">{item.hsCode}</p>
+                                                        <p className="text-[11px] text-muted truncate">{item.diSaleType || 'Goods at standard rate (default)'}</p>
+                                                        {(item.sroScheduleNo || item.sroItemSerialNo) && (
+                                                            <p className="text-[11px] text-muted truncate">
+                                                                SRO: {item.sroScheduleNo || 'N/A'} · SR#: {item.sroItemSerialNo || 'N/A'}
+                                                            </p>
+                                                        )}
+                                                    </td>
+
+                                                    {/* Unit Price */}
+                                                    <td className="px-3 py-3">
+                                                        <span className="text-sm font-medium text-ink">PKR {item.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                                                    </td>
+
+                                                    {/* Qty */}
+                                                    <td className="px-3 py-3">
+                                                        <span className="text-sm font-medium text-ink">{item.quantity}</span>
+                                                    </td>
+
+                                                    {/* Rate */}
+                                                    <td className="px-3 py-3">
+                                                        <p className="text-sm font-medium text-ink">{(item.diRate ?? '').trim() || `${item.taxRate}%`}</p>
+                                                        <p className="text-xs text-muted">Tax {item.taxRate}%</p>
+                                                    </td>
+
+                                                    {/* Discount */}
+                                                    <td className="px-3 py-3">
+                                                        <span className="text-sm text-ink">PKR {item.discount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                                                    </td>
+
+                                                    {/* Total */}
+                                                    <td className="px-3 py-3 text-right">
+                                                        <p className="text-sm font-bold text-ink">PKR {getItemLineTotal(item).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                                                        <p className="text-xs text-muted">+{getItemSalesTax(item).toLocaleString(undefined, { maximumFractionDigits: 2 })} tax</p>
+                                                    </td>
+
+                                                    {/* Remove */}
+                                                    <td className="px-3 py-3 text-center">
+                                                        <button
+                                                            onClick={() => removeItem(item.productId)}
+                                                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-error-bg text-xs text-error transition-colors hover:bg-error hover:text-white mx-auto"
+                                                        >✕</button>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* ══ RIGHT SIDE: Checkout Sidebar ══ */}
+                <div className="w-full lg:w-96 shrink-0 border-t lg:border-t-0 lg:border-l border-border bg-surface flex flex-col p-6 shadow-[0_-4px_16px_rgba(0,0,0,0.04)] overflow-y-auto">
+                    
+                    {/* Customer Section */}
+                    <div className="mb-6">
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted">Customer Details</label>
                         <button
                             type="button"
                             onClick={() => setShowCustomerModal(true)}
-                            className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-left transition-colors hover:border-border-strong"
+                            className="w-full flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 text-left transition-colors hover:border-border-strong"
                         >
                             {customerId ? (
                                 <>
-                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-micro text-white">✓</span>
-                                    <span className="min-w-0 flex-1">
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary font-bold text-sm">
+                                        {buyerName.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
                                         <span className="block truncate text-sm font-medium text-ink">{buyerName}</span>
-                                        {buyerNTN && <span className="block font-mono text-xs text-muted">{buyerNTN}</span>}
-                                    </span>
+                                        {buyerNTN ? (
+                                            <span className="block font-mono text-xs text-muted">{buyerNTN}</span>
+                                        ) : (
+                                            <span className="block text-xs text-muted">Walk-in Customer</span>
+                                        )}
+                                    </div>
                                     {buyerRegistrationType && (
-                                        <span className="shrink-0 rounded-full bg-primary-light px-2 py-0.5 text-xs font-medium text-primary">
+                                        <span className="shrink-0 rounded-full bg-primary-light px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
                                             {buyerRegistrationType}
                                         </span>
                                     )}
                                 </>
                             ) : (
                                 <>
-                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-dashed border-border-strong text-xs text-muted">+</span>
-                                    <span className="text-sm text-muted">Add Customer</span>
+                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-border-strong text-muted text-sm">+</span>
+                                    <span className="text-sm text-muted">Add / Select Customer</span>
                                 </>
                             )}
                         </button>
+                    </div>
 
-                        {/* Product search with dropdown */}
-                        <div className="relative flex min-w-0 flex-2 flex-col">
-                            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
-                                <svg className="h-4 w-4 shrink-0 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-                                </svg>
+                    {/* Invoice Configuration */}
+                    <div className="mb-6 space-y-4">
+                        <div>
+                            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted">Invoice Type</label>
+                            <div className="flex gap-1 rounded-xl border border-border bg-canvas p-1">
+                                {(['Sale Invoice', 'Debit Note'] as const).map(t => (
+                                    <button
+                                        key={t}
+                                        type="button"
+                                        onClick={() => setInvoiceType(t)}
+                                        className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors ${invoiceType === t ? 'bg-primary text-white shadow-sm' : 'text-ink-secondary hover:text-ink'}`}
+                                    >{t}</button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {invoiceType === 'Debit Note' && (
+                            <div>
+                                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted">FBR Invoice Reference #</label>
                                 <input
-                                    type="text"
-                                    placeholder="Search products by name, SKU, HS code…"
-                                    value={search}
-                                    onChange={e => setSearch(e.target.value)}
-                                    className="min-w-0 flex-1 bg-transparent text-sm text-ink placeholder:text-muted focus:outline-none"
+                                    value={invoiceRefNo}
+                                    onChange={e => setInvoiceRefNo(e.target.value)}
+                                    placeholder="Original Invoice Number (22/28 chars)"
+                                    className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-ink placeholder:text-muted focus:outline-none focus:border-primary"
                                 />
-                                {search && (
-                                    <button onClick={() => setSearch('')} className="shrink-0 text-muted hover:text-ink">✕</button>
+                            </div>
+                        )}
+
+                        <div>
+                            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted">Payment Method</label>
+                            <select
+                                value={paymentMethod}
+                                onChange={e => setPaymentMethod(e.target.value as 'CASH' | 'CARD' | 'BANK_TRANSFER')}
+                                className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-primary"
+                            >
+                                <option value="CASH">Cash</option>
+                                <option value="CARD">Card</option>
+                                <option value="BANK_TRANSFER">Bank Transfer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Summary & Checkout Actions */}
+                    <div className="mt-auto border-t border-border pt-6 space-y-4">
+                        <div className="space-y-2.5">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted">Subtotal</span>
+                                <span className="font-medium text-ink">PKR {subtotal().toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                            </div>
+                            
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted">Discount</span>
+                                {discountTotal() > 0 ? (
+                                    <span className="font-semibold text-success">−PKR {discountTotal().toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                                ) : (
+                                    <span className="text-muted">—</span>
                                 )}
                             </div>
-                            {search && filteredProducts.length > 0 && (
-                                <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-auto rounded-xl border border-border bg-card shadow-modal">
-                                    {filteredProducts.map(product => (
-                                        <button
-                                            key={product.id}
-                                            onClick={() => { handleAddProduct(product); setSearch('') }}
-                                            className="flex w-full items-center gap-3 border-b border-border-muted px-4 py-2.5 text-left last:border-0 hover:bg-surface"
-                                        >
-                                            <div className="min-w-0 flex-1">
-                                                <p className="truncate text-sm font-medium text-ink">{product.name}</p>
-                                                <p className="text-xs text-muted">{product.hsCode}{product.diSaleType ? ` · ${product.diSaleType}` : ''}</p>
-                                            </div>
-                                            <div className="shrink-0 text-right">
-                                                <p className="text-sm font-semibold text-ink">PKR {product.price.toLocaleString()}</p>
-                                                <p className="text-xs text-muted">{product.taxRate}% tax</p>
-                                                {product.isLocalOnly && <p className="text-micro font-medium uppercase tracking-wider text-amber-600">Local Only</p>}
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                            {search && filteredProducts.length === 0 && (
-                                <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted shadow-card">
-                                    No products found for &ldquo;{search}&rdquo;
-                                </div>
-                            )}
+
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted">Sales Tax</span>
+                                <span className="font-medium text-ink">PKR {taxAmount().toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                            </div>
+
+                            <div className="flex justify-between items-baseline border-t border-border-muted pt-3">
+                                <span className="text-sm font-semibold text-ink">Total</span>
+                                <span className="text-2xl font-bold text-primary">PKR {total().toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                            </div>
                         </div>
 
-                        {/* New product button */}
+                        {/* Message banner */}
+                        {message && (
+                            <div className={`rounded-xl p-3 text-xs font-medium ${message.type === 'success' ? 'bg-success-bg text-success border border-success-border' : 'bg-error-bg text-error border border-error-border'}`}>
+                                {message.text}
+                            </div>
+                        )}
+
+                        {/* Save Draft Action */}
                         <button
-                            onClick={() => setShowProductModal(true)}
-                            className="shrink-0 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-ink-secondary transition-colors hover:border-primary hover:text-primary"
-                        >
-                            + New Product
-                        </button>
-                    </div>
-                </div>
-
-                {/* ══ CART ITEMS (scrollable) ══ */}
-                <div className="min-h-0 flex-1 overflow-auto">
-                    {items.length === 0 ? (
-                        <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-surface text-3xl">🛒</div>
-                            <p className="text-base font-medium text-ink-secondary">Cart is empty</p>
-                            <p className="text-sm text-muted">Search and add products above</p>
-                        </div>
-                    ) : (
-                        <div>
-                            <table className="w-full border-collapse text-sm table-fixed">
-                                <thead>
-                                    <tr className="border-b border-border bg-surface sticky top-0 z-10">
-                                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[34%]">Product</th>
-                                        <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[14%]">Unit Price</th>
-                                        <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[8%]">Qty</th>
-                                        <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[12%]">Rate</th>
-                                        <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[12%]">Discount</th>
-                                        <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-caps text-muted w-[16%]">Total</th>
-                                        <th className="px-3 py-2.5 w-10" />
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {items.map((item, idx) => {
-                                        return (
-                                            <tr key={item.productId} className={`border-b border-border-muted transition-colors hover:bg-surface-subtle ${idx % 2 === 0 ? '' : 'bg-surface-subtle/40'}`}>
-                                                {/* Product */}
-                                                <td className="px-4 py-2.5">
-                                                    <p className="font-medium text-ink truncate">{item.name}</p>
-                                                    <p className="text-xs text-muted font-mono truncate">{item.hsCode}</p>
-                                                    <p className="text-[11px] text-muted truncate">{item.diSaleType || 'Goods at standard rate (default)'}</p>
-                                                    {(item.sroScheduleNo || item.sroItemSerialNo) && (
-                                                        <p className="text-[11px] text-muted truncate">
-                                                            SRO: {item.sroScheduleNo || 'N/A'} · SR#: {item.sroItemSerialNo || 'N/A'}
-                                                        </p>
-                                                    )}
-                                                </td>
-
-                                                {/* Unit Price */}
-                                                <td className="px-3 py-2.5">
-                                                    <span className="text-sm font-medium text-ink">PKR {item.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-                                                </td>
-
-                                                {/* Qty */}
-                                                <td className="px-3 py-2.5">
-                                                    <span className="text-sm font-medium text-ink">{item.quantity}</span>
-                                                </td>
-
-                                                {/* Rate */}
-                                                <td className="px-3 py-2.5">
-                                                    <p className="text-sm font-medium text-ink">{(item.diRate ?? '').trim() || `${item.taxRate}%`}</p>
-                                                    <p className="text-xs text-muted">Tax {item.taxRate}%</p>
-                                                </td>
-
-                                                {/* Discount */}
-                                                <td className="px-3 py-2.5">
-                                                    <span className="text-sm text-ink">PKR {item.discount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-                                                </td>
-
-                                                {/* Total */}
-                                                <td className="px-3 py-2.5 text-right">
-                                                    <p className="text-sm font-bold text-ink">PKR {getItemLineTotal(item).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
-                                                    <p className="text-xs text-muted">+{getItemSalesTax(item).toLocaleString(undefined, { maximumFractionDigits: 2 })} tax</p>
-                                                </td>
-
-                                                {/* Remove */}
-                                                <td className="px-3 py-2.5 text-center">
-                                                    <button
-                                                        onClick={() => removeItem(item.productId)}
-                                                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-error-bg text-xs text-error transition-colors hover:bg-error hover:text-white mx-auto"
-                                                    >✕</button>
-                                                </td>
-                                            </tr>
-                                        )
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-
-                {/* ══ FIXED BOTTOM PANEL ══ */}
-                <div className="shrink-0 z-20 border-t border-border bg-surface shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
-
-                    {/* Invoice type + payment */}
-                    <div className="flex items-center gap-3 border-b border-border-muted px-4 py-2.5">
-                        <div className="flex gap-1 rounded-lg border border-border bg-canvas p-0.5">
-                            {(['Sale Invoice', 'Debit Note'] as const).map(t => (
-                                <button
-                                    key={t}
-                                    onClick={() => setInvoiceType(t)}
-                                    className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${invoiceType === t ? 'bg-primary text-white shadow-sm' : 'text-ink-secondary hover:text-ink'}`}
-                                >{t}</button>
-                            ))}
-                        </div>
-                        <select
-                            value={paymentMethod}
-                            onChange={e => setPaymentMethod(e.target.value as 'CASH' | 'CARD' | 'BANK_TRANSFER')}
-                            className="flex-1 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-ink focus:outline-none focus:border-primary"
-                        >
-                            <option value="CASH">Cash</option>
-                            <option value="CARD">Card</option>
-                            <option value="BANK_TRANSFER">Bank Transfer</option>
-                        </select>
-                    </div>
-
-                    {invoiceType === 'Debit Note' && (
-                        <div className="border-b border-border-muted px-4 py-2">
-                            <input
-                                value={invoiceRefNo}
-                                onChange={e => setInvoiceRefNo(e.target.value)}
-                                placeholder="Original FBR Invoice Number (22 or 28 chars)"
-                                className="w-full rounded-lg border border-accent/40 bg-accent-light px-3 py-2 text-xs text-ink placeholder:text-muted focus:outline-none"
-                            />
-                        </div>
-                    )}
-
-                    {/* Totals row */}
-                    <div className="grid grid-cols-4 divide-x divide-border-muted px-4 py-3">
-                        <div className="pr-3">
-                            <p className="text-xs ">Subtotal</p>
-                            <p className="text-sm font-semibold text-ink">PKR {subtotal().toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
-                        </div>
-                        <div className="px-3">
-                            <p className="text-xs">Discount</p>
-                            {discountTotal() > 0
-                                ? <p className="text-sm font-semibold text-success">−PKR {discountTotal().toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
-                                : <p className="text-sm font-semibold ">—</p>
-                            }
-                        </div>
-                        <div className="px-3">
-                            <p className="text-xs">Sales Tax</p>
-                            <p className="text-sm font-semibold text-ink">PKR {taxAmount().toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
-                        </div>
-                        <div className="pl-3">
-                            <p className="text-xs">Total</p>
-                            <p className="text-base font-bold text-primary">PKR {total().toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
-                        </div>
-                    </div>
-
-                    {/* Message banner */}
-                    {message && (
-                        <div className={`mx-4 mb-2 rounded-lg p-2 text-xs ${message.type === 'success' ? 'bg-success-bg text-success border border-success-border' : 'bg-error-bg text-error border border-error-border'}`}>
-                            {message.text}
-                        </div>
-                    )}
-
-                    {/* Action buttons */}
-                    <div className="flex gap-2 px-4 pb-4">
-                        <button
+                            type="button"
                             onClick={handleDraft}
                             disabled={items.length === 0 || draftLoading}
-                            className="flex-1 rounded-full bg-primary py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-40"
+                            className="w-full rounded-full bg-primary py-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             {draftLoading ? 'Saving…' : 'Save Draft'}
                         </button>
                     </div>
+
                 </div>
             </div>
 
