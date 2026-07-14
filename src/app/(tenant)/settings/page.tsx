@@ -39,7 +39,6 @@ export default function SettingsPage() {
     const [tokenForm, setTokenForm] = useState<TokenFormState>({ sandboxToken: '', productionToken: '' })
     const [loading, setLoading] = useState(true)
     const [savingTokens, setSavingTokens] = useState(false)
-    const [switchingEnv, setSwitchingEnv] = useState(false)
     const [verifying, setVerifying] = useState(false)
     const [resettingCircuit, setResettingCircuit] = useState(false)
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -71,42 +70,7 @@ export default function SettingsPage() {
             .catch(() => { })
     }, [])
 
-    async function handleSwitchEnvironment(newEnv: 'SANDBOX' | 'PRODUCTION') {
-        if (!diConfig?.configured) return
-        if (newEnv === 'PRODUCTION' && !diConfig?.hasProductionToken) {
-            setMessage({ type: 'error', text: 'Add a production token before switching to Live mode.' })
-            return
-        }
-        setSwitchingEnv(true)
-        setMessage(null)
-        try {
-            const res = await fetch('/api/tenant/fbr-credentials', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sellerNTN: diConfig.sellerNTN,
-                    sellerCNIC: diConfig.sellerCNIC ?? undefined,
-                    sellerBusinessName: diConfig.sellerBusinessName,
-                    sellerProvince: diConfig.sellerProvince,
-                    sellerAddress: diConfig.sellerAddress,
-                    businessActivity: diConfig.businessActivity,
-                    sector: diConfig.sector,
-                    environment: newEnv,
-                }),
-            })
-            if (res.ok) {
-                setMessage({ type: 'success', text: `Switched to ${newEnv === 'PRODUCTION' ? 'Live' : 'Sandbox'} mode.` })
-                await loadConfig({ showLoading: false })
-            } else {
-                const data = await res.json()
-                setMessage({ type: 'error', text: data.error || 'Failed to switch environment.' })
-            }
-        } catch {
-            setMessage({ type: 'error', text: 'Network error' })
-        } finally {
-            setSwitchingEnv(false)
-        }
-    }
+
 
     async function handleSaveTokens(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -220,27 +184,7 @@ export default function SettingsPage() {
                     <h1 className="text-page-title font-normal text-ink">Settings</h1>
                 </div>
 
-                {/* Sandbox / Live mode toggle */}
-                {diConfig?.configured && !loading && (
-                    <div className="flex items-center gap-3 rounded-2xl border border-border bg-white px-4 py-2.5 shadow-sm">
-                        <span className={`text-xs font-semibold uppercase tracking-wide transition-colors ${!isLive ? 'text-gold' : 'text-muted'}`}>
-                            Sandbox
-                        </span>
-                        <button
-                            type="button"
-                            role="switch"
-                            aria-checked={isLive}
-                            onClick={() => handleSwitchEnvironment(isLive ? 'SANDBOX' : 'PRODUCTION')}
-                            disabled={switchingEnv}
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus-visible:outline-none disabled:opacity-50 ${isLive ? 'bg-primary' : 'bg-border-strong'}`}
-                        >
-                            <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${isLive ? 'translate-x-5' : 'translate-x-0'}`} />
-                        </button>
-                        <span className={`text-xs font-semibold uppercase tracking-wide transition-colors ${isLive ? 'text-primary' : 'text-muted'}`}>
-                            Live
-                        </span>
-                    </div>
-                )}
+
             </div>
 
             {/* Global alert */}

@@ -138,30 +138,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
     return <h2 className="text-ui-sm font-semibold text-ink mb-4">{children}</h2>
 }
 
-function EnvToggle({
-    value,
-    onChange,
-}: {
-    value: 'sandbox' | 'production'
-    onChange: (v: 'sandbox' | 'production') => void
-}) {
-    return (
-        <div className="inline-flex rounded-full border border-border bg-surface p-0.5 text-xs font-medium">
-            <button
-                onClick={() => onChange('sandbox')}
-                className={`rounded-full px-3 py-1 transition-colors ${value === 'sandbox' ? 'bg-primary text-white' : 'text-muted hover:text-ink'}`}
-            >
-                Sandbox
-            </button>
-            <button
-                onClick={() => onChange('production')}
-                className={`rounded-full px-3 py-1 transition-colors ${value === 'production' ? 'bg-primary text-white' : 'text-muted hover:text-ink'}`}
-            >
-                Live
-            </button>
-        </div>
-    )
-}
+
 
 function StatusBar({ breakdown }: { breakdown: StatusMap }) {
     const order = ['SUBMITTED', 'CONFIRMED', 'VALIDATED', 'PENDING', 'QUEUED', 'FAILED', 'DRAFT', 'CANCELLED']
@@ -222,9 +199,6 @@ export default function DashboardPage() {
     const [data, setData] = useState<DashboardData | null>(null)
     const [diStatus, setDiStatus] = useState<DIStatus | null>(null)
     const [loading, setLoading] = useState(true)
-    const [chartEnv, setChartEnv] = useState<'sandbox' | 'production'>('sandbox')
-    const [statsEnv, setStatsEnv] = useState<'sandbox' | 'production'>('sandbox')
-
     useEffect(() => {
         async function load() {
             try {
@@ -238,10 +212,6 @@ export default function DashboardPage() {
                 if (statsData) setData(statsData)
                 if (diData) {
                     setDiStatus(diData)
-                    if (diData.environment === 'PRODUCTION') {
-                        setChartEnv('production')
-                        setStatsEnv('production')
-                    }
                 }
             } finally {
                 setLoading(false)
@@ -256,10 +226,11 @@ export default function DashboardPage() {
     const diConnected =
         circuitState === 'CLOSED' || circuitState === 'HALF_OPEN' || circuitState === 'CONNECTED'
 
-    const currentStats = data ? (statsEnv === 'sandbox' ? data.month.sandbox : data.month.production) : null
-    const todayStats = data ? (statsEnv === 'sandbox' ? data.today.sandbox : data.today.production) : null
-    const statusBreakdown = data ? (statsEnv === 'sandbox' ? data.statusBreakdown.sandbox : data.statusBreakdown.production) : {}
-    const chartData = data ? (chartEnv === 'sandbox' ? data.monthly.sandbox : data.monthly.production) : []
+    const activeEnv = isLive ? 'production' : 'sandbox'
+    const currentStats = data ? (activeEnv === 'sandbox' ? data.month.sandbox : data.month.production) : null
+    const todayStats = data ? (activeEnv === 'sandbox' ? data.today.sandbox : data.today.production) : null
+    const statusBreakdown = data ? (activeEnv === 'sandbox' ? data.statusBreakdown.sandbox : data.statusBreakdown.production) : {}
+    const chartData = data ? (activeEnv === 'sandbox' ? data.monthly.sandbox : data.monthly.production) : []
 
     const submittedMonth = statusBreakdown['SUBMITTED'] ?? 0
     const failedMonth = statusBreakdown['FAILED'] ?? 0
@@ -341,10 +312,9 @@ export default function DashboardPage() {
                 </div>
             )}
 
-            {/* Stats environment selector */}
+            {/* Stats environment label */}
             <div className="flex items-center justify-between">
-                <p className="text-xs text-muted font-medium uppercase tracking-wide">Statistics</p>
-                <EnvToggle value={statsEnv} onChange={setStatsEnv} />
+                <p className="text-xs text-muted font-medium uppercase tracking-wide">Statistics ({envLabel})</p>
             </div>
 
             {/* 8 stat cards */}
@@ -354,7 +324,7 @@ export default function DashboardPage() {
                     value={fmtPKR(todayStats?.sales ?? 0)}
                     sub={`${todayStats?.invoices ?? 0} invoices`}
                     style="black"
-                    badge={statsEnv === 'production' ? 'Live' : 'SBX'}
+                    badge={isLive ? 'Live' : 'SBX'}
                 />
                 <StatCard
                     label="Today's Tax"
@@ -367,7 +337,7 @@ export default function DashboardPage() {
                     value={fmtPKR(currentStats?.sales ?? 0)}
                     sub={`${currentStats?.invoices ?? 0} invoices`}
                     style="yellow"
-                    badge={statsEnv === 'production' ? 'Live' : 'SBX'}
+                    badge={isLive ? 'Live' : 'SBX'}
                 />
                 <StatCard
                     label="Month Tax"
@@ -404,8 +374,7 @@ export default function DashboardPage() {
             {/* Monthly charts */}
             <div className="bg-white rounded-card shadow-card p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
-                    <SectionTitle>Monthly Trends — Last 6 Months</SectionTitle>
-                    <EnvToggle value={chartEnv} onChange={setChartEnv} />
+                    <SectionTitle>Monthly Trends — Last 6 Months ({envLabel})</SectionTitle>
                 </div>
 
                 {/* Revenue + Tax area chart */}
@@ -477,8 +446,7 @@ export default function DashboardPage() {
                 {/* Status breakdown */}
                 <div className="bg-white rounded-card shadow-card p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <SectionTitle>Invoice Status Breakdown</SectionTitle>
-                        <EnvToggle value={statsEnv} onChange={setStatsEnv} />
+                        <SectionTitle>Invoice Status Breakdown ({envLabel})</SectionTitle>
                     </div>
                     <StatusBar breakdown={statusBreakdown} />
                     <div className="mt-5 pt-5 border-t border-border grid grid-cols-2 gap-4">

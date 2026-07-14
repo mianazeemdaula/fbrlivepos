@@ -139,3 +139,45 @@ export async function GET() {
         scenarios,
     })
 }
+
+const UpdateEnvironmentSchema = z.object({
+    environment: z.enum(['SANDBOX', 'PRODUCTION']),
+})
+
+export async function PATCH(req: NextRequest) {
+    try {
+        const { tenant } = await getTenantFromSession()
+        const body = UpdateEnvironmentSchema.parse(await req.json())
+
+        const creds = await prisma.dICredentials.findUnique({
+            where: { tenantId: tenant.id },
+        })
+
+        if (!creds) {
+            return NextResponse.json(
+                { success: false, error: 'FBR Credentials not configured yet.' },
+                { status: 400 }
+            )
+        }
+
+        if (body.environment === 'PRODUCTION' && !creds.encryptedProductionToken) {
+            return NextResponse.json(
+                { success: false, error: 'Add a production token before switching to Live mode.' },
+                { status: 400 }
+            )
+        }
+
+        await prisma.dICredentials.update({
+            where: { tenantId: tenant.id },
+            data: { environment: body.environment },
+        })
+
+        return NextResponse.json({ success: true, environment: body.environment })
+    } catch (err: any) {
+        return NextResponse.json(
+            { success: false, error: err.message || 'An error occurred.' },
+            { status: 400 }
+        )
+    }
+}
+
