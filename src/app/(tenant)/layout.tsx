@@ -98,6 +98,13 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
         }
     }
 
+    const visibleNavItems = navItems.filter((item) => {
+        if (item.href === '/onboarding' && config?.configured) {
+            return false
+        }
+        return true
+    })
+
     useEffect(() => { setMobileMenuOpen(false) }, [pathname])
 
     return (
@@ -127,7 +134,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                             <span className="font-semibold text-ui-sm text-ink">AAZIFY FBR</span>
                         </div>
                         <nav className="hidden lg:flex items-center gap-1">
-                            {navItems.map((item) => {
+                            {visibleNavItems.map((item) => {
                                 const active = pathname === item.href ||
                                     (item.href !== '/invoices' && pathname.startsWith(item.href + '/'))
                                 return (
@@ -195,7 +202,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                 {mobileMenuOpen && (
                     <div className="lg:hidden border-t border-border bg-surface px-4 py-3">
                         <nav className="flex flex-col gap-1">
-                            {navItems.map((item) => {
+                            {visibleNavItems.map((item) => {
                                 const active = pathname === item.href ||
                                     (item.href !== '/invoices' && pathname.startsWith(item.href + '/'))
                                 return (

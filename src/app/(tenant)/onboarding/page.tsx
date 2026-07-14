@@ -69,6 +69,17 @@ export default function OnboardingPage() {
     })
 
     useEffect(() => {
+        fetch('/api/tenant/fbr-credentials')
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (data?.configured) {
+                    router.replace('/dashboard')
+                }
+            })
+            .catch(() => {})
+    }, [router])
+
+    useEffect(() => {
         if (step !== 2 || !step2.businessActivity || !step2.sector) return
         setScenariosLoading(true)
 
