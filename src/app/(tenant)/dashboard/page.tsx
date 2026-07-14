@@ -117,19 +117,19 @@ function StatCard({
         outlined: 'text-muted',
     }
     return (
-        <div className={`rounded-card p-5 shadow-card ${base[style]}`}>
-            <div className="flex items-start justify-between gap-2 mb-1">
-                <p className={`text-xs font-medium uppercase tracking-wide ${style === 'black' ? 'text-white/70' : style === 'yellow' ? 'text-ink/50' : 'opacity-60 text-current'}`}>
+        <div className={`rounded-xl p-3.5 shadow-card ${base[style]}`}>
+            <div className="flex items-start justify-between gap-1 mb-1">
+                <p className={`text-[10px] font-semibold uppercase tracking-wider ${style === 'black' ? 'text-white/70' : style === 'yellow' ? 'text-ink/50' : 'opacity-60 text-current'}`}>
                     {label}
                 </p>
                 {badge && (
-                    <span className="text-micro font-semibold uppercase tracking-wide rounded-full bg-white/20 px-2 py-0.5 shrink-0">
+                    <span className="text-[9px] font-bold uppercase tracking-wider rounded-full bg-white/20 px-1.5 py-0.5 shrink-0">
                         {badge}
                     </span>
                 )}
             </div>
-            <p className="text-2xl font-semibold leading-tight">{value}</p>
-            {sub && <p className={`mt-1 text-xs ${subCls[style]}`}>{sub}</p>}
+            <p className="text-lg font-bold leading-tight truncate">{value}</p>
+            {sub && <p className={`mt-0.5 text-[10px] truncate ${subCls[style]}`}>{sub}</p>}
         </div>
     )
 }
@@ -312,13 +312,8 @@ export default function DashboardPage() {
                 </div>
             )}
 
-            {/* Stats environment label */}
-            <div className="flex items-center justify-between">
-                <p className="text-xs text-muted font-medium uppercase tracking-wide">Statistics ({envLabel})</p>
-            </div>
-
             {/* 8 stat cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
                 <StatCard
                     label="Today's Sales"
                     value={fmtPKR(todayStats?.sales ?? 0)}
@@ -371,114 +366,106 @@ export default function DashboardPage() {
                 />
             </div>
 
-            {/* Monthly charts */}
-            <div className="bg-white rounded-card shadow-card p-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
-                    <SectionTitle>Monthly Trends — Last 6 Months ({envLabel})</SectionTitle>
-                </div>
-
-                {/* Revenue + Tax area chart */}
-                <div className="mb-8">
-                    <p className="text-xs text-muted font-medium uppercase tracking-wide mb-3">Revenue &amp; Tax (PKR)</p>
-                    <ResponsiveContainer width="100%" height={220}>
-                        <AreaChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                            <defs>
-                                <linearGradient id="gradSales" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#1d1d1f" stopOpacity={0.15} />
-                                    <stop offset="95%" stopColor="#1d1d1f" stopOpacity={0} />
-                                </linearGradient>
-                                <linearGradient id="gradTax" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#f5a623" stopOpacity={0.2} />
-                                    <stop offset="95%" stopColor="#f5a623" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                            <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                            <YAxis
-                                tickFormatter={(v) => fmt(v)}
-                                tick={{ fontSize: 11 }}
-                                tickLine={false}
-                                axisLine={false}
-                                width={52}
-                            />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Legend wrapperStyle={{ fontSize: 11 }} />
-                            <Area
-                                type="monotone"
-                                dataKey="sales"
-                                name="Sales"
-                                stroke="#1d1d1f"
-                                strokeWidth={2}
-                                fill="url(#gradSales)"
-                            />
-                            <Area
-                                type="monotone"
-                                dataKey="tax"
-                                name="Tax"
-                                stroke="#f5a623"
-                                strokeWidth={2}
-                                fill="url(#gradTax)"
-                            />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-
-                {/* Invoice count bar chart */}
-                <div>
-                    <p className="text-xs text-muted font-medium uppercase tracking-wide mb-3">Invoice Counts</p>
-                    <ResponsiveContainer width="100%" height={200}>
-                        <BarChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barGap={2}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                            <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                            <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={30} allowDecimals={false} />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Legend wrapperStyle={{ fontSize: 11 }} />
-                            <Bar dataKey="invoices" name="Total" fill="#e5e7eb" radius={[3, 3, 0, 0]} />
-                            <Bar dataKey="submitted" name="Submitted" fill="#22c55e" radius={[3, 3, 0, 0]} />
-                            <Bar dataKey="failed" name="Failed" fill="#ef4444" radius={[3, 3, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
-
-            {/* Status breakdown + quick actions */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Status breakdown */}
-                <div className="bg-white rounded-card shadow-card p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <SectionTitle>Invoice Status Breakdown ({envLabel})</SectionTitle>
-                    </div>
-                    <StatusBar breakdown={statusBreakdown} />
-                    <div className="mt-5 pt-5 border-t border-border grid grid-cols-2 gap-4">
-                        <div>
-                            <p className="text-xs text-muted mb-1">Sandbox total</p>
-                            <p className="text-sm font-semibold text-ink">
-                                {Object.values(data?.statusBreakdown.sandbox ?? {}).reduce((s, v) => s + v, 0)} invoices
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-muted mb-1">Live total</p>
-                            <p className="text-sm font-semibold text-ink">
-                                {Object.values(data?.statusBreakdown.production ?? {}).reduce((s, v) => s + v, 0)} invoices
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Quick actions + DI readiness */}
-                <div className="space-y-6">
+            {/* Main content grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* Left side: Charts (2/3 width) */}
+                <div className="lg:col-span-2 space-y-6">
                     <div className="bg-white rounded-card shadow-card p-6">
-                        <SectionTitle>Quick Actions</SectionTitle>
-                        <div className="grid grid-cols-2 gap-3">
-                            <QuickAction href="/pos" label="Open POS" />
-                            <QuickAction href="/invoices" label="View Invoices" />
-                            <QuickAction href="/products" label="Manage Products" />
-                            <QuickAction href="/settings" label="DI Settings" />
-                            <QuickAction href="/customers" label="Customers" />
-                            <QuickAction href="/sandbox-scenarios" label="Sandbox Tests" />
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+                            <SectionTitle>Monthly Trends — Last 6 Months ({envLabel})</SectionTitle>
+                        </div>
+
+                        {/* Revenue + Tax area chart */}
+                        <div className="mb-8">
+                            <p className="text-xs text-muted font-medium uppercase tracking-wide mb-3">Revenue &amp; Tax (PKR)</p>
+                            <ResponsiveContainer width="100%" height={220}>
+                                <AreaChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="gradSales" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#1d1d1f" stopOpacity={0.15} />
+                                            <stop offset="95%" stopColor="#1d1d1f" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="gradTax" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#f5a623" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#f5a623" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                    <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                                    <YAxis
+                                        tickFormatter={(v) => fmt(v)}
+                                        tick={{ fontSize: 11 }}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        width={52}
+                                    />
+                                    <Tooltip content={<CustomTooltip />} />
+                                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="sales"
+                                        name="Sales"
+                                        stroke="#1d1d1f"
+                                        strokeWidth={2}
+                                        fill="url(#gradSales)"
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="tax"
+                                        name="Tax"
+                                        stroke="#f5a623"
+                                        strokeWidth={2}
+                                        fill="url(#gradTax)"
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        {/* Invoice count bar chart */}
+                        <div>
+                            <p className="text-xs text-muted font-medium uppercase tracking-wide mb-3">Invoice Counts</p>
+                            <ResponsiveContainer width="100%" height={200}>
+                                <BarChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barGap={2}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                                    <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                                    <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={30} allowDecimals={false} />
+                                    <Tooltip content={<CustomTooltip />} />
+                                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                                    <Bar dataKey="invoices" name="Total" fill="#e5e7eb" radius={[3, 3, 0, 0]} />
+                                    <Bar dataKey="submitted" name="Submitted" fill="#22c55e" radius={[3, 3, 0, 0]} />
+                                    <Bar dataKey="failed" name="Failed" fill="#ef4444" radius={[3, 3, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right side: Sidebar metrics / lists (1/3 width) */}
+                <div className="lg:col-span-1 space-y-6">
+                    {/* Status breakdown */}
+                    <div className="bg-white rounded-card shadow-card p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <SectionTitle>Invoice Status Breakdown ({envLabel})</SectionTitle>
+                        </div>
+                        <StatusBar breakdown={statusBreakdown} />
+                        <div className="mt-5 pt-5 border-t border-border grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-xs text-muted mb-1">Sandbox total</p>
+                                <p className="text-sm font-semibold text-ink">
+                                    {Object.values(data?.statusBreakdown.sandbox ?? {}).reduce((s, v) => s + v, 0)} invoices
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted mb-1">Live total</p>
+                                <p className="text-sm font-semibold text-ink">
+                                    {Object.values(data?.statusBreakdown.production ?? {}).reduce((s, v) => s + v, 0)} invoices
+                                </p>
+                            </div>
                         </div>
                     </div>
 
+                    {/* DI Readiness */}
                     <div className="bg-white rounded-card shadow-card p-6">
                         <SectionTitle>DI Readiness</SectionTitle>
                         <div className="space-y-3">
@@ -505,6 +492,7 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     )
