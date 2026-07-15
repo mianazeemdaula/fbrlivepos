@@ -121,12 +121,20 @@ export const SALE_TYPE_CONFIG: Record<string, SaleTypeConfig> = {
         transTypeId: 22, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
         taxBase: 'retailPrice', uomLocked: null,
-        fallbackRates: [{
-            desc: '18%',
-            sros: [
-                { id: -1, desc: '3rd Schedule goods', srItems: [{ id: -1, desc: '51' }] },
-            ],
-        }],
+        fallbackRates: [
+            {
+                desc: '18%',
+                sros: [
+                    { id: -1, desc: '3rd Schedule goods', srItems: [{ id: -1, desc: '51' }] },
+                ],
+            },
+            {
+                desc: '5%',
+                sros: [
+                    { id: -1, desc: '3rd Schedule goods', srItems: [{ id: -1, desc: '51' }] },
+                ],
+            },
+        ],
     },
     SN009: {
         id: 'SN009', scenarioId: 'SN009', label: 'Cotton ginners',
@@ -258,12 +266,20 @@ export const SALE_TYPE_CONFIG: Record<string, SaleTypeConfig> = {
         transTypeId: 22, requiresSRO: true, requiresSR: true,
         showFT: false, showFED: false, showEXT: false, showEXMT: false,
         taxBase: 'retailPrice', uomLocked: null,
-        fallbackRates: [{
-            desc: '18%',
-            sros: [
-                { id: -1, desc: '3rd Schedule goods', srItems: [{ id: -1, desc: '51' }] },
-            ],
-        }],
+        fallbackRates: [
+            {
+                desc: '18%',
+                sros: [
+                    { id: -1, desc: '3rd Schedule goods', srItems: [{ id: -1, desc: '51' }] },
+                ],
+            },
+            {
+                desc: '5%',
+                sros: [
+                    { id: -1, desc: '3rd Schedule goods', srItems: [{ id: -1, desc: '51' }] },
+                ],
+            },
+        ],
     },
 }
 

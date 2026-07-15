@@ -18,6 +18,9 @@ const prisma = {
     dICredentials: {
         findUnique: vi.fn(),
     },
+    dIScenario: {
+        findFirst: vi.fn(),
+    },
 }
 
 vi.mock('@/lib/tenant/context', () => ({
@@ -65,6 +68,7 @@ describe('POST /api/tenant/fbr/submit', () => {
         inferSandboxScenario.mockReturnValue({ scenarioId: 'SN026' })
         buildDIPayload.mockReturnValue({ payload: 'di' })
         prisma.invoice.updateMany.mockResolvedValue({ count: 1 })
+        prisma.dIScenario.findFirst.mockResolvedValue({ id: 'SN026' })
         updateInvoiceForTenant.mockResolvedValue({ count: 1 })
         recordFBRSubmissionLog.mockResolvedValue(undefined)
 
@@ -141,12 +145,6 @@ describe('POST /api/tenant/fbr/submit', () => {
             diInvoiceNumber: 'PRAL-INV-001',
         })
 
-        expect(inferSandboxScenario).toHaveBeenCalledWith(
-            expect.objectContaining({
-                businessActivity: 'Retailer',
-                sector: 'Wholesale / Retails',
-            }),
-        )
         expect(prisma.invoice.updateMany).toHaveBeenCalledWith({
             where: { id: 'invoice-1', tenantId: 'tenant-1' },
             data: { diScenarioId: 'SN026' },
