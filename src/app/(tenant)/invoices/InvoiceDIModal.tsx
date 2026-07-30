@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { formatPKTDateTime } from '@/lib/date'
 
 interface SubmissionLog {
     attempt: number
@@ -107,7 +108,7 @@ export default function InvoiceDIModal({ invoiceId, onClose }: Props) {
                                 <InfoCell
                                     label="Confirmed At"
                                     value={data.diInvoiceDate
-                                        ? new Date(data.diInvoiceDate).toLocaleString()
+                                        ? formatPKTDateTime(data.diInvoiceDate)
                                         : '—'}
                                 />
                             </div>

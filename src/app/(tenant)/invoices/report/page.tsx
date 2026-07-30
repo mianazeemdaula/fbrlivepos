@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { formatPKTDate, formatPKTDateTime } from '@/lib/date'
 
 interface ReportInvoice {
     id: string
@@ -108,7 +109,7 @@ export default function InvoiceReportPage() {
         ]
         const rows = invoices.map(inv => [
             inv.invoiceNumber,
-            new Date(inv.createdAt).toLocaleDateString('en-PK'),
+            formatPKTDate(inv.createdAt),
             inv.diInvoiceNumber ?? '',
             inv.buyerName ?? '',
             inv.buyerNTN ?? '',
@@ -245,7 +246,7 @@ export default function InvoiceReportPage() {
                         {search ? ` · Search: "${search}"` : ''}
                     </p>
                     <p className="text-xs text-center text-gray-400 mt-1">
-                        Generated: {new Date().toLocaleString('en-PK')} · {meta.total} invoice{meta.total !== 1 ? 's' : ''}
+                        Generated: {formatPKTDateTime(new Date())} (PKT) · {meta.total} invoice{meta.total !== 1 ? 's' : ''}
                     </p>
                     <hr className="mt-3 border-gray-300" />
                 </div>
@@ -296,7 +297,7 @@ export default function InvoiceReportPage() {
                                         <td className="px-4 py-2.5 text-xs text-muted">{(page - 1) * 200 + idx + 1}</td>
                                         <td className="px-4 py-2.5 font-medium text-ink whitespace-nowrap">{inv.invoiceNumber}</td>
                                         <td className="px-4 py-2.5 text-xs text-muted whitespace-nowrap">
-                                            {new Date(inv.createdAt).toLocaleDateString('en-PK')}
+                                            {formatPKTDateTime(inv.createdAt)}
                                         </td>
                                         <td className="px-4 py-2.5 text-xs font-mono text-success whitespace-nowrap">
                                             {inv.diInvoiceNumber ?? <span className="text-muted">—</span>}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { formatPKTDateTime } from '@/lib/date'
 
 interface InvoiceDetail {
     id: string
@@ -141,7 +142,7 @@ export default function InvoiceDetailPage() {
                         <p className="text-xs uppercase tracking-caps-xl text-muted">Invoice detail</p>
                         <h1 className="mt-2 text-3xl font-bold text-ink">{invoice.invoiceNumber}</h1>
                         <p className="mt-1 text-sm text-muted">
-                            Created {new Date(invoice.createdAt).toLocaleString()}
+                            Created {formatPKTDateTime(invoice.createdAt)} (PKT)
                         </p>
                     </div>
                     <span
@@ -208,7 +209,7 @@ export default function InvoiceDetailPage() {
                         </div>
                         <div>
                             <p className="mb-1 text-muted">Confirmed At</p>
-                            <p className="text-ink">{invoice.diInvoiceDate ? new Date(invoice.diInvoiceDate).toLocaleString() : '—'}</p>
+                            <p className="text-ink">{invoice.diInvoiceDate ? formatPKTDateTime(invoice.diInvoiceDate) : '—'}</p>
                         </div>
                         <div>
                             <p className="mb-1 text-muted">DI Error Code</p>
@@ -218,7 +219,7 @@ export default function InvoiceDetailPage() {
                             <p className="mb-1 text-muted">Latest Attempt</p>
                             <p className="text-ink">
                                 {invoice.latestSubmissionLog
-                                    ? `#${invoice.latestSubmissionLog.attempt} · ${new Date(invoice.latestSubmissionLog.createdAt).toLocaleString()}`
+                                    ? `#${invoice.latestSubmissionLog.attempt} · ${formatPKTDateTime(invoice.latestSubmissionLog.createdAt)}`
                                     : '—'}
                             </p>
                         </div>

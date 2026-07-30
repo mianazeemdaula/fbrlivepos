@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { formatPKTDateTime } from '@/lib/date'
 
 const InvoiceDIModal = dynamic(() => import('./InvoiceDIModal'), { ssr: false })
 
@@ -19,11 +20,42 @@ interface Invoice {
     createdAt: string
 }
 
+function getPageNumbers(current: number, total: number): (number | '...')[] {
+    if (total <= 5) {
+        return Array.from({ length: total }, (_, i) => i + 1)
+    }
+
+    const pages: (number | '...')[] = [1]
+
+    if (current > 3) {
+        pages.push('...')
+    }
+
+    const start = Math.max(2, current - 1)
+    const end = Math.min(total - 1, current + 1)
+
+    for (let i = start; i <= end; i++) {
+        pages.push(i)
+    }
+
+    if (current < total - 2) {
+        pages.push('...')
+    }
+
+    if (total > 1) {
+        pages.push(total)
+    }
+
+    return pages
+}
+
 export default function InvoicesPage() {
     const [invoices, setInvoices] = useState<Invoice[]>([])
     const [loading, setLoading] = useState(true)
     const [page, setPage] = useState(1)
+    const [limit, setLimit] = useState(20)
     const [totalPages, setTotalPages] = useState(1)
+    const [totalInvoices, setTotalInvoices] = useState(0)
     const [search, setSearch] = useState('')
     const [actionLoading, setActionLoading] = useState<string | null>(null)
     const [actionError, setActionError] = useState<string | null>(null)
@@ -38,21 +70,24 @@ export default function InvoicesPage() {
 
     useEffect(() => {
         fetch('/api/tenant/fbr-credentials')
-            .then((r) => r.ok ? r.json() : null)
-            .then((d) => { if (d?.environment) setEnvironment(d.environment) })
-            .catch(() => { })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d) => {
+                if (d?.environment) setEnvironment(d.environment)
+            })
+            .catch(() => {})
     }, [])
 
     const loadInvoices = useCallback(async () => {
         setLoading(true)
         try {
-            const params = new URLSearchParams({ page: String(page), limit: '20' })
+            const params = new URLSearchParams({ page: String(page), limit: String(limit) })
             if (search) params.set('q', search)
             const res = await fetch(`/api/invoices?${params}`)
             if (res.ok) {
                 const data = await res.json()
                 setInvoices(data.invoices ?? data.data ?? [])
                 setTotalPages(data.pages ?? data.meta?.totalPages ?? 1)
+                setTotalInvoices(data.total ?? data.meta?.total ?? 0)
                 if (data.meta?.invoiceLimit) setInvoiceLimit(data.meta.invoiceLimit)
             }
         } catch {
@@ -60,12 +95,16 @@ export default function InvoicesPage() {
         } finally {
             setLoading(false)
         }
-    }, [page, search])
-
-    useEffect(() => { loadInvoices() }, [loadInvoices])
+    }, [page, limit, search])
 
     useEffect(() => {
-        const timer = setTimeout(() => { setPage(1) }, 300)
+        loadInvoices()
+    }, [loadInvoices])
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setPage(1)
+        }, 300)
         return () => clearTimeout(timer)
     }, [search])
 
@@ -123,9 +162,12 @@ export default function InvoicesPage() {
                     <div className="flex items-center gap-2.5">
                         <h1 className="text-page-title font-normal text-ink">Invoices</h1>
                         {environment && (
-                            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${environment === 'PRODUCTION'
-                                ? 'border-success-border bg-success-bg text-success'
-                                : 'border-border-muted bg-surface-subtle text-gold'}`}
+                            <span
+                                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${
+                                    environment === 'PRODUCTION'
+                                        ? 'border-success-border bg-success-bg text-success'
+                                        : 'border-border-muted bg-surface-subtle text-gold'
+                                }`}
                             >
                                 <span className="h-1.5 w-1.5 rounded-full bg-current" />
                                 {environment === 'PRODUCTION' ? 'Live' : 'Sandbox'}
@@ -133,41 +175,55 @@ export default function InvoicesPage() {
                         )}
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
+
+                {/* Search & Actions inline */}
+                <div className="flex flex-1 items-center justify-end gap-3 flex-wrap min-w-[280px]">
+                    <div className="relative w-full max-w-sm">
+                        <input
+                            type="text"
+                            placeholder="Search by invoice # or buyer name..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full rounded-full border border-border bg-white px-4 py-2 text-sm text-ink placeholder:text-muted focus:outline-none focus:border-primary"
+                        />
+                        {search && (
+                            <button
+                                onClick={() => setSearch('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted hover:text-ink"
+                            >
+                                ✕
+                            </button>
+                        )}
+                    </div>
+
                     {invoiceLimit && (
-                        <span className={`text-xs font-medium ${
-                            invoiceLimit.max !== null && invoiceLimit.current >= invoiceLimit.max
-                                ? 'text-error'
-                                : 'text-muted'
-                        }`}>
+                        <span
+                            className={`text-xs font-medium whitespace-nowrap ${
+                                invoiceLimit.max !== null && invoiceLimit.current >= invoiceLimit.max
+                                    ? 'text-error'
+                                    : 'text-muted'
+                            }`}
+                        >
                             {invoiceLimit.current}
                             {invoiceLimit.max !== null ? ` / ${invoiceLimit.max}` : ''} this month
                         </span>
                     )}
+
                     <Link
                         href="/pos"
-                        className="rounded-full bg-primary px-4 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors"
+                        className="rounded-full bg-primary px-4 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors whitespace-nowrap"
                     >
                         + New Invoice
                     </Link>
                 </div>
             </div>
 
-            {/* Search */}
-            <div className="mb-4">
-                <input
-                    type="text"
-                    placeholder="Search by invoice # or buyer name..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full max-w-md rounded-input border border-border bg-white px-4 py-2.5 text-sm text-ink placeholder:text-muted focus:outline-none focus:border-primary"
-                />
-            </div>
-
             {actionError && (
                 <div className="mb-4 rounded-input border border-error-bg bg-error-bg px-4 py-3 text-sm text-error flex items-center justify-between">
                     {actionError}
-                    <button onClick={() => setActionError(null)} className="ml-3 text-error hover:text-error-dark">✕</button>
+                    <button onClick={() => setActionError(null)} className="ml-3 text-error hover:text-error-dark">
+                        ✕
+                    </button>
                 </div>
             )}
 
@@ -181,13 +237,13 @@ export default function InvoicesPage() {
                             <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Amount</th>
                             <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Payment</th>
                             <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Status</th>
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Date</th>
+                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Date & Time (PKT)</th>
                             <th className="px-4 py-3 text-right text-ui-xs font-normal text-muted">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            Array.from({ length: 5 }).map((_, i) => (
+                            Array.from({ length: limit > 10 ? 10 : limit }).map((_, i) => (
                                 <tr key={i} className="border-b border-border-muted">
                                     <td colSpan={7} className="px-4 py-3">
                                         <div className="h-4 rounded-full bg-border animate-pulse" />
@@ -197,7 +253,7 @@ export default function InvoicesPage() {
                         ) : invoices.length === 0 ? (
                             <tr>
                                 <td colSpan={7} className="px-4 py-12 text-center text-muted text-sm">
-                                    No invoices yet. Create your first invoice from the POS terminal.
+                                    No invoices found. Create your first invoice from the POS terminal.
                                 </td>
                             </tr>
                         ) : (
@@ -214,8 +270,8 @@ export default function InvoicesPage() {
                                     <td className="px-4 py-3">
                                         <StatusBadge status={inv.status} />
                                     </td>
-                                    <td className="px-4 py-3 text-ui-xs text-muted">
-                                        {new Date(inv.createdAt).toLocaleDateString()}
+                                    <td className="px-4 py-3 text-ui-xs text-muted whitespace-nowrap">
+                                        {formatPKTDateTime(inv.createdAt)}
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center justify-end gap-1.5">
@@ -303,26 +359,122 @@ export default function InvoicesPage() {
                 </table>
             </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="mt-4 flex justify-center gap-2">
-                    <button
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                        className="rounded-full border border-border bg-white px-3 py-1.5 text-ui-xs text-ink disabled:opacity-40 hover:bg-surface transition-colors"
-                    >
-                        Previous
-                    </button>
-                    <span className="px-3 py-1.5 text-ui-xs text-muted">Page {page} of {totalPages}</span>
-                    <button
-                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={page === totalPages}
-                        className="rounded-full border border-border bg-white px-3 py-1.5 text-ui-xs text-ink disabled:opacity-40 hover:bg-surface transition-colors"
-                    >
-                        Next
-                    </button>
+            {/* Pagination Controls */}
+            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-card border border-border bg-white px-4 py-3 shadow-card">
+                {/* Showing info */}
+                <div className="text-xs text-muted">
+                    {totalInvoices > 0 ? (
+                        <span>
+                            Showing <strong className="font-medium text-ink">{(page - 1) * limit + 1}</strong> to{' '}
+                            <strong className="font-medium text-ink">{Math.min(page * limit, totalInvoices)}</strong> of{' '}
+                            <strong className="font-medium text-ink">{totalInvoices}</strong> invoices
+                        </span>
+                    ) : (
+                        <span>No invoices found</span>
+                    )}
                 </div>
-            )}
+
+                {/* Pagination Controls */}
+                <div className="flex flex-wrap items-center gap-3">
+                    {/* Rows per page selector */}
+                    <div className="flex items-center gap-1.5 text-xs text-muted">
+                        <span>Show</span>
+                        <select
+                            value={limit}
+                            onChange={(e) => {
+                                setLimit(Number(e.target.value))
+                                setPage(1)
+                            }}
+                            className="rounded-input border border-border bg-white px-2 py-1 text-xs text-ink focus:outline-none focus:border-primary"
+                        >
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                        </select>
+                        <span>per page</span>
+                    </div>
+
+                    {/* Page selector dropdown */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center gap-1.5 text-xs text-muted border-l border-border-muted pl-3">
+                            <span>Go to page</span>
+                            <select
+                                value={page}
+                                onChange={(e) => setPage(Number(e.target.value))}
+                                className="rounded-input border border-border bg-white px-2 py-1 text-xs text-ink focus:outline-none focus:border-primary"
+                            >
+                                {Array.from({ length: totalPages }).map((_, i) => (
+                                    <option key={i + 1} value={i + 1}>
+                                        Page {i + 1}
+                                    </option>
+                                ))}
+                            </select>
+                            <span>of {totalPages}</span>
+                        </div>
+                    )}
+
+                    {/* Buttons */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center gap-1 border-l border-border-muted pl-3">
+                            <button
+                                onClick={() => setPage(1)}
+                                disabled={page === 1}
+                                title="First Page"
+                                className="h-7 px-2 rounded-lg border border-border bg-white text-xs text-ink disabled:opacity-30 hover:bg-surface transition-colors"
+                            >
+                                «
+                            </button>
+                            <button
+                                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                title="Previous Page"
+                                className="h-7 px-2.5 rounded-lg border border-border bg-white text-xs text-ink disabled:opacity-30 hover:bg-surface transition-colors"
+                            >
+                                Prev
+                            </button>
+
+                            {/* Page numbers */}
+                            {getPageNumbers(page, totalPages).map((pNum, idx) =>
+                                pNum === '...' ? (
+                                    <span key={`ellipsis-${idx}`} className="px-1 text-xs text-muted">
+                                        ...
+                                    </span>
+                                ) : (
+                                    <button
+                                        key={pNum}
+                                        onClick={() => setPage(Number(pNum))}
+                                        className={`min-w-[28px] h-7 rounded-lg text-xs font-medium transition-colors ${
+                                            page === pNum
+                                                ? 'bg-primary text-white'
+                                                : 'border border-border bg-white text-ink hover:bg-surface'
+                                        }`}
+                                    >
+                                        {pNum}
+                                    </button>
+                                )
+                            )}
+
+                            <button
+                                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages}
+                                title="Next Page"
+                                className="h-7 px-2.5 rounded-lg border border-border bg-white text-xs text-ink disabled:opacity-30 hover:bg-surface transition-colors"
+                            >
+                                Next
+                            </button>
+                            <button
+                                onClick={() => setPage(totalPages)}
+                                disabled={page === totalPages}
+                                title="Last Page"
+                                className="h-7 px-2 rounded-lg border border-border bg-white text-xs text-ink disabled:opacity-30 hover:bg-surface transition-colors"
+                            >
+                                »
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
 
             {viewDIId && <InvoiceDIModal invoiceId={viewDIId} onClose={() => setViewDIId(null)} />}
         </div>
