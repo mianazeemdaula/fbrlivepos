@@ -1,17 +1,17 @@
 import { z } from 'zod'
 
 export const HSCodeSchema = z.object({
-    code: z.string().regex(/^\d{4,10}(\.\d{2})?$/, 'Format: 8471.30 or 84713000'),
-    description: z.string().min(5).max(500),
-    shortName: z.string().max(100).optional(),
-    category: z.string().min(2).max(100),
-    subCategory: z.string().max(100).optional(),
-    unit: z.enum(['PCS', 'KG', 'LTR', 'MTR', 'SQM', 'SET', 'PAIR', 'BOX', 'CTN', 'DZN']),
-    defaultTaxRate: z.number().min(0).max(100),
+    code: z.string().min(2, 'Code is required').max(20),
+    description: z.string().min(2, 'Description must be at least 2 characters').max(500),
+    shortName: z.string().max(100).optional().nullable(),
+    category: z.string().min(2, 'Category is required').max(100),
+    subCategory: z.string().max(100).optional().nullable(),
+    unit: z.string().min(1, 'Unit is required'),
+    defaultTaxRate: z.coerce.number().min(0, 'Tax rate cannot be negative').max(100, 'Tax rate cannot exceed 100%'),
     isFBRActive: z.boolean().default(true),
-    notes: z.string().max(1000).optional(),
-    effectiveFrom: z.iso.datetime().optional(),
-    effectiveTo: z.iso.datetime().optional(),
+    notes: z.string().max(1000).optional().nullable(),
+    effectiveFrom: z.string().optional().nullable(),
+    effectiveTo: z.string().optional().nullable(),
 })
 
 export const HSCodeImportRowSchema = z.object({
@@ -24,3 +24,4 @@ export const HSCodeImportRowSchema = z.object({
 })
 
 export const HSCodeImportSchema = z.array(HSCodeImportRowSchema)
+
