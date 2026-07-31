@@ -35,6 +35,14 @@ type CartItemInput = Omit<CartItem, 'quantity' | 'discount'> & {
     discount?: number
 }
 
+// FBR DI requires invoiceDate as "YYYY-MM-DD"; keep the cart value in that shape.
+export function todayInvoiceDate() {
+    const now = new Date()
+    const month = `${now.getMonth() + 1}`.padStart(2, '0')
+    const day = `${now.getDate()}`.padStart(2, '0')
+    return `${now.getFullYear()}-${month}-${day}`
+}
+
 interface CartStore {
     items: CartItem[]
     buyerName: string
@@ -46,6 +54,7 @@ interface CartStore {
     customerId: string | null
     paymentMethod: 'CASH' | 'CARD' | 'BANK_TRANSFER'
     terminalId: string | null
+    invoiceDate: string // "YYYY-MM-DD" — submitted to FBR DI as invoiceDate
 
     addItem: (item: CartItemInput) => void
     removeItem: (productId: string) => void
@@ -53,6 +62,7 @@ interface CartStore {
     setCustomer: (customer: { id: string; name: string; ntnCnic?: string | null; phone?: string | null; province?: string | null; address?: string | null; registrationType?: string | null } | null) => void
     setPaymentMethod: (method: 'CASH' | 'CARD' | 'BANK_TRANSFER') => void
     setTerminalId: (id: string | null) => void
+    setInvoiceDate: (date: string) => void
     clearCart: () => void
 
     // Computed
@@ -74,6 +84,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     customerId: null,
     paymentMethod: 'CASH',
     terminalId: null,
+    invoiceDate: todayInvoiceDate(),
 
     addItem: (item) =>
         set((state) => {
@@ -115,6 +126,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     },
     setPaymentMethod: (paymentMethod) => set({ paymentMethod }),
     setTerminalId: (terminalId) => set({ terminalId }),
+    setInvoiceDate: (invoiceDate) => set({ invoiceDate }),
     clearCart: () =>
         set({
             items: [],
@@ -126,6 +138,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
             buyerRegistrationType: '',
             customerId: null,
             paymentMethod: 'CASH',
+            invoiceDate: todayInvoiceDate(),
         }),
 
     subtotal: () => get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
@@ -137,8 +150,10 @@ export const useCartStore = create<CartStore>((set, get) => ({
                 saleType: i.diSaleType,
                 taxRate: i.taxRate,
                 taxableValue: lineSubtotal,
-                retailPrice: (i.diFixedNotifiedValueOrRetailPrice ?? i.price) * i.quantity,
-                quantity: i.quantity,
+                // Stored per unit on the cart item; the DI tax base is the line total.
+                retailPrice: i.diFixedNotifiedValueOrRetailPrice != null
+                    ? i.diFixedNotifiedValueOrRetailPrice * i.quantity
+                    : null,
             }))
         }, 0),
     total: () => get().subtotal() - get().discountTotal() + get().taxAmount(),

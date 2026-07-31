@@ -15,8 +15,19 @@ function normalizeOptionalText(value?: string | null) {
     return trimmed?.length ? trimmed : undefined
 }
 
+// FBR DI expects invoiceDate as "YYYY-MM-DD". Store it at UTC midnight so the
+// payload builder's toISOString() round-trip yields the same calendar day.
+function parseInvoiceDate(value?: string) {
+    if (!value) return undefined
+    return new Date(`${value}T00:00:00.000Z`)
+}
+
 const CreateInvoiceSchema = z.object({
     terminalId: z.string().optional(),
+    invoiceDate: z.string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invoice date must be in YYYY-MM-DD format')
+        .refine((value) => !Number.isNaN(new Date(`${value}T00:00:00.000Z`).getTime()), 'Invoice date is not a valid date')
+        .optional(),
     buyerNTN: z.string().optional().transform((value) => {
         const normalized = normalizeNtnCnic(value)
         return normalized || undefined
@@ -134,6 +145,7 @@ export async function POST(req: NextRequest) {
     let discountAmount = 0
 
     const invoiceNumber = await getNextInvoiceNumber(tenant.id)
+    const invoiceDate = parseInvoiceDate(body.invoiceDate)
 
     // Stamp the invoice with the tenant's current DI environment so sandbox and live invoices are separated
     const diCreds = await prisma.dICredentials.findUnique({ where: { tenantId: tenant.id }, select: { environment: true } })
@@ -207,17 +219,19 @@ export async function POST(req: NextRequest) {
                 diSaleType: resolvedSaleType,
             })
 
-            const retailBase = (item.diFixedNotifiedValueOrRetailPrice != null
-                ? Number(item.diFixedNotifiedValueOrRetailPrice) * qty
-                 : product.diFixedNotifiedValueOrRetailPrice != null
-                    ? Number(product.diFixedNotifiedValueOrRetailPrice) * qty
-                    : unitPrice * qty)
+            // The notified/retail price is stored per unit on the product; the DI tax base
+            // (and the value we later send as fixedNotifiedValueOrRetailPrice) is the line total.
+            const notifiedUnitPrice = item.diFixedNotifiedValueOrRetailPrice != null
+                ? Number(item.diFixedNotifiedValueOrRetailPrice)
+                : product.diFixedNotifiedValueOrRetailPrice != null
+                    ? Number(product.diFixedNotifiedValueOrRetailPrice)
+                    : null
+            const notifiedLineValue = notifiedUnitPrice != null ? notifiedUnitPrice * qty : null
             const salesTaxApplicable = item.salesTaxApplicable ?? calculateSalesTaxApplicable({
                 saleType: resolvedSaleType,
                 taxRate,
                 taxableValue: taxableAmount,
-                retailPrice: retailBase,
-                quantity: qty,
+                retailPrice: notifiedLineValue,
             })
             const furtherTax = item.furtherTax ?? Number(product.furtherTax ?? 0)
             const fedPayable = item.fedPayable ?? Number(product.fedPayable ?? 0)
@@ -242,11 +256,7 @@ export async function POST(req: NextRequest) {
                 diRate: resolvedRate || null,
                 diUOM: unit,
                 diSaleType: resolvedSaleType,
-                diFixedNotifiedValueOrRetailPrice: item.diFixedNotifiedValueOrRetailPrice != null
-                    ? Number(item.diFixedNotifiedValueOrRetailPrice) * qty
-                    : product.diFixedNotifiedValueOrRetailPrice != null
-                        ? Number(product.diFixedNotifiedValueOrRetailPrice)
-                        : null,
+                diFixedNotifiedValueOrRetailPrice: notifiedLineValue,
                 diSalesTaxWithheldAtSource: product.diSalesTaxWithheldAtSource != null
                     ? Number(product.diSalesTaxWithheldAtSource)
                     : null,
@@ -268,6 +278,8 @@ export async function POST(req: NextRequest) {
                 userId,
                 terminalId: body.terminalId,
                 invoiceNumber,
+                // Falls back to the schema default (now()) when the client omits it
+                ...(invoiceDate ? { invoiceDate } : {}),
                 buyerNTN: body.buyerNTN,
                 buyerName: body.buyerName,
                 buyerPhone: body.buyerPhone,

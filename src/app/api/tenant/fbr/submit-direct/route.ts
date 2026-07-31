@@ -9,7 +9,7 @@ import { getScenarioId, getSaleTypeIdFromLabel } from '@/lib/di/sale-type-config
 import { evaluateDIItemReadiness } from '@/lib/di/eligibility'
 import { mapDIErrorCodes } from '@/lib/di/error-codes'
 import { resolveDIRateDescriptor } from '@/lib/di/rate'
-import { calculateSalesTaxApplicable } from '@/lib/di/tax'
+import { calculateDILineValues, round2 } from '@/lib/di/tax'
 import { stringifyError } from '@/lib/fbr/submission-log'
 
 const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
@@ -90,14 +90,20 @@ function buildDirectPayload(input: z.infer<typeof DirectSubmissionSchema>, creds
                 taxRate: item.taxRate,
                 diSaleType: item.diSaleType,
             })
-            const retailBase = (item.diFixedNotifiedValueOrRetailPrice ?? item.price) * item.quantity
-            const salesTaxApplicable = item.salesTaxApplicable ?? calculateSalesTaxApplicable({
+            // The notified/retail price arrives per unit; the DI tax base — and the value sent
+            // as fixedNotifiedValueOrRetailPrice — is the line total, so the two always agree.
+            const notifiedLineValue = isThirdSchedule
+                ? (item.diFixedNotifiedValueOrRetailPrice ?? item.price) * item.quantity
+                : item.diFixedNotifiedValueOrRetailPrice != null
+                    ? item.diFixedNotifiedValueOrRetailPrice * item.quantity
+                    : null
+            const lineValues = calculateDILineValues({
                 saleType: item.diSaleType,
                 taxRate: item.taxRate,
-                taxableValue: lineValue,
-                retailPrice: retailBase,
-                quantity: item.quantity,
+                valueSalesExcludingST: lineValue,
+                fixedNotifiedValueOrRetailPrice: notifiedLineValue,
             })
+            const salesTaxApplicable = item.salesTaxApplicable ?? lineValues.salesTaxApplicable
             const furtherTax = Number((item.furtherTax ?? 0).toFixed(2))
             const fedPayable = Number((item.fedPayable ?? 0).toFixed(2))
             const extraTax = Number((item.extraTax ?? 0).toFixed(2))
@@ -108,11 +114,9 @@ function buildDirectPayload(input: z.infer<typeof DirectSubmissionSchema>, creds
                 rate: resolvedRate,
                 uoM: normalizeText(item.unit) || DEFAULT_FALLBACK_UOM,
                 quantity: Number(item.quantity.toFixed(4)),
-                totalValues: item.totalValues ?? (isThirdSchedule ? Number((lineValue + salesTaxApplicable).toFixed(2)) : 0),
+                totalValues: item.totalValues ?? lineValues.totalValues,
                 valueSalesExcludingST: lineValue,
-                fixedNotifiedValueOrRetailPrice: isThirdSchedule
-                    ? Number((item.diFixedNotifiedValueOrRetailPrice ?? item.price).toFixed(2))
-                    : Number((item.diFixedNotifiedValueOrRetailPrice ?? 0).toFixed(2)),
+                fixedNotifiedValueOrRetailPrice: round2(notifiedLineValue ?? 0),
                 salesTaxApplicable,
                 salesTaxWithheldAtSource: Number((item.diSalesTaxWithheldAtSource ?? 0).toFixed(2)),
                 extraTax: extraTax === 0 ? '' : extraTax,

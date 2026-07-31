@@ -1,3 +1,5 @@
+import { isThirdScheduleSaleType, round2 } from './tax';
+
 export interface ItemCalculationInput {
   saleType: string;                      // e.g. "Goods at standard rate (default)"
   rateDesc: string;                      // from FBR rate API or fallback, e.g. "18%"
@@ -65,13 +67,14 @@ export function calculateItemTax(input: ItemCalculationInput): ItemCalculationRe
   let taxableValue = Math.max(0, unitPrice * quantity - discount);
 
   // 2. Determine if tax base is "retail price" (3rd Schedule goods, etc.)
-  const usesRetailPrice = saleType === '3rd Schedule Goods' ||
+  //    Mirrors usesFixedNotifiedTaxBase() in ./tax — the notified/retail price,
+  //    when present, is the base PRAL taxes.
+  const usesRetailPrice = isThirdScheduleSaleType(saleType) ||
                           (fixedNotifiedValueOrRetailPrice !== undefined &&
-                           fixedNotifiedValueOrRetailPrice > 0 &&
-                           rateDesc.toLowerCase().includes('retail price'));
+                           fixedNotifiedValueOrRetailPrice > 0);
 
   if (usesRetailPrice && fixedNotifiedValueOrRetailPrice) {
-    taxableValue = fixedNotifiedValueOrRetailPrice;
+    taxableValue = round2(fixedNotifiedValueOrRetailPrice);
   }
 
   // 3. Parse rate (percentage + possible fixed per unit)
@@ -85,15 +88,16 @@ export function calculateItemTax(input: ItemCalculationInput): ItemCalculationRe
   if (fixedPerUnit > 0) {
     salesTaxApplicable += fixedPerUnit * quantity;
   }
+  salesTaxApplicable = round2(salesTaxApplicable);
 
   // 5. Further tax, FED, extra tax (always on taxableValue, as in scenarios)
-  const furtherTax = (taxableValue * furtherTaxPercent) / 100;
-  const fedPayable = (taxableValue * fedPercent) / 100;
-  const extraTax = (taxableValue * extraTaxPercent) / 100;
+  const furtherTax = round2((taxableValue * furtherTaxPercent) / 100);
+  const fedPayable = round2((taxableValue * fedPercent) / 100);
+  const extraTax = round2((taxableValue * extraTaxPercent) / 100);
 
   // 6. Totals
-  const totalTax = salesTaxApplicable + furtherTax + fedPayable + extraTax;
-  const totalInvoiceValue = taxableValue + totalTax;
+  const totalTax = round2(salesTaxApplicable + furtherTax + fedPayable + extraTax);
+  const totalInvoiceValue = round2(taxableValue + totalTax);
 
   return {
     valueSalesExcludingST: taxableValue,

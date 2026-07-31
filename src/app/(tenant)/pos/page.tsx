@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
-import { useCartStore } from '@/stores/cart'
+import { useCartStore, todayInvoiceDate } from '@/stores/cart'
 import { normalizeNtnCnic } from '@/lib/validation/pakistan'
 import DirectProductModal, { type DirectPosProduct } from './DirectProductModal'
 
@@ -45,9 +45,9 @@ export default function POSPage() {
 
     const {
         items, buyerName, buyerNTN, buyerProvince, buyerAddress,
-        buyerRegistrationType, customerId, paymentMethod,
+        buyerRegistrationType, customerId, paymentMethod, invoiceDate,
         addItem, removeItem,
-        setBuyerInfo, setCustomer, setPaymentMethod,
+        setBuyerInfo, setCustomer, setPaymentMethod, setInvoiceDate,
         subtotal, discountTotal, taxAmount, total, clearCart,
     } = useCartStore()
 
@@ -150,6 +150,7 @@ export default function POSPage() {
             buyerRegistrationType: buyerRegistrationType || undefined,
             customerId: customerId || undefined,
             paymentMethod,
+            invoiceDate,
             invoiceType,
             invoiceRefNo: invoiceType === 'Debit Note' ? (invoiceRefNo || undefined) : undefined,
             items: items.map((i) => ({
@@ -346,6 +347,18 @@ export default function POSPage() {
 
                     {/* Invoice Configuration */}
                     <div className="mb-6 space-y-4">
+                        <div>
+                            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted">Invoice Date</label>
+                            <input
+                                type="date"
+                                value={invoiceDate}
+                                max={todayInvoiceDate()}
+                                onChange={e => setInvoiceDate(e.target.value || todayInvoiceDate())}
+                                className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-primary"
+                            />
+                            <p className="mt-1.5 text-[11px] text-muted">Sent to FBR as <span className="font-mono">invoiceDate</span> (YYYY-MM-DD).</p>
+                        </div>
+
                         <div>
                             <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted">Invoice Type</label>
                             <div className="flex gap-1 rounded-xl border border-border bg-canvas p-1">

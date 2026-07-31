@@ -2,16 +2,13 @@ import type { Invoice, InvoiceItem, DICredentials } from '@/generated/prisma/cli
 import type { DIInvoicePayload } from './types'
 import { getSellerIdentity } from './seller'
 import { resolveDIRateDescriptor } from './rate'
+import { calculateDILineValues, round2 } from './tax'
 
 const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
 
 type PreferredIdType = 'NTN' | 'CNIC'
 
 type InvoiceWithItems = Invoice & { items: InvoiceItem[] }
-
-function normalize(value: string | null | undefined) {
-    return value?.trim().toLowerCase() ?? ''
-}
 
 export function buildDIPayload(
     invoice: InvoiceWithItems,
@@ -52,28 +49,40 @@ export function buildDIPayload(
         // Sandbox testing scenario (omit in production)
         scenarioId: options?.isSandbox ? options.scenarioId : undefined,
 
-        items: invoice.items.map((item) => ({
-            hsCode: item.hsCode,
-            productDescription: item.name,
-            rate: item.diRate ?? resolveDIRateDescriptor({
-                diRate: item.diRate,
+        items: invoice.items.map((item) => {
+            // The stored fixed/notified price is already line-level (per-unit × qty).
+            const fixedNotifiedValueOrRetailPrice = round2(Number(item.diFixedNotifiedValueOrRetailPrice ?? 0))
+            const valueSalesExcludingST = round2(Number(item.lineTotal ?? 0) - Number(item.taxAmount ?? 0))
+            const { salesTaxApplicable, totalValues } = calculateDILineValues({
+                saleType: item.diSaleType,
                 taxRate: Number(item.taxRate),
-                diSaleType: item.diSaleType,
-            }),
-            uoM: item.diUOM ?? item.unit ?? DEFAULT_FALLBACK_UOM,
-            quantity: Number(item.quantity),
-            totalValues: normalize(item.diSaleType) === '3rd schedule goods' ? Number(item.lineTotal ?? 0) : 0,
-            valueSalesExcludingST: Number((Number(item.lineTotal ?? 0) - Number(item.taxAmount ?? 0)).toFixed(2)),
-            fixedNotifiedValueOrRetailPrice: Number(item.diFixedNotifiedValueOrRetailPrice ?? 0),
-            salesTaxApplicable: Number(item.taxAmount ?? 0),
-            salesTaxWithheldAtSource: Number(item.diSalesTaxWithheldAtSource ?? 0),
-            extraTax: Number(item.extraTax ?? 0),
-            furtherTax: Number(item.furtherTax ?? 0),
-            sroScheduleNo: item.sroScheduleNo ?? '',
-            fedPayable: Number(item.fedPayable ?? 0),
-            discount: Number(item.discount ?? 0),
-            saleType: item.diSaleType ?? 'Goods at standard rate (default)',
-            sroItemSerialNo: item.sroItemSerialNo ?? '',
-        })),
+                valueSalesExcludingST,
+                fixedNotifiedValueOrRetailPrice,
+            })
+
+            return {
+                hsCode: item.hsCode,
+                productDescription: item.name,
+                rate: item.diRate ?? resolveDIRateDescriptor({
+                    diRate: item.diRate,
+                    taxRate: Number(item.taxRate),
+                    diSaleType: item.diSaleType,
+                }),
+                uoM: item.diUOM ?? item.unit ?? DEFAULT_FALLBACK_UOM,
+                quantity: Number(item.quantity),
+                totalValues,
+                valueSalesExcludingST,
+                fixedNotifiedValueOrRetailPrice,
+                salesTaxApplicable,
+                salesTaxWithheldAtSource: Number(item.diSalesTaxWithheldAtSource ?? 0),
+                extraTax: Number(item.extraTax ?? 0),
+                furtherTax: Number(item.furtherTax ?? 0),
+                sroScheduleNo: item.sroScheduleNo ?? '',
+                fedPayable: Number(item.fedPayable ?? 0),
+                discount: Number(item.discount ?? 0),
+                saleType: item.diSaleType ?? 'Goods at standard rate (default)',
+                sroItemSerialNo: item.sroItemSerialNo ?? '',
+            }
+        }),
     }
 }
