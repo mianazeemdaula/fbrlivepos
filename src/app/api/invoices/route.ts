@@ -15,6 +15,15 @@ function normalizeOptionalText(value?: string | null) {
     return trimmed?.length ? trimmed : undefined
 }
 
+// Prefix the failing field path so a 400 is self-diagnosing in the network tab,
+// e.g. "items.0.sroScheduleNo: Invalid input: expected string, received null".
+function formatValidationError(error: z.ZodError) {
+    const issue = error.issues[0]
+    if (!issue) return 'Invalid invoice input.'
+    const path = issue.path.join('.')
+    return path ? `${path}: ${issue.message}` : issue.message
+}
+
 // FBR DI expects invoiceDate as "YYYY-MM-DD". Store it at UTC midnight so the
 // payload builder's toISOString() round-trip yields the same calendar day.
 function parseInvoiceDate(value?: string) {
@@ -53,8 +62,10 @@ const CreateInvoiceSchema = z.object({
             diRate: z.string().optional(),
             diSaleType: z.string().optional(),
             diFixedNotifiedValueOrRetailPrice: z.number().min(0).nullable().optional(),
-            sroScheduleNo: z.string().optional(),
-            sroItemSerialNo: z.string().optional(),
+            // Local-only POS items send `null` for unset SRO fields, and zod's
+            // `.optional()` rejects null — so these must be nullish.
+            sroScheduleNo: z.string().nullish(),
+            sroItemSerialNo: z.string().nullish(),
             quantity: z.number().positive(),
             discount: z.number().min(0).default(0),
             valueSalesExcludingST: z.number().min(0).optional(),
@@ -119,7 +130,7 @@ export async function POST(req: NextRequest) {
 
     const parsed = CreateInvoiceSchema.safeParse(await req.json())
     if (!parsed.success) {
-        return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid invoice input.' }, { status: 400 })
+        return NextResponse.json({ error: formatValidationError(parsed.error) }, { status: 400 })
     }
     const body = parsed.data
 
