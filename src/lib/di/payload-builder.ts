@@ -60,6 +60,8 @@ export function buildDIPayload(
                 fixedNotifiedValueOrRetailPrice,
             })
 
+            const rawExtraTax = item.extraTax != null ? Number(item.extraTax) : 0
+
             return {
                 hsCode: item.hsCode,
                 productDescription: item.name,
@@ -70,16 +72,16 @@ export function buildDIPayload(
                 }),
                 uoM: item.diUOM ?? item.unit ?? DEFAULT_FALLBACK_UOM,
                 quantity: Number(item.quantity),
-                totalValues,
-                valueSalesExcludingST,
-                fixedNotifiedValueOrRetailPrice,
-                salesTaxApplicable,
-                salesTaxWithheldAtSource: Number(item.diSalesTaxWithheldAtSource ?? 0),
-                extraTax: Number(item.extraTax ?? 0),
-                furtherTax: Number(item.furtherTax ?? 0),
+                totalValues: round2(totalValues),
+                valueSalesExcludingST: round2(valueSalesExcludingST),
+                fixedNotifiedValueOrRetailPrice: round2(fixedNotifiedValueOrRetailPrice),
+                salesTaxApplicable: round2(salesTaxApplicable),
+                salesTaxWithheldAtSource: round2(Number(item.diSalesTaxWithheldAtSource ?? 0)),
+                extraTax: rawExtraTax === 0 ? 0 : round2(rawExtraTax),
+                furtherTax: round2(Number(item.furtherTax ?? 0)),
                 sroScheduleNo: item.sroScheduleNo ?? '',
-                fedPayable: Number(item.fedPayable ?? 0),
-                discount: Number(item.discount ?? 0),
+                fedPayable: round2(Number(item.fedPayable ?? 0)),
+                discount: round2(Number(item.discount ?? 0)),
                 saleType: item.diSaleType ?? 'Goods at standard rate (default)',
                 sroItemSerialNo: item.sroItemSerialNo ?? '',
             }

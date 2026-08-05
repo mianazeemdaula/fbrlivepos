@@ -82,8 +82,8 @@ function buildDirectPayload(input: z.infer<typeof DirectSubmissionSchema>, creds
         invoiceRefNo: input.invoiceType === 'Debit Note' ? normalizeText(input.invoiceRefNo) : '',
         scenarioId,
         items: input.items.map((item) => {
-            const lineDiscount = Number((item.discount ?? 0).toFixed(2))
-            const lineValue = Number((item.valueSalesExcludingST ?? (item.price * item.quantity - lineDiscount)).toFixed(2))
+            const lineDiscount = round2(item.discount ?? 0)
+            const lineValue = round2(item.valueSalesExcludingST ?? (item.price * item.quantity - lineDiscount))
             const isThirdSchedule = normalizeText(item.diSaleType).toLowerCase() === '3rd schedule goods'
             const resolvedRate = resolveDIRateDescriptor({
                 diRate: item.diRate,
@@ -103,10 +103,10 @@ function buildDirectPayload(input: z.infer<typeof DirectSubmissionSchema>, creds
                 valueSalesExcludingST: lineValue,
                 fixedNotifiedValueOrRetailPrice: notifiedLineValue,
             })
-            const salesTaxApplicable = item.salesTaxApplicable ?? lineValues.salesTaxApplicable
-            const furtherTax = Number((item.furtherTax ?? 0).toFixed(2))
-            const fedPayable = Number((item.fedPayable ?? 0).toFixed(2))
-            const extraTax = Number((item.extraTax ?? 0).toFixed(2))
+            const salesTaxApplicable = item.salesTaxApplicable != null ? round2(item.salesTaxApplicable) : lineValues.salesTaxApplicable
+            const furtherTax = round2(item.furtherTax ?? 0)
+            const fedPayable = round2(item.fedPayable ?? 0)
+            const extraTax = round2(item.extraTax ?? 0)
 
             return {
                 hsCode: item.hsCode,
@@ -114,11 +114,11 @@ function buildDirectPayload(input: z.infer<typeof DirectSubmissionSchema>, creds
                 rate: resolvedRate,
                 uoM: normalizeText(item.unit) || DEFAULT_FALLBACK_UOM,
                 quantity: Number(item.quantity.toFixed(4)),
-                totalValues: item.totalValues ?? lineValues.totalValues,
+                totalValues: item.totalValues != null ? round2(item.totalValues) : lineValues.totalValues,
                 valueSalesExcludingST: lineValue,
                 fixedNotifiedValueOrRetailPrice: round2(notifiedLineValue ?? 0),
                 salesTaxApplicable,
-                salesTaxWithheldAtSource: Number((item.diSalesTaxWithheldAtSource ?? 0).toFixed(2)),
+                salesTaxWithheldAtSource: round2(item.diSalesTaxWithheldAtSource ?? 0),
                 extraTax: extraTax === 0 ? '' : extraTax,
                 furtherTax,
                 sroScheduleNo: normalizeText(item.sroScheduleNo),
