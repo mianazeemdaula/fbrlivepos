@@ -6,8 +6,24 @@ export function isThirdScheduleSaleType(saleType: string | null | undefined): bo
     return normalizeSaleType(saleType) === '3rd schedule goods'
 }
 
+/**
+ * Half-up rounding to 2 decimals, matching PRAL's decimal arithmetic.
+ *
+ * `toFixed(2)` rounds the *binary* double, so a decimal midpoint that lands just
+ * below it loses a paisa — 135400.50 × 5% is 6770.0249999999996 in floating point
+ * and rounds to 6770.02, while PRAL expects 6770.03 and rejects the line (0102).
+ * Shifting the exponent on the shortest round-trip decimal string keeps the
+ * midpoint exact before rounding.
+ */
 export function round2(value: number | null | undefined): number {
-    return Number((Math.max(0, Number(value) || 0)).toFixed(2))
+    const numeric = Math.max(0, Number(value) || 0)
+    if (!Number.isFinite(numeric)) return 0
+
+    const decimal = String(numeric)
+    // Exponential notation (1e-7, 1e21) can't take an appended exponent.
+    if (decimal.includes('e') || decimal.includes('E')) return Number(numeric.toFixed(2))
+
+    return Number(`${Math.round(Number(`${decimal}e2`))}e-2`)
 }
 
 /**
