@@ -151,13 +151,22 @@ export default function TenantsPage() {
                                     <td className="px-4 py-3 text-xs text-muted">
                                         {new Date(t.createdAt).toLocaleDateString()}
                                     </td>
-                                    <td className="px-4 py-3">
-                                        <Link
-                                            href={`/super-admin/tenants/${t.id}`}
-                                            className="text-xs font-medium text-muted transition-colors hover:text-cream"
-                                        >
-                                            Manage →
-                                        </Link>
+                                    <td className="px-4 py-3 text-right">
+                                        <div className="flex items-center justify-end gap-2.5">
+                                            <Link
+                                                href={`/super-admin/tenants/${t.id}?edit=true`}
+                                                className="text-xs font-semibold text-primary hover:text-primary-dark transition-colors"
+                                            >
+                                                Edit
+                                            </Link>
+                                            <span className="text-border">·</span>
+                                            <Link
+                                                href={`/super-admin/tenants/${t.id}`}
+                                                className="text-xs font-medium text-muted transition-colors hover:text-ink"
+                                            >
+                                                Manage →
+                                            </Link>
+                                        </div>
                                     </td>
                                 </tr>
                             ))
