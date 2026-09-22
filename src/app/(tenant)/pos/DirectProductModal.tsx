@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { SALE_TYPE_CONFIG, SALE_TYPE_LIST, type SaleTypeConfig } from '@/lib/di/sale-type-config'
 import { calculateItemTax } from '@/lib/di/scenario-tax-calculator'
 
@@ -111,6 +111,35 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
     const [sroLoading, setSroLoading] = useState(false)
     const [srOptions, setSrOptions] = useState<SROOption[]>([])
     const [srLoading, setSrLoading] = useState(false)
+    const [defaultHS, setDefaultHS] = useState<string>('')
+
+    useEffect(() => {
+        let isMounted = true
+        async function fetchDefaultHSCode() {
+            try {
+                const res = await fetch('/api/hs-codes/default')
+                if (res.ok) {
+                    const data = await res.json()
+                    if (data?.code && isMounted) {
+                        setDefaultHS(data.code)
+                        setForm((current) => {
+                            if (current.hsCode.trim()) return current
+                            return {
+                                ...current,
+                                hsCode: data.code,
+                                uom: current.uom || data.unit || DEFAULT_FALLBACK_UOM,
+                            }
+                        })
+                        void loadUomForHSCode(data.code)
+                    }
+                }
+            } catch {
+                // Non-blocking
+            }
+        }
+        void fetchDefaultHSCode()
+        return () => { isMounted = false }
+    }, [])
 
     const cfg: SaleTypeConfig | null = form.saleTypeId ? (SALE_TYPE_CONFIG[form.saleTypeId] ?? null) : null
     const today = new Date().toISOString().split('T')[0]
@@ -344,8 +373,14 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
         e.preventDefault()
         setError('')
 
-        if (!form.hsCode.trim()) {
-            setError('HS code is required.')
+        let effectiveHSCode = form.hsCode.trim()
+        if (!effectiveHSCode && defaultHS) {
+            effectiveHSCode = defaultHS
+            setForm((current) => ({ ...current, hsCode: defaultHS }))
+        }
+
+        if (!effectiveHSCode) {
+            setError('HS code could not be resolved from database.')
             return
         }
 
@@ -380,7 +415,7 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
         const localProduct: DirectPosProduct = {
             id: `local-${Date.now()}`,
             name: form.productDescription.trim(),
-            hsCode: form.hsCode.trim(),
+            hsCode: effectiveHSCode,
             price,
             taxRate,
             diRate: form.diRate,
@@ -470,7 +505,7 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
                                         void loadUomForHSCode(form.hsCode.trim())
                                     }
                                 }}
-                                placeholder="e.g. 8471.3000"
+                                placeholder={defaultHS ? `e.g. ${defaultHS}` : 'e.g. HS Code'}
                                 required
                             />
                         </div>

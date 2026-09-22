@@ -11,12 +11,13 @@ import { mapDIErrorCodes } from '@/lib/di/error-codes'
 import { resolveDIRateDescriptor } from '@/lib/di/rate'
 import { calculateDILineValues, round2 } from '@/lib/di/tax'
 import { stringifyError } from '@/lib/fbr/submission-log'
+import { getDefaultHSCode } from '@/lib/hscode'
 
 const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
 
 const DirectItemSchema = z.object({
     name: z.string().trim().min(1, 'Product name is required'),
-    hsCode: z.string().trim().min(1, 'HS code is required in input'),
+    hsCode: z.string().trim().optional(),
     price: z.number().min(0),
     quantity: z.number().positive(),
     discount: z.number().min(0).default(0),
@@ -109,7 +110,7 @@ function buildDirectPayload(input: z.infer<typeof DirectSubmissionSchema>, creds
             const extraTax = round2(item.extraTax ?? 0)
 
             return {
-                hsCode: item.hsCode,
+                hsCode: item.hsCode ?? '',
                 productDescription: item.name,
                 rate: resolvedRate,
                 uoM: normalizeText(item.unit) || DEFAULT_FALLBACK_UOM,
@@ -148,6 +149,13 @@ export async function POST(req: NextRequest) {
 
         if (!hasToken) {
             return NextResponse.json({ error: 'Your PRAL DI token is not configured. Please complete IRIS registration.' }, { status: 422 })
+        }
+
+        const defaultHS = await getDefaultHSCode()
+        for (const item of body.items) {
+            if (!item.hsCode) {
+                item.hsCode = defaultHS?.code ?? ''
+            }
         }
 
         const readinessIssues = body.items

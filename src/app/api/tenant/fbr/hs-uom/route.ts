@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getTenantFromSession } from '@/lib/tenant/context'
 import { prisma } from '@/lib/db/prisma'
 import { decryptCredential } from '@/lib/crypto/credentials'
+import { getDefaultHSCode } from '@/lib/hscode'
 
 const FBR_BASE = 'https://gw.fbr.gov.pk'
 
@@ -21,10 +22,14 @@ function resolveEnvToken() {
 export async function GET(req: NextRequest) {
     const { tenant } = await getTenantFromSession()
 
-    const hsCode = req.nextUrl.searchParams.get('hs_code')
+    let hsCode = req.nextUrl.searchParams.get('hs_code')
     const annexureId = Math.max(1, Number(req.nextUrl.searchParams.get('annexure_id') ?? 3))
     if (!hsCode) {
-        return NextResponse.json({ error: 'hs_code query param is required' }, { status: 400 })
+        const defaultHS = await getDefaultHSCode()
+        hsCode = defaultHS?.code ?? null
+    }
+    if (!hsCode) {
+        return NextResponse.json({ error: 'hs_code query param is required and no default HS code is in database' }, { status: 400 })
     }
 
     const cachedUOMs = await prisma.dIHSCodeUOM.findMany({

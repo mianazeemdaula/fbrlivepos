@@ -7,6 +7,7 @@ import { checkPlanLimit } from '@/lib/features/flags'
 import { isValidMobile, isValidNtnCnic, normalizeMobile, normalizeNtnCnic } from '@/lib/validation/pakistan'
 import { resolveDIRateDescriptor } from '@/lib/di/rate'
 import { calculateSalesTaxApplicable } from '@/lib/di/tax'
+import { getDefaultHSCode } from '@/lib/hscode'
 
 const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
 
@@ -77,14 +78,6 @@ const CreateInvoiceSchema = z.object({
             totalInvoiceValue: z.number().min(0).optional(),
         }).superRefine((value, ctx) => {
             if (value.productId) return
-
-            if (!normalizeOptionalText(value.hsCode)) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message: 'HS code is required when productId is not provided.',
-                    path: ['hsCode'],
-                })
-            }
 
             if (!normalizeOptionalText(value.name)) {
                 ctx.addIssue({
@@ -191,7 +184,14 @@ export async function POST(req: NextRequest) {
 
             if (!product) {
                 const directName = normalizeOptionalText(item.name) ?? `POS Item ${index + 1}`
-                const directHSCode = normalizeOptionalText(item.hsCode)!
+                let directHSCode = normalizeOptionalText(item.hsCode)
+                if (!directHSCode) {
+                    const defaultHS = await getDefaultHSCode()
+                    directHSCode = defaultHS?.code
+                }
+                if (!directHSCode) {
+                    throw new Error(`HS code could not be determined for item "${directName}" and no default HS code was found in database.`)
+                }
 
                 const directUnit = normalizeOptionalText(item.unit) ?? DEFAULT_FALLBACK_UOM
                 const createdProduct = await tx.product.create({

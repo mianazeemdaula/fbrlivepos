@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getTenantFromSession } from '@/lib/tenant/context'
 import { prisma } from '@/lib/db/prisma'
+import { getDefaultHSCode } from '@/lib/hscode'
 
 const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
 
@@ -72,14 +73,25 @@ export async function PATCH(
         })
 
         if (!selectedHSCode) {
-            return NextResponse.json({ error: 'Selected HS code was not found.' }, { status: 400 })
+            // On failure to get the specified HS code, load default from database
+            selectedHSCode = await getDefaultHSCode()
         }
 
-        hsCode = selectedHSCode.code
+        if (selectedHSCode) {
+            hsCode = selectedHSCode.code
+        }
     }
 
     if (!hsCode) {
-        return NextResponse.json({ error: 'HS code is required.' }, { status: 400 })
+        // Fallback to default HS code from database instead of hardcoded value or failing
+        selectedHSCode = await getDefaultHSCode()
+        if (selectedHSCode) {
+            hsCode = selectedHSCode.code
+        }
+    }
+
+    if (!hsCode) {
+        return NextResponse.json({ error: 'HS code could not be resolved and no default HS code was found in the database.' }, { status: 400 })
     }
 
     const sharedUnit = resolveSharedUnit(body)

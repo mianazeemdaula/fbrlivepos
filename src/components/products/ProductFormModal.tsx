@@ -76,9 +76,63 @@ export function ProductFormModal({ editingProductId, initialValues, onSave, onCl
         setHsLoading(true)
         try {
             const res = await fetch(`/api/hs-codes?${new URLSearchParams({ q, page: '1', limit: '50' })}`)
-            if (res.ok) { const d = await res.json(); setHsCodes(d.data || []) }
-        } catch { /* ignore */ } finally { setHsLoading(false) }
-    }, [])
+            if (res.ok) {
+                const d = await res.json()
+                const list: HSCodeOption[] = d.data || []
+                setHsCodes(list)
+                if (!editingProductId && list.length > 0) {
+                    const defaultItem = d.defaultHSCode || list[0]
+                    if (defaultItem) {
+                        setForm(c => c.hsCodeId ? c : {
+                            ...c,
+                            hsCodeId: defaultItem.id,
+                            unit: c.unit || defaultItem.unit || DEFAULT_FALLBACK_UOM,
+                            diUOM: c.diUOM || defaultItem.unit || DEFAULT_FALLBACK_UOM,
+                            taxRate: c.taxRate || (defaultItem.defaultTaxRate != null ? String(defaultItem.defaultTaxRate) : c.taxRate),
+                        })
+                    }
+                }
+            } else {
+                // If fail to get HS code list, fallback to default HS code from DB
+                const defRes = await fetch('/api/hs-codes/default')
+                if (defRes.ok) {
+                    const def = await defRes.json()
+                    if (def?.id) {
+                        setHsCodes([def])
+                        if (!editingProductId) {
+                            setForm(c => c.hsCodeId ? c : {
+                                ...c,
+                                hsCodeId: def.id,
+                                unit: c.unit || def.unit || DEFAULT_FALLBACK_UOM,
+                                diUOM: c.diUOM || def.unit || DEFAULT_FALLBACK_UOM,
+                                taxRate: c.taxRate || (def.defaultTaxRate != null ? String(def.defaultTaxRate) : c.taxRate),
+                            })
+                        }
+                    }
+                }
+            }
+        } catch {
+            // On network failure or error, fallback to default HS code from database
+            try {
+                const defRes = await fetch('/api/hs-codes/default')
+                if (defRes.ok) {
+                    const def = await defRes.json()
+                    if (def?.id) {
+                        setHsCodes([def])
+                        if (!editingProductId) {
+                            setForm(c => c.hsCodeId ? c : {
+                                ...c,
+                                hsCodeId: def.id,
+                                unit: c.unit || def.unit || DEFAULT_FALLBACK_UOM,
+                                diUOM: c.diUOM || def.unit || DEFAULT_FALLBACK_UOM,
+                                taxRate: c.taxRate || (def.defaultTaxRate != null ? String(def.defaultTaxRate) : c.taxRate),
+                            })
+                        }
+                    }
+                }
+            } catch { /* ignore */ }
+        } finally { setHsLoading(false) }
+    }, [editingProductId])
 
     useEffect(() => { loadHS('') }, [loadHS])
     useEffect(() => { const t = setTimeout(() => loadHS(hsSearch), 250); return () => clearTimeout(t) }, [hsSearch, loadHS])

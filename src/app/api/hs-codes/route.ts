@@ -52,11 +52,22 @@ export async function GET(req: Request) {
         }),
     ])
 
+    const defaultHS = hsCodes[0] ?? (await prisma.hSCode.findFirst({ where: { isFBRActive: true }, orderBy: { code: 'asc' } }))
+
     return NextResponse.json({
         data: hsCodes,
         total,
         page,
         pages: Math.ceil(total / limit),
         categories: categoryRows.map((r) => r.category),
+        defaultHSCode: defaultHS ? {
+            id: defaultHS.id,
+            code: defaultHS.code,
+            description: defaultHS.description,
+            shortName: defaultHS.shortName,
+            category: defaultHS.category,
+            unit: defaultHS.unit,
+            defaultTaxRate: defaultHS.defaultTaxRate,
+        } : null,
     })
 }
