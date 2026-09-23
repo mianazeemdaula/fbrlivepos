@@ -19,9 +19,9 @@ interface Announcement {
 
 const TYPE_STYLES: Record<AnnouncementType, { label: string; color: string; dot: string }> = {
     INFO: { label: 'Info', color: 'text-sky-400 bg-sky-500/10 border-sky-500/20', dot: 'bg-sky-400' },
-    WARNING: { label: 'Warning', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20', dot: 'bg-amber-400' },
+    WARNING: { label: 'Warning', color: 'text-amber-700 bg-amber-50 border-amber-500/20', dot: 'bg-amber-400' },
     MAINTENANCE: { label: 'Maintenance', color: 'text-orange-400 bg-orange-500/10 border-orange-500/20', dot: 'bg-orange-400' },
-    FEATURE: { label: 'Feature', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
+    FEATURE: { label: 'Feature', color: 'text-emerald-700 bg-emerald-50 border-emerald-500/20', dot: 'bg-emerald-400' },
 }
 
 export default function AnnouncementsPage() {
@@ -121,17 +121,16 @@ export default function AnnouncementsPage() {
     const to = Math.min(page * 20, total)
 
     return (
-        <div className="p-8">
+        <div className="p-4 lg:p-6">
             {/* Header */}
-            <div className="mb-8 flex items-start justify-between">
+            <div className="mb-4 flex items-start justify-between">
                 <div>
-                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Comms</p>
-                    <h1 className="text-page-title font-normal text-ink">Announcements</h1>
-                    <p className="mt-1 text-sm text-muted">Publish platform-wide notices to tenants</p>
+                    <h1 className="text-page-title font-semibold tracking-tight text-ink">Announcements</h1>
+                    <p className="mt-0.5 text-ui-xs text-muted">Publish platform-wide notices to tenants</p>
                 </div>
                 <button
                     onClick={() => { setShowForm(!showForm); setError('') }}
-                    className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
+                    className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
@@ -231,7 +230,7 @@ export default function AnnouncementsPage() {
                         <button
                             type="submit"
                             disabled={formLoading}
-                            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-70"
+                            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {formLoading ? 'Publishing...' : 'Publish'}
                         </button>
@@ -276,7 +275,7 @@ export default function AnnouncementsPage() {
                                                 {style.label}
                                             </span>
                                             {active ? (
-                                                <span className="text-xs text-emerald-400 font-medium">● Active</span>
+                                                <span className="text-xs text-emerald-700 font-medium">● Active</span>
                                             ) : (
                                                 <span className="text-xs text-muted font-medium">Inactive</span>
                                             )}
@@ -294,7 +293,7 @@ export default function AnnouncementsPage() {
                                     <button
                                         onClick={() => handleDelete(a.id)}
                                         disabled={deleteId === a.id}
-                                        className="shrink-0 p-1.5 rounded-lg text-muted hover:text-red-400 hover:bg-border transition-colors disabled:opacity-50"
+                                        className="shrink-0 p-1.5 rounded-lg text-muted hover:text-red-700 hover:bg-border transition-colors disabled:opacity-50"
                                         title="Delete announcement"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

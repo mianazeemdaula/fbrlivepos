@@ -78,16 +78,15 @@ export default function FeatureFlagsPage() {
     }
 
     return (
-        <div className="p-8">
-            <div className="mb-8 flex items-start justify-between">
+        <div className="p-4 lg:p-6">
+            <div className="mb-4 flex items-start justify-between">
                 <div>
-                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Platform controls</p>
-                    <h1 className="text-page-title font-normal text-ink">Feature Flags</h1>
-                    <p className="mt-1 text-sm text-muted">Control platform features globally or per tenant</p>
+                    <h1 className="text-page-title font-semibold tracking-tight text-ink">Feature Flags</h1>
+                    <p className="mt-0.5 text-ui-xs text-muted">Control platform features globally or per tenant</p>
                 </div>
                 <button
                     onClick={() => setShowForm(!showForm)}
-                    className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
+                    className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
                 >
                     {showForm ? 'Cancel' : '+ New Flag'}
                 </button>
@@ -118,7 +117,7 @@ export default function FeatureFlagsPage() {
                         <button
                             type="submit"
                             disabled={formLoading}
-                            className="rounded-full bg-primary px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-70"
+                            className="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {formLoading ? 'Creating...' : 'Create Flag'}
                         </button>
@@ -154,7 +153,7 @@ export default function FeatureFlagsPage() {
                                     <button
                                         onClick={() => handleToggle(flag.id, flag.isEnabled)}
                                         className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${flag.isEnabled
-                                            ? 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/20'
+                                            ? 'bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 border border-emerald-500/20'
                                             : 'bg-border text-muted hover:bg-border-strong border border-border'
                                             }`}
                                     >

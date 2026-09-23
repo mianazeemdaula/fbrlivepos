@@ -323,29 +323,25 @@ export default function HSCodesPage() {
     const to = Math.min(page * LIMIT, total)
 
     return (
-        <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
+        <div className="space-y-4 p-4 lg:p-6">
             {/* Header section */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold uppercase tracking-wider text-muted">Tax & Tariff Administration</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">Super Admin Only</span>
-                    </div>
-                    <h1 className="text-2xl font-bold text-ink tracking-tight mt-1">HS Code Master Library</h1>
-                    <p className="text-sm text-muted">Manage Harmonized System (HS) codes, tax rates, UOM units, and FBR tax statuses across the platform.</p>
+                    <h1 className="text-page-title font-semibold tracking-tight text-ink">HS Code Master Library</h1>
+                    <p className="mt-0.5 text-ui-xs text-muted">Manage HS codes, tax rates, UOM units and FBR status across the platform.</p>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
                     <button
                         onClick={handleExportCSV}
-                        className="flex items-center gap-1.5 rounded-xl border border-border bg-white px-3.5 py-2 text-xs font-medium text-ink hover:bg-surface transition-colors shadow-xs"
+                        className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-3.5 py-2 text-xs font-medium text-ink hover:bg-surface transition-colors shadow-xs"
                     >
                         <Download size={14} />
                         Export CSV
                     </button>
 
                     <label
-                        className={`flex items-center gap-1.5 cursor-pointer rounded-xl border border-border bg-white px-3.5 py-2 text-xs font-medium text-ink hover:bg-surface transition-colors shadow-xs ${
+                        className={`flex items-center gap-1.5 cursor-pointer rounded-lg border border-border bg-white px-3.5 py-2 text-xs font-medium text-ink hover:bg-surface transition-colors shadow-xs ${
                             importLoading ? 'opacity-50 pointer-events-none' : ''
                         }`}
                     >
@@ -369,8 +365,8 @@ export default function HSCodesPage() {
                 <div
                     className={`flex items-center justify-between p-4 rounded-xl text-sm border ${
                         bannerMessage.type === 'success'
-                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-                            : 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'
+                            ? 'bg-emerald-50 border-emerald-500/20 text-emerald-600 dark:text-emerald-700'
+                            : 'bg-red-50 border-red-500/20 text-red-600 dark:text-red-700'
                     }`}
                 >
                     <div className="flex items-center gap-2">
@@ -454,21 +450,21 @@ export default function HSCodesPage() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-border bg-surface-subtle/50">
-                                <th className="px-5 py-3.5 text-xs font-semibold text-muted uppercase tracking-wider">HS Code</th>
-                                <th className="px-5 py-3.5 text-xs font-semibold text-muted uppercase tracking-wider">Description</th>
-                                <th className="px-5 py-3.5 text-xs font-semibold text-muted uppercase tracking-wider">Category</th>
-                                <th className="px-5 py-3.5 text-xs font-semibold text-muted uppercase tracking-wider">Unit</th>
-                                <th className="px-5 py-3.5 text-xs font-semibold text-muted uppercase tracking-wider">Tax Rate</th>
-                                <th className="px-5 py-3.5 text-xs font-semibold text-muted uppercase tracking-wider">FBR Status</th>
-                                <th className="px-5 py-3.5 text-xs font-semibold text-muted uppercase tracking-wider text-right">Actions</th>
+                            <tr className="border-b border-border bg-surface-subtle">
+                                <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">HS Code</th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Description</th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Category</th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Unit</th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Tax Rate</th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">FBR Status</th>
+                                <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
                             {loading ? (
                                 Array.from({ length: 6 }).map((_, i) => (
                                     <tr key={i} className="animate-pulse">
-                                        <td colSpan={7} className="px-5 py-4">
+                                        <td colSpan={7} className="px-3 py-2 px-5 py-4">
                                             <div className="h-4 bg-surface rounded-md w-full" />
                                         </td>
                                     </tr>
@@ -486,31 +482,31 @@ export default function HSCodesPage() {
                             ) : (
                                 codes.map((code) => (
                                     <tr key={code.id} className="hover:bg-surface/50 transition-colors">
-                                        <td className="px-5 py-3.5 font-mono text-xs font-semibold text-primary">
+                                        <td className="px-3 py-2 px-5 .5 font-mono text-xs font-semibold text-primary">
                                             {code.code}
                                         </td>
-                                        <td className="px-5 py-3.5 text-sm text-ink max-w-xs truncate" title={code.description}>
+                                        <td className="px-3 py-2 px-5 .5 text-sm text-ink max-w-xs truncate" title={code.description}>
                                             <div className="font-medium text-ink">{code.description}</div>
                                             {code.shortName && <div className="text-xs text-muted truncate">{code.shortName}</div>}
                                         </td>
-                                        <td className="px-5 py-3.5 text-xs text-muted">
+                                        <td className="px-3 py-2 px-5 .5 text-xs text-muted">
                                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-surface border border-border text-ink font-medium">
                                                 <Tag size={11} />
                                                 {code.category || 'General'}
                                             </span>
                                         </td>
-                                        <td className="px-5 py-3.5 text-xs font-medium text-ink">
+                                        <td className="px-3 py-2 px-5 .5 text-xs font-medium text-ink">
                                             {code.unit}
                                         </td>
-                                        <td className="px-5 py-3.5 text-xs font-semibold text-ink">
+                                        <td className="px-3 py-2 px-5 .5 text-xs font-semibold text-ink">
                                             {code.defaultTaxRate}%
                                         </td>
-                                        <td className="px-5 py-3.5">
+                                        <td className="px-3 py-2 px-5 .5">
                                             <button
                                                 onClick={() => handleToggleStatus(code)}
                                                 className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${
                                                     code.isFBRActive
-                                                        ? 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20'
+                                                        ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-500/20'
                                                         : 'bg-rose-500/10 text-rose-600 hover:bg-rose-500/20'
                                                 }`}
                                                 title="Click to toggle active status"
@@ -519,7 +515,7 @@ export default function HSCodesPage() {
                                                 {code.isFBRActive ? 'Active' : 'Inactive'}
                                             </button>
                                         </td>
-                                        <td className="px-5 py-3.5 text-right">
+                                        <td className="px-3 py-2 px-5 .5 text-right">
                                             <div className="flex items-center justify-end gap-1">
                                                 <button
                                                     onClick={() => openViewModal(code)}
@@ -810,7 +806,7 @@ export default function HSCodesPage() {
                                     <span
                                         className={`inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full font-semibold ${
                                             selectedCode.isFBRActive
-                                                ? 'bg-emerald-500/10 text-emerald-600'
+                                                ? 'bg-emerald-50 text-emerald-600'
                                                 : 'bg-rose-500/10 text-rose-600'
                                         }`}
                                     >

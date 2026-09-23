@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
-import { User, Menu, X, Shield } from 'lucide-react'
+import { LogOut, Menu, Shield, User, X } from 'lucide-react'
 
 const navItems = [
     { href: '/super-admin', label: 'Overview', exact: true },
@@ -27,15 +27,17 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
     return (
         <div className="min-h-screen bg-canvas">
             {/* Top Navigation Bar */}
-            <header className="sticky top-0 z-30 bg-surface border-b border-border shadow-nav">
-                <div className="flex items-center justify-between px-6 h-16">
+            <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
+                <div className="mx-auto flex h-14 max-w-[1600px] items-center justify-between gap-4 px-4 sm:px-6">
                     {/* Logo + Nav */}
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 border border-border-strong rounded-full px-4 py-1.5 shrink-0">
-                            <Shield size={14} className="text-ink" />
-                            <span className="font-semibold text-ui-sm text-ink">Platform Admin</span>
-                        </div>
-                        <nav className="hidden xl:flex items-center gap-1">
+                    <div className="flex min-w-0 items-center gap-6">
+                        <Link href="/super-admin" className="flex shrink-0 items-center gap-2">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-ink text-white">
+                                <Shield size={14} />
+                            </span>
+                            <span className="text-sm font-semibold tracking-tight text-ink">Platform Admin</span>
+                        </Link>
+                        <nav className="hidden items-center gap-0.5 xl:flex">
                             {navItems.map((item) => {
                                 const active = item.exact
                                     ? pathname === item.href
@@ -44,9 +46,9 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        className={`px-3 py-1.5 rounded-full text-ui-xs font-medium transition-colors duration-150 ${active
-                                            ? 'bg-primary text-white'
-                                            : 'text-ink-secondary hover:text-ink hover:bg-surface'
+                                        className={`rounded-md px-3 py-1.5 text-ui-xs font-medium transition-colors duration-150 ${active
+                                            ? 'bg-primary-light text-primary-dark'
+                                            : 'text-ink-secondary hover:bg-surface hover:text-ink'
                                             }`}
                                     >
                                         {item.label}
@@ -57,22 +59,26 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                     </div>
 
                     {/* Right side */}
-                    <div className="flex items-center gap-2">
-                        <span className="hidden sm:block text-ui-xs text-muted mr-1">
-                            {session?.user?.email || ''}
-                        </span>
-                        <button
-                            onClick={() => signOut({ callbackUrl: '/login' })}
-                            className="hidden sm:flex items-center gap-1.5 border border-border rounded-full px-3 py-1.5 text-ui-xs text-ink bg-white hover:bg-surface transition-colors"
-                        >
-                            Sign Out
-                        </button>
-                        <div className="w-8 h-8 rounded-full bg-subtle/50 flex items-center justify-center">
-                            <User size={15} className="text-muted" />
+                    <div className="flex shrink-0 items-center gap-3">
+                        <div className="hidden items-center gap-2 sm:flex">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface">
+                                <User size={14} className="text-muted" />
+                            </span>
+                            <span className="max-w-48 truncate text-ui-xs font-medium text-ink">
+                                {session?.user?.email || ''}
+                            </span>
                         </div>
                         <button
-                            className="flex xl:hidden h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-canvas transition-colors"
+                            onClick={() => signOut({ callbackUrl: '/login' })}
+                            className="hidden items-center gap-1.5 rounded-md px-2 py-1.5 text-ui-xs font-medium text-muted transition-colors hover:bg-surface hover:text-ink sm:flex"
+                        >
+                            <LogOut size={14} />
+                            Sign out
+                        </button>
+                        <button
+                            className="flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface xl:hidden"
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            aria-label="Toggle menu"
                         >
                             {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
                         </button>
@@ -81,8 +87,8 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
 
                 {/* Mobile / tablet Nav Dropdown */}
                 {mobileMenuOpen && (
-                    <div className="xl:hidden border-t border-border bg-surface px-4 py-3">
-                        <nav className="flex flex-col gap-1">
+                    <div className="border-t border-border bg-white px-4 py-3 xl:hidden">
+                        <nav className="flex flex-col gap-0.5">
                             {navItems.map((item) => {
                                 const active = item.exact
                                     ? pathname === item.href
@@ -91,8 +97,8 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${active
-                                            ? 'bg-primary text-white'
+                                        className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${active
+                                            ? 'bg-primary-light text-primary-dark'
                                             : 'text-ink-secondary hover:bg-surface hover:text-ink'
                                             }`}
                                     >
@@ -102,9 +108,10 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                             })}
                             <button
                                 onClick={() => signOut({ callbackUrl: '/login' })}
-                                className="mt-2 px-4 py-2.5 rounded-xl text-sm font-medium text-ink-secondary hover:bg-canvas hover:text-ink text-left transition-colors"
+                                className="mt-2 flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium text-ink-secondary transition-colors hover:bg-surface hover:text-ink"
                             >
-                                Sign Out
+                                <LogOut size={15} />
+                                Sign out
                             </button>
                         </nav>
                     </div>
@@ -112,7 +119,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
             </header>
 
             {/* Page content */}
-            <main className="min-h-[calc(100vh-64px)]">
+            <main className="mx-auto min-h-[calc(100vh-56px)] max-w-[1600px]">
                 {children}
             </main>
         </div>

@@ -68,11 +68,10 @@ export default function TenantsPage() {
     const to = Math.min(page * 25, total)
 
     return (
-        <div className="p-8">
-            <div className="mb-8">
-                <p className="text-xs font-medium uppercase tracking-caps text-muted">Accounts</p>
-                <h1 className="text-page-title font-normal text-ink">Tenants</h1>
-                <p className="mt-1 text-sm text-muted">Manage all registered businesses on the platform</p>
+        <div className="p-4 lg:p-6">
+            <div className="mb-4">
+                <h1 className="text-page-title font-semibold tracking-tight text-ink">Tenants</h1>
+                <p className="mt-0.5 text-ui-xs text-muted">Manage all registered businesses on the platform</p>
             </div>
 
             <div className="flex gap-3 mb-4">
@@ -104,96 +103,86 @@ export default function TenantsPage() {
                 <table className="w-full">
                     <thead>
                         <tr className="border-b border-border bg-surface-subtle">
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Business</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Plan</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Expires</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">DI Status</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Invoices</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Status</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Joined</th>
-                            <th className="px-4 py-3" />
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Business</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Email</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Plan</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Plan Status</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Expires</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">DI Status</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Invoices</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Status</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Joined</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap" />
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             Array.from({ length: 5 }).map((_, i) => (
                                 <tr key={i} className="border-b border-border">
-                                    <td colSpan={8} className="px-4 py-3">
+                                    <td colSpan={10} className="px-3 py-2">
                                         <div className="h-4 rounded bg-border animate-pulse" />
                                     </td>
                                 </tr>
                             ))
                         ) : tenants.length === 0 ? (
                             <tr>
-                                <td colSpan={8} className="px-4 py-12 text-center text-sm text-muted">
+                                <td colSpan={10} className="px-4 py-12 text-center text-sm text-muted">
                                     No tenants found.
                                 </td>
                             </tr>
                         ) : (
                             tenants.map((t) => (
                                 <tr key={t.id} className="border-b border-border transition-colors hover:bg-surface-subtle">
-                                    <td className="px-4 py-3">
-                                        <p className="text-sm text-ink font-medium">{t.name}</p>
-                                        <p className="text-xs text-muted">{t.email}</p>
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-ink">
+                                    <td className="max-w-[220px] truncate px-3 py-2 text-sm font-medium text-ink" title={t.name}>{t.name}</td>
+                                    <td className="max-w-[220px] truncate px-3 py-2 text-xs text-muted" title={t.email}>{t.email}</td>
+                                    <td className="px-3 py-2 text-sm text-ink">
                                         {t.subscription?.plan?.name || <span className="text-muted">—</span>}
                                     </td>
-                                    <td className="px-4 py-3">
-                                        {(() => {
-                                            const expiry = t.subscription ? subscriptionExpiry(t.subscription) : null
-                                            if (!expiry) return <span className="text-xs text-muted">—</span>
-                                            return (
-                                                <div className="space-y-1">
-                                                    <SubscriptionStatusBadge status={expiry.status} />
-                                                    <p className={`text-xs ${expiry.daysLeft < 0 ? 'text-rose-600' : expiry.daysLeft <= 7 ? 'text-amber-600' : 'text-muted'}`}>
-                                                        {expiry.date.toLocaleDateString()}
-                                                    </p>
-                                                </div>
-                                            )
-                                        })()}
-                                    </td>
-                                    <td className="px-4 py-3">
+                                    {(() => {
+                                        const expiry = t.subscription ? subscriptionExpiry(t.subscription) : null
+                                        return (
+                                            <>
+                                                <td className="px-3 py-2">
+                                                    {expiry ? <SubscriptionStatusBadge status={expiry.status} /> : <span className="text-xs text-muted">—</span>}
+                                                </td>
+                                                <td className={`whitespace-nowrap px-3 py-2 text-xs ${!expiry ? 'text-muted' : expiry.daysLeft < 0 ? 'text-rose-600' : expiry.daysLeft <= 7 ? 'text-amber-600' : 'text-ink'}`}>
+                                                    {expiry ? expiry.date.toLocaleDateString() : '—'}
+                                                </td>
+                                            </>
+                                        )
+                                    })()}
+                                    <td className="px-3 py-2">
                                         {t.diCredentials?.isProductionReady ? (
-                                            <span className="text-xs text-emerald-400 font-medium">Production</span>
+                                            <span className="text-xs text-emerald-700 font-medium">Production</span>
                                         ) : t.diCredentials ? (
-                                            <span className="text-xs text-amber-400 font-medium">{t.diCredentials.environment}</span>
+                                            <span className="text-xs text-amber-700 font-medium">{t.diCredentials.environment}</span>
                                         ) : (
                                             <span className="text-xs text-muted">Not set</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-ink">
+                                    <td className="px-3 py-2 text-sm text-ink">
                                         {t._count?.invoices ?? 0}
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-3 py-2">
                                         <span
                                             className={`text-xs px-2 py-0.5 rounded-full font-medium ${t.isActive
-                                                ? 'bg-emerald-500/10 text-emerald-400'
-                                                : 'bg-red-500/10 text-red-400'
+                                                ? 'bg-emerald-50 text-emerald-700'
+                                                : 'bg-red-50 text-red-700'
                                                 }`}
                                         >
                                             {t.isActive ? 'Active' : 'Suspended'}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-muted">
+                                    <td className="px-3 py-2 text-xs text-muted">
                                         {new Date(t.createdAt).toLocaleDateString()}
                                     </td>
-                                    <td className="px-4 py-3 text-right">
-                                        <div className="flex items-center justify-end gap-2.5">
-                                            <Link
-                                                href={`/super-admin/tenants/${t.id}?edit=true`}
-                                                className="text-xs font-semibold text-primary hover:text-primary-dark transition-colors"
-                                            >
-                                                Edit
-                                            </Link>
-                                            <span className="text-border">·</span>
-                                            <Link
-                                                href={`/super-admin/tenants/${t.id}`}
-                                                className="text-xs font-medium text-muted transition-colors hover:text-ink"
-                                            >
-                                                Manage →
-                                            </Link>
-                                        </div>
+                                    <td className="px-3 py-2 text-right">
+                                        <Link
+                                            href={`/super-admin/tenants/${t.id}`}
+                                            className="text-xs font-medium text-primary transition-colors hover:text-primary-dark"
+                                        >
+                                            Edit
+                                        </Link>
                                     </td>
                                 </tr>
                             ))

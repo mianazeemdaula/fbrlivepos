@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Check } from 'lucide-react'
 import { getPublicMarketingPlans } from '@/lib/marketing-plans.server'
+import type { MarketingPlan } from '@/lib/marketing'
 import SiteHeader from '@/components/marketing/site-header'
 import SiteFooter from '@/components/marketing/site-footer'
 
@@ -10,8 +11,21 @@ const faqs = [
     { q: 'Can I change my plan later?', a: 'Yes. Upgrade as your invoice volume or team grows.' },
 ]
 
+// Plans, prices and features are read from the database on every request,
+// so changes made in Super Admin → Subscriptions show up immediately.
+export const dynamic = 'force-dynamic'
+
 function formatLimit(value: number | 'unlimited') {
     return value === 'unlimited' ? 'Unlimited' : value.toLocaleString()
+}
+
+function planLimits(plan: MarketingPlan) {
+    return [
+        `${formatLimit(plan.invoicesPerMonth)} invoices / month`,
+        `${formatLimit(plan.users)} users`,
+        `${formatLimit(plan.products)} products`,
+        `${formatLimit(plan.posTerminals)} POS terminal${plan.posTerminals === 1 ? '' : 's'}`,
+    ]
 }
 
 export default async function PricingPage() {
@@ -56,7 +70,7 @@ export default async function PricingPage() {
                                                 <span className="text-3xl font-semibold tracking-tight">{isFree ? 'Free' : 'Custom'}</span>
                                             ) : (
                                                 <>
-                                                    <span className="text-3xl font-semibold tracking-tight">PKR {plan.monthlyPrice!.toLocaleString()}</span>
+                                                    <span className="text-3xl font-semibold tracking-tight">{plan.currency} {plan.monthlyPrice!.toLocaleString()}</span>
                                                     <span className="text-sm text-slate-500"> /month</span>
                                                 </>
                                             )}
@@ -65,7 +79,8 @@ export default async function PricingPage() {
                                                     ? 'No credit card required'
                                                     : isCustom || !plan.annualPrice
                                                     ? 'Annual billing on request'
-                                                    : `or PKR ${plan.annualPrice.toLocaleString()} billed yearly`}
+                                                    : `or ${plan.currency} ${plan.annualPrice.toLocaleString()} billed yearly`}
+                                                {plan.trialDays > 0 && ` · ${plan.trialDays}-day free trial`}
                                             </p>
                                         </div>
 
@@ -77,15 +92,7 @@ export default async function PricingPage() {
                                         </Link>
 
                                         <ul className="mt-6 space-y-2.5 border-t border-slate-100 pt-6 text-sm text-slate-600">
-                                            <li className="flex items-start gap-2">
-                                                <Check size={16} className="mt-0.5 shrink-0 text-primary" />
-                                                {formatLimit(plan.invoicesPerMonth)} invoices / month
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                                <Check size={16} className="mt-0.5 shrink-0 text-primary" />
-                                                {formatLimit(plan.users)} users
-                                            </li>
-                                            {plan.features.map((feature) => (
+                                            {[...planLimits(plan), ...plan.features].map((feature) => (
                                                 <li key={feature} className="flex items-start gap-2">
                                                     <Check size={16} className="mt-0.5 shrink-0 text-primary" />
                                                     {feature}

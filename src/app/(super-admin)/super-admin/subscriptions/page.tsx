@@ -41,6 +41,30 @@ interface PlanFormState {
     sortOrder: string
     isActive: boolean
     isPublic: boolean
+    features: FeatureRow[]
+}
+
+interface FeatureRow {
+    key: string
+    label: string
+    included: boolean
+    /** non-boolean values (e.g. "5") are kept as-is */
+    value: string
+}
+
+// Entitlement flags the app already understands; any other key is display-only on the pricing page
+const KNOWN_FEATURE_KEYS = [
+    'multi_pos', 'advanced_reports', 'api_access', 'custom_branding', 'email_invoices',
+    'bulk_import', 'priority_support', 'white_label', 'multi_branch', 'accountant_access',
+]
+
+function featureKeyFromLabel(label: string) {
+    return label.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 50)
+}
+
+function toFeatureRow(f: { key: string; value: string; label: string }): FeatureRow {
+    const v = f.value.trim().toLowerCase()
+    return { key: f.key, label: f.label, included: v !== 'false', value: v === 'true' || v === 'false' ? '' : f.value }
 }
 
 const inputClassName = 'w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted focus:outline-none focus:border-primary'
@@ -63,6 +87,7 @@ function createDefaultFormState(): PlanFormState {
         sortOrder: '0',
         isActive: true,
         isPublic: true,
+        features: [],
     }
 }
 
@@ -84,6 +109,7 @@ function createFormStateFromPlan(plan: Plan): PlanFormState {
         sortOrder: String(plan.sortOrder),
         isActive: plan.isActive,
         isPublic: plan.isPublic,
+        features: plan.features.map(toFeatureRow),
     }
 }
 
@@ -183,6 +209,19 @@ export default function SubscriptionsPage() {
                 return
             }
 
+            const features = form.features
+                .filter((f) => f.label.trim())
+                .map((f) => ({
+                    key: f.key.trim() || featureKeyFromLabel(f.label),
+                    label: f.label.trim(),
+                    value: f.included ? (f.value.trim() || 'true') : 'false',
+                }))
+            const keys = features.map((f) => f.key)
+            if (keys.some((k) => !k) || new Set(keys).size !== keys.length) {
+                setError('Each feature needs a unique key')
+                return
+            }
+
             const res = await fetch(editingPlanId ? `/api/admin/subscriptions/${editingPlanId}` : '/api/admin/subscriptions', {
                 method: editingPlanId ? 'PATCH' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -203,6 +242,7 @@ export default function SubscriptionsPage() {
                     sortOrder,
                     isActive: form.isActive,
                     isPublic: form.isPublic,
+                    features,
                 }),
             })
 
@@ -253,17 +293,16 @@ export default function SubscriptionsPage() {
     const submitLabel = formLoading ? (editingPlanId ? 'Saving...' : 'Creating...') : (editingPlanId ? 'Save Changes' : 'Create Plan')
 
     return (
-        <div className="p-8">
+        <div className="p-4 lg:p-6">
             {/* Header */}
-            <div className="flex items-start justify-between mb-8">
+            <div className="flex items-start justify-between mb-4">
                 <div>
-                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Packages</p>
-                    <h1 className="mt-1 text-page-title font-normal text-ink">Subscription Plans</h1>
-                    <p className="mt-1 text-ui-xs text-muted">Manage pricing tiers and feature entitlements</p>
+                    <h1 className="text-page-title font-semibold tracking-tight text-ink">Subscription Plans</h1>
+                    <p className="mt-0.5 text-ui-xs text-muted">Manage pricing tiers and feature entitlements</p>
                 </div>
                 <button
                     onClick={() => (showForm && !editingPlanId ? resetForm() : openCreateForm())}
-                    className="rounded-full bg-primary px-4 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors"
+                    className="rounded-lg bg-primary px-4 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors"
                 >
                     {showForm && !editingPlanId ? 'Cancel' : '+ New Plan'}
                 </button>
@@ -354,21 +393,95 @@ export default function SubscriptionsPage() {
                         </div>
                         <label className="flex items-center justify-between rounded-input border border-border bg-surface-subtle px-3 py-2.5 cursor-pointer">
                             <span className="text-sm text-ink">Plan is active</span>
-                            <input checked={form.isActive} onChange={(e) => setForm((c) => ({ ...c, isActive: e.target.checked }))} type="checkbox" className="h-4 w-4 rounded border-border accent-[#1A1A1A]" />
+                            <input checked={form.isActive} onChange={(e) => setForm((c) => ({ ...c, isActive: e.target.checked }))} type="checkbox" className="h-4 w-4 rounded border-border accent-primary" />
                         </label>
                         <label className="flex items-center justify-between rounded-input border border-border bg-surface-subtle px-3 py-2.5 cursor-pointer">
                             <span className="text-sm text-ink">Visible on public pricing</span>
-                            <input checked={form.isPublic} onChange={(e) => setForm((c) => ({ ...c, isPublic: e.target.checked }))} type="checkbox" className="h-4 w-4 rounded border-border accent-[#1A1A1A]" />
+                            <input checked={form.isPublic} onChange={(e) => setForm((c) => ({ ...c, isPublic: e.target.checked }))} type="checkbox" className="h-4 w-4 rounded border-border accent-primary" />
                         </label>
+                    </div>
+
+                    {/* Features shown on the public pricing page */}
+                    <div className="mb-6 rounded-input border border-border p-4">
+                        <div className="mb-3 flex items-center justify-between gap-3">
+                            <div>
+                                <h3 className="text-sm font-semibold text-ink">Features</h3>
+                                <p className="text-xs text-muted">Included features are listed on the pricing page. Unticked ones are hidden.</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setForm((c) => ({ ...c, features: [...c.features, { key: '', label: '', included: true, value: '' }] }))}
+                                className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-ink hover:bg-surface transition-colors"
+                            >
+                                + Add feature
+                            </button>
+                        </div>
+                        {form.features.length === 0 ? (
+                            <p className="text-xs text-muted">No features yet.</p>
+                        ) : (
+                            <div className="space-y-2">
+                                <div className="hidden grid-cols-[1fr_200px_120px_80px_32px] gap-2 text-xs font-medium text-muted md:grid">
+                                    <span>Label (shown to customers)</span>
+                                    <span>Key</span>
+                                    <span>Value (optional)</span>
+                                    <span>Included</span>
+                                    <span />
+                                </div>
+                                {form.features.map((f, i) => (
+                                    <div key={i} className="grid grid-cols-1 items-center gap-2 md:grid-cols-[1fr_200px_120px_80px_32px]">
+                                        <input
+                                            value={f.label}
+                                            onChange={(e) => setForm((c) => ({ ...c, features: c.features.map((row, j) => j === i ? { ...row, label: e.target.value } : row) }))}
+                                            placeholder="e.g. IRN and QR generation"
+                                            className={inputClassName}
+                                        />
+                                        <input
+                                            value={f.key}
+                                            list="known-feature-keys"
+                                            onChange={(e) => setForm((c) => ({ ...c, features: c.features.map((row, j) => j === i ? { ...row, key: e.target.value.replace(/[^A-Za-z0-9_-]/g, '_') } : row) }))}
+                                            placeholder={featureKeyFromLabel(f.label) || 'auto from label'}
+                                            className={`${inputClassName} font-mono text-xs`}
+                                        />
+                                        <input
+                                            value={f.value}
+                                            onChange={(e) => setForm((c) => ({ ...c, features: c.features.map((row, j) => j === i ? { ...row, value: e.target.value } : row) }))}
+                                            placeholder="—"
+                                            disabled={!f.included}
+                                            className={`${inputClassName} disabled:opacity-50`}
+                                        />
+                                        <label className="flex items-center gap-2 text-sm text-ink">
+                                            <input
+                                                type="checkbox"
+                                                checked={f.included}
+                                                onChange={(e) => setForm((c) => ({ ...c, features: c.features.map((row, j) => j === i ? { ...row, included: e.target.checked } : row) }))}
+                                                className="h-4 w-4 accent-primary"
+                                            />
+                                            Yes
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setForm((c) => ({ ...c, features: c.features.filter((_, j) => j !== i) }))}
+                                            className="flex h-8 w-8 items-center justify-center rounded-md text-muted hover:bg-error-bg hover:text-error transition-colors"
+                                            aria-label="Remove feature"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        <datalist id="known-feature-keys">
+                            {KNOWN_FEATURE_KEYS.map((k) => <option key={k} value={k} />)}
+                        </datalist>
                     </div>
 
                     <div className="flex justify-end gap-3 border-t border-border-muted pt-4">
                         <button type="button" onClick={resetForm}
-                            className="rounded-full border border-border px-4 py-2 text-ui-xs font-medium text-ink hover:bg-surface transition-colors">
+                            className="rounded-lg border border-border px-4 py-2 text-ui-xs font-medium text-ink hover:bg-surface transition-colors">
                             Cancel
                         </button>
                         <button type="submit" disabled={formLoading}
-                            className="rounded-full bg-primary px-6 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark disabled:opacity-60 disabled:cursor-not-allowed transition-colors">
+                            className="rounded-lg bg-primary px-6 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark disabled:opacity-60 disabled:cursor-not-allowed transition-colors">
                             {submitLabel}
                         </button>
                     </div>
@@ -422,9 +535,11 @@ export default function SubscriptionsPage() {
                             {plan.features.length > 0 && (
                                 <ul className="mb-4 space-y-1.5 border-t border-border-muted pt-3">
                                     {plan.features.map((f) => (
-                                        <li key={f.key} className="flex justify-between text-xs">
-                                            <span className="text-muted">{f.key}</span>
-                                            <span className={`font-medium ${f.value === 'true' ? 'text-success' : f.value === 'false' ? 'text-muted' : 'text-ink'}`}>{f.value}</span>
+                                        <li key={f.key} className="flex justify-between gap-3 text-xs">
+                                            <span className={f.value === 'false' ? 'text-muted line-through' : 'text-ink'}>{f.label || f.key}</span>
+                                            <span className={`font-medium ${f.value === 'false' ? 'text-muted' : 'text-success'}`}>
+                                                {f.value === 'true' ? 'Included' : f.value === 'false' ? 'Not included' : f.value}
+                                            </span>
                                         </li>
                                     ))}
                                 </ul>
@@ -433,7 +548,7 @@ export default function SubscriptionsPage() {
                             {/* Actions */}
                             <div className="flex gap-2 border-t border-border-muted pt-3">
                                 <button type="button" onClick={() => openEditForm(plan)}
-                                    className="flex-1 rounded-full border border-border px-3 py-2 text-ui-xs font-medium text-ink hover:bg-surface transition-colors">
+                                    className="flex-1 rounded-lg border border-border px-3 py-2 text-ui-xs font-medium text-ink hover:bg-surface transition-colors">
                                     Edit
                                 </button>
                                 <button type="button" onClick={() => handleTogglePlan(plan)} disabled={actionPlanId === plan.id}

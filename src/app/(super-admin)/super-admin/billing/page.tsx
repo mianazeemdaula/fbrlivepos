@@ -129,14 +129,13 @@ export default function BillingPage() {
     ]
 
     return (
-        <div className="p-8">
-            <div className="mb-6">
-                <p className="text-xs font-medium uppercase tracking-caps text-muted">Revenue</p>
-                <h1 className="text-page-title font-normal text-ink">Billing</h1>
-                <p className="mt-1 text-sm text-muted">Subscriptions, expiry dates and payments across all tenants</p>
+        <div className="p-4 lg:p-6">
+            <div className="mb-4">
+                <h1 className="text-page-title font-semibold tracking-tight text-ink">Billing</h1>
+                <p className="mt-0.5 text-ui-xs text-muted">Subscriptions, expiry dates and payments across all tenants</p>
             </div>
 
-            <div className="mb-6 grid gap-4 sm:grid-cols-3">
+            <div className="mb-4 grid gap-3 sm:grid-cols-3">
                 <SummaryCard label="Active subscriptions" value={summary.active} />
                 <SummaryCard label="Expiring in 7 days" value={summary.expiring} tone="amber" />
                 <SummaryCard label="Expired (unpaid)" value={summary.expired} tone="rose" />
@@ -173,42 +172,42 @@ export default function BillingPage() {
                 <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm text-rose-700">{error}</div>
             )}
 
-            <div className="overflow-x-auto rounded-2xl bg-white shadow-card">
+            <div className="overflow-x-auto rounded-card border border-border bg-white shadow-card">
                 {view === 'payments' ? (
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b border-border">
+                            <tr className="border-b border-border bg-surface-subtle">
                                 <Th>Tenant</Th>
+                                <Th>Plan</Th>
                                 <Th>Description</Th>
                                 <Th>Amount</Th>
                                 <Th>Period</Th>
                                 <Th>Method</Th>
+                                <Th>Reference</Th>
                                 <Th>Status</Th>
                                 <Th />
                             </tr>
                         </thead>
                         <tbody>
-                            {loading ? <LoadingRows cols={7} /> : records.length === 0 ? (
-                                <EmptyRow cols={7} text="No billing records found." />
+                            {loading ? <LoadingRows cols={9} /> : records.length === 0 ? (
+                                <EmptyRow cols={9} text="No billing records found." />
                             ) : records.map((r) => (
                                 <tr key={r.id} className="border-b border-border transition-colors hover:bg-surface-subtle">
-                                    <td className="px-4 py-3 text-sm font-medium text-ink">
+                                    <td className="max-w-[200px] truncate px-3 py-2 text-sm font-medium text-ink">
                                         <Link href={`/super-admin/tenants/${r.tenantId}`} className="hover:text-primary">
                                             {r.subscription?.tenant?.name || 'Unknown tenant'}
                                         </Link>
-                                        <p className="text-xs font-normal text-muted">{r.subscription?.plan?.name}</p>
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-ink">{r.description}</td>
-                                    <td className="px-4 py-3 text-sm font-semibold tabular-nums text-ink">PKR {Number(r.amount).toLocaleString()}</td>
-                                    <td className="px-4 py-3 text-xs text-muted">{formatDate(r.periodStart)} – {formatDate(r.periodEnd)}</td>
-                                    <td className="px-4 py-3 text-xs text-muted">
-                                        {r.paymentMethod?.replace('_', ' ') ?? '—'}
-                                        {r.paymentRef && <span className="block">{r.paymentRef}</span>}
-                                    </td>
-                                    <td className="px-4 py-3">
+                                    <td className="whitespace-nowrap px-3 py-2 text-xs text-muted">{r.subscription?.plan?.name ?? '—'}</td>
+                                    <td className="px-3 py-2 text-sm text-ink">{r.description}</td>
+                                    <td className="px-3 py-2 text-sm font-semibold tabular-nums text-ink">PKR {Number(r.amount).toLocaleString()}</td>
+                                    <td className="px-3 py-2 text-xs text-muted">{formatDate(r.periodStart)} – {formatDate(r.periodEnd)}</td>
+                                    <td className="whitespace-nowrap px-3 py-2 text-xs text-muted">{r.paymentMethod?.replace('_', ' ') ?? '—'}</td>
+                                    <td className="max-w-[160px] truncate px-3 py-2 text-xs text-muted" title={r.paymentRef ?? undefined}>{r.paymentRef || '—'}</td>
+                                    <td className="px-3 py-2">
                                         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${RECORD_STATUS_STYLE[r.status] ?? ''}`}>{r.status}</span>
                                     </td>
-                                    <td className="px-4 py-3 text-right">
+                                    <td className="px-3 py-2 text-right">
                                         <select
                                             value=""
                                             onChange={(e) => e.target.value && updateRecordStatus(r.id, e.target.value)}
@@ -228,39 +227,36 @@ export default function BillingPage() {
                 ) : (
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b border-border">
+                            <tr className="border-b border-border bg-surface-subtle">
                                 <Th>Tenant</Th>
+                                <Th>Email</Th>
                                 <Th>Plan</Th>
+                                <Th>Price</Th>
                                 <Th>Cycle</Th>
                                 <Th>Expires</Th>
+                                <Th>Days Left</Th>
                                 <Th>Status</Th>
                                 <Th />
                             </tr>
                         </thead>
                         <tbody>
-                            {loading ? <LoadingRows cols={6} /> : subs.length === 0 ? (
-                                <EmptyRow cols={6} text="No subscriptions in this view." />
+                            {loading ? <LoadingRows cols={9} /> : subs.length === 0 ? (
+                                <EmptyRow cols={9} text="No subscriptions in this view." />
                             ) : subs.map((sub) => (
                                 <tr key={sub.id} className="border-b border-border transition-colors hover:bg-surface-subtle">
-                                    <td className="px-4 py-3 text-sm font-medium text-ink">
-                                        {sub.tenant.name}
-                                        <p className="text-xs font-normal text-muted">{sub.tenant.email}</p>
+                                    <td className="max-w-[200px] truncate px-3 py-2 text-sm font-medium text-ink" title={sub.tenant.name}>{sub.tenant.name}</td>
+                                    <td className="max-w-[220px] truncate px-3 py-2 text-xs text-muted" title={sub.tenant.email}>{sub.tenant.email}</td>
+                                    <td className="whitespace-nowrap px-3 py-2 text-sm text-ink">{sub.plan.name}</td>
+                                    <td className="whitespace-nowrap px-3 py-2 text-xs tabular-nums text-muted">
+                                        PKR {(sub.billingCycle === 'YEARLY' ? sub.plan.priceYearly : sub.plan.priceMonthly).toLocaleString()}
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-ink">
-                                        {sub.plan.name}
-                                        <p className="text-xs text-muted">
-                                            PKR {(sub.billingCycle === 'YEARLY' ? sub.plan.priceYearly : sub.plan.priceMonthly).toLocaleString()}
-                                        </p>
+                                    <td className="px-3 py-2 text-xs text-muted">{sub.billingCycle === 'YEARLY' ? 'Yearly' : 'Monthly'}</td>
+                                    <td className="whitespace-nowrap px-3 py-2 text-sm text-ink">{formatDate(sub.expiresAt)}</td>
+                                    <td className={`whitespace-nowrap px-3 py-2 text-xs ${sub.daysLeft < 0 ? 'text-rose-600' : sub.daysLeft <= 7 ? 'text-amber-600' : 'text-muted'}`}>
+                                        {sub.daysLeft < 0 ? `${Math.abs(sub.daysLeft)} days ago` : sub.daysLeft === 0 ? 'Today' : `${sub.daysLeft} days`}
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-muted">{sub.billingCycle === 'YEARLY' ? 'Yearly' : 'Monthly'}</td>
-                                    <td className="px-4 py-3 text-sm text-ink">
-                                        {formatDate(sub.expiresAt)}
-                                        <p className={`text-xs ${sub.daysLeft < 0 ? 'text-rose-600' : sub.daysLeft <= 7 ? 'text-amber-600' : 'text-muted'}`}>
-                                            {sub.daysLeft < 0 ? `${Math.abs(sub.daysLeft)} days ago` : sub.daysLeft === 0 ? 'Today' : `in ${sub.daysLeft} days`}
-                                        </p>
-                                    </td>
-                                    <td className="px-4 py-3"><SubscriptionStatusBadge status={sub.status} /></td>
-                                    <td className="px-4 py-3 text-right">
+                                    <td className="px-3 py-2"><SubscriptionStatusBadge status={sub.status} /></td>
+                                    <td className="px-3 py-2 text-right">
                                         <Link
                                             href={`/super-admin/tenants/${sub.tenant.id}`}
                                             className="text-xs font-semibold text-primary hover:text-primary-dark"
@@ -288,7 +284,7 @@ export default function BillingPage() {
 }
 
 function Th({ children }: { children?: React.ReactNode }) {
-    return <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">{children}</th>
+    return <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">{children}</th>
 }
 
 function LoadingRows({ cols }: { cols: number }) {
@@ -314,7 +310,7 @@ function EmptyRow({ cols, text }: { cols: number; text: string }) {
 function SummaryCard({ label, value, tone }: { label: string; value: number; tone?: 'amber' | 'rose' }) {
     const color = tone === 'amber' ? 'text-amber-600' : tone === 'rose' ? 'text-rose-600' : 'text-ink'
     return (
-        <div className="rounded-2xl border border-border bg-white p-4 shadow-card">
+        <div className="rounded-card border border-border bg-white p-4 shadow-card">
             <p className="text-xs font-medium text-muted">{label}</p>
             <p className={`mt-1 text-2xl font-semibold ${color}`}>{value}</p>
         </div>

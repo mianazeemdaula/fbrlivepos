@@ -43,12 +43,11 @@ export default function AuditLogPage() {
     }, [page, actionFilter])
 
     return (
-        <div className="p-8">
-            <div className="mb-8 flex items-start justify-between">
+        <div className="p-4 lg:p-6">
+            <div className="mb-4 flex items-start justify-between">
                 <div>
-                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Governance</p>
-                    <h1 className="text-page-title font-normal text-ink">Audit Log</h1>
-                    <p className="mt-1 text-sm text-muted">Track all platform-level administrative actions</p>
+                    <h1 className="text-page-title font-semibold tracking-tight text-ink">Audit Log</h1>
+                    <p className="mt-0.5 text-ui-xs text-muted">Track all platform-level administrative actions</p>
                 </div>
                 <input
                     type="text"
@@ -62,20 +61,20 @@ export default function AuditLogPage() {
             <div className="bg-white rounded-card shadow-card overflow-hidden rounded-2xl">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-border">
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Time</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Actor</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Role</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Action</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Entity</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">IP</th>
+                        <tr className="border-b border-border bg-surface-subtle">
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Time</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Actor</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Role</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Action</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Entity</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">IP</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             Array.from({ length: 5 }).map((_, i) => (
                                 <tr key={i} className="border-b border-border">
-                                    <td colSpan={6} className="px-4 py-3">
+                                    <td colSpan={6} className="px-3 py-2">
                                         <div className="h-4 rounded bg-border animate-pulse" />
                                     </td>
                                 </tr>
@@ -89,24 +88,24 @@ export default function AuditLogPage() {
                         ) : (
                             entries.map((entry) => (
                                 <tr key={entry.id} className="border-b border-border transition-colors hover:bg-surface-subtle">
-                                    <td className="px-4 py-3 text-xs whitespace-nowrap text-muted">
+                                    <td className="px-3 py-2 text-xs whitespace-nowrap text-muted">
                                         {new Date(entry.createdAt).toLocaleString()}
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-3 py-2">
                                         <p className="text-sm text-ink">{entry.actorEmail || '—'}</p>
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-muted">
+                                    <td className="px-3 py-2 text-xs text-muted">
                                         {entry.actorRole || '—'}
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-3 py-2">
                                         <span className="rounded border border-border bg-surface-subtle px-2 py-0.5 font-mono text-xs text-ink">
                                             {entry.action}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-muted">
+                                    <td className="px-3 py-2 text-xs text-muted">
                                         {entry.entity ? `${entry.entity}:${entry.entityId?.slice(0, 8)}` : '—'}
                                     </td>
-                                    <td className="px-4 py-3 font-mono text-xs text-muted">
+                                    <td className="px-3 py-2 font-mono text-xs text-muted">
                                         {entry.ipAddress || '—'}
                                     </td>
                                 </tr>

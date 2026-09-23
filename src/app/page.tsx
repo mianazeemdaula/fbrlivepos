@@ -19,6 +19,9 @@ const sampleInvoices = [
     { no: 'INV-1040', buyer: 'Metro Wholesale', amount: 'PKR 260,540' },
 ]
 
+// Plans shown here come from the database on every request.
+export const dynamic = 'force-dynamic'
+
 function formatLimit(value: number | 'unlimited') {
     return value === 'unlimited' ? 'Unlimited' : value.toLocaleString()
 }
@@ -176,7 +179,7 @@ export default async function HomePage() {
                                             <span className="text-2xl font-semibold tracking-tight">Free</span>
                                         ) : (
                                             <>
-                                                <span className="text-2xl font-semibold tracking-tight">PKR {plan.monthlyPrice.toLocaleString()}</span>
+                                                <span className="text-2xl font-semibold tracking-tight">{plan.currency} {plan.monthlyPrice.toLocaleString()}</span>
                                                 <span className="text-sm text-slate-500"> /month</span>
                                             </>
                                         )}
@@ -184,6 +187,9 @@ export default async function HomePage() {
                                     <ul className="mt-5 space-y-2 text-sm text-slate-600">
                                         <li className="flex items-center gap-2"><Check size={14} className="text-primary" />{formatLimit(plan.invoicesPerMonth)} invoices / month</li>
                                         <li className="flex items-center gap-2"><Check size={14} className="text-primary" />{formatLimit(plan.users)} users</li>
+                                        {plan.trialDays > 0 && (
+                                            <li className="flex items-center gap-2"><Check size={14} className="text-primary" />{plan.trialDays}-day free trial</li>
+                                        )}
                                     </ul>
                                     <Link
                                         href={plan.monthlyPrice === null ? '/pricing' : '/signup'}

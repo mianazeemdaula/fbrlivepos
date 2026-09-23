@@ -370,13 +370,13 @@ export function SubscriptionManager({ tenantId, subscription, plans, onChanged, 
                         <div className="overflow-x-auto rounded-xl border border-border">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b border-border bg-surface-subtle text-left text-xs text-muted">
-                                        <th className="px-3 py-2 font-medium">Date</th>
-                                        <th className="px-3 py-2 font-medium">Description</th>
-                                        <th className="px-3 py-2 font-medium">Period</th>
-                                        <th className="px-3 py-2 font-medium">Method</th>
-                                        <th className="px-3 py-2 text-right font-medium">Amount</th>
-                                        <th className="px-3 py-2 font-medium">Status</th>
+                                    <tr className="border-b border-border bg-surface-subtle">
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Date</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Description</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Period</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Method</th>
+                                        <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">Amount</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>

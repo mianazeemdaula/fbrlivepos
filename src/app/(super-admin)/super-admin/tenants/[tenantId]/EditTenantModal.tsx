@@ -531,7 +531,7 @@ export function EditTenantModal({
                         type="button"
                         onClick={onClose}
                         disabled={saving}
-                        className="rounded-full border border-border px-4 py-2 text-xs font-medium text-ink hover:bg-white transition-colors"
+                        className="rounded-lg border border-border px-4 py-2 text-xs font-medium text-ink hover:bg-white transition-colors"
                     >
                         Cancel
                     </button>
@@ -539,7 +539,7 @@ export function EditTenantModal({
                         type="submit"
                         form="edit-tenant-form"
                         disabled={saving}
-                        className="rounded-full bg-primary hover:bg-primary-dark disabled:opacity-60 disabled:cursor-not-allowed text-white px-5 py-2 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
+                        className="rounded-lg bg-primary hover:bg-primary-dark disabled:opacity-60 disabled:cursor-not-allowed text-white px-5 py-2 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
                     >
                         {saving ? (
                             <>

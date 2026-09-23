@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, useEffect, useState } from 'react'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { Edit2, Shield, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react'
 import { EditTenantModal, type TenantDetail } from './EditTenantModal'
 import { SubscriptionManager, type PlanOption } from './SubscriptionManager'
@@ -9,7 +9,6 @@ import { SubscriptionManager, type PlanOption } from './SubscriptionManager'
 function TenantDetailContent() {
     const params = useParams()
     const router = useRouter()
-    const searchParams = useSearchParams()
 
     const [tenant, setTenant] = useState<TenantDetail | null>(null)
     const [plans, setPlans] = useState<PlanOption[]>([])
@@ -47,18 +46,6 @@ function TenantDetailContent() {
         }
         load()
     }, [params.tenantId])
-
-    // Check query params to auto-open edit modal if requested
-    useEffect(() => {
-        if (!loading && tenant) {
-            const edit = searchParams.get('edit')
-            const tab = searchParams.get('tab')
-            if (edit === 'true' || tab === 'tax') {
-                setEditModalTab(tab === 'tax' ? 'tax' : 'general')
-                setIsEditModalOpen(true)
-            }
-        }
-    }, [loading, tenant, searchParams])
 
     function openEditModal(tab: 'general' | 'tax' = 'general') {
         setEditModalTab(tab)
@@ -159,7 +146,7 @@ function TenantDetailContent() {
 
     if (loading) {
         return (
-            <div className="p-8 max-w-5xl mx-auto">
+            <div className="mx-auto max-w-5xl p-4 lg:p-6">
                 <div className="animate-pulse space-y-4">
                     <div className="h-8 w-48 rounded bg-border" />
                     <div className="h-20 rounded-2xl bg-border" />
@@ -181,7 +168,7 @@ function TenantDetailContent() {
                 <p className="text-muted text-sm mb-4">Tenant not found.</p>
                 <button
                     onClick={() => router.push('/super-admin/tenants')}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-4 py-2 text-xs font-semibold text-ink hover:bg-surface transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-4 py-2 text-xs font-semibold text-ink hover:bg-surface transition-colors"
                 >
                     <ArrowLeft size={14} />
                     Back to Tenants
@@ -191,11 +178,11 @@ function TenantDetailContent() {
     }
 
     return (
-        <div className="max-w-5xl mx-auto p-6 md:p-8">
+        <div className="mx-auto max-w-5xl p-4 lg:p-6">
             {/* Back Button */}
             <button
                 onClick={() => router.push('/super-admin/tenants')}
-                className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium text-muted transition-colors hover:text-ink"
+                className="mb-3 inline-flex items-center gap-1.5 text-xs font-medium text-muted transition-colors hover:text-ink"
             >
                 <ArrowLeft size={14} />
                 Back to Tenants
@@ -206,7 +193,7 @@ function TenantDetailContent() {
                 <div
                     className={`mb-6 p-4 rounded-2xl border text-sm font-medium flex items-center justify-between animate-in fade-in duration-200 ${
                         notification.type === 'success'
-                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700'
+                            ? 'bg-emerald-50 border-emerald-500/20 text-emerald-700'
                             : 'bg-rose-500/10 border-rose-500/20 text-rose-700'
                     }`}
                 >
@@ -228,7 +215,7 @@ function TenantDetailContent() {
             )}
 
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-8 bg-white rounded-2xl border border-border p-6 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4 bg-white rounded-card border border-border p-5 shadow-xs">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs font-semibold uppercase tracking-wider text-muted">Tenant</span>
@@ -238,7 +225,7 @@ function TenantDetailContent() {
                             </span>
                         )}
                     </div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-ink">{tenant.businessName}</h1>
+                    <h1 className="text-page-title font-semibold tracking-tight text-ink">{tenant.businessName}</h1>
                     <p className="mt-1 text-sm text-muted">{tenant.email}</p>
                 </div>
 
@@ -246,7 +233,7 @@ function TenantDetailContent() {
                     <span
                         className={`text-xs px-3 py-1 rounded-full font-semibold border ${
                             tenant.isActive
-                                ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-500/20'
                                 : 'bg-rose-500/10 text-rose-700 border-rose-500/20'
                         }`}
                     >
@@ -254,7 +241,7 @@ function TenantDetailContent() {
                     </span>
                     <button
                         onClick={() => openEditModal('general')}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-primary hover:bg-primary-dark text-white px-4 py-1.5 text-xs font-semibold transition-colors shadow-xs"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-primary hover:bg-primary-dark text-white px-4 py-1.5 text-xs font-semibold transition-colors shadow-xs"
                     >
                         <Edit2 size={13} />
                         Edit Details
@@ -451,7 +438,7 @@ function TenantDetailContent() {
                     <div
                         className={`mb-4 rounded-xl border px-3.5 py-2.5 text-xs font-medium ${
                             passwordMessage.type === 'success'
-                                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700'
+                                ? 'border-emerald-500/30 bg-emerald-50 text-emerald-700'
                                 : 'border-rose-500/30 bg-rose-500/10 text-rose-700'
                         }`}
                     >
@@ -519,7 +506,7 @@ export default function TenantDetailPage() {
     return (
         <Suspense
             fallback={
-                <div className="p-8 max-w-5xl mx-auto">
+                <div className="mx-auto max-w-5xl p-4 lg:p-6">
                     <div className="animate-pulse space-y-4">
                         <div className="h-8 w-48 rounded bg-border" />
                         <div className="h-64 rounded-2xl bg-border" />

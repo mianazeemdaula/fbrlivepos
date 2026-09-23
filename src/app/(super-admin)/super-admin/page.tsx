@@ -45,12 +45,11 @@ export default function AdminOverviewPage() {
     }, [])
 
     return (
-        <div className="p-8">
+        <div className="p-4 lg:p-6">
             {/* Header */}
-            <div className="mb-8">
-                <p className="text-xs font-medium uppercase tracking-caps text-muted">Super admin</p>
-                <h1 className="text-page-title font-normal text-ink">Platform Overview</h1>
-                <p className="mt-1 text-sm text-muted">Real-time metrics across all tenants</p>
+            <div className="mb-4">
+                <h1 className="text-page-title font-semibold tracking-tight text-ink">Platform Overview</h1>
+                <p className="mt-0.5 text-ui-xs text-muted">Real-time metrics across all tenants</p>
             </div>
 
             {/* Stats grid */}

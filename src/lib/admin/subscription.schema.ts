@@ -33,11 +33,16 @@ export const CreatePlanSchema = z.object({
     features: z
         .array(
             z.object({
-                key: PlanFeatureKeys,
-                value: z.string(),
-                label: z.string(),
+                // Known entitlement flags are listed in PlanFeatureKeys; any simple key is allowed
+                // so plans can also carry display-only features for the public pricing page.
+                key: z.string().trim().min(1).max(50).regex(/^[A-Za-z0-9_-]+$/, 'Feature key may only contain letters, numbers, _ and -'),
+                value: z.string().trim().max(100).default('true'),
+                label: z.string().trim().min(1, 'Feature label is required').max(120),
             }),
         )
+        .refine((items) => new Set(items.map((f) => f.key)).size === items.length, {
+            message: 'Each feature key must be unique within a plan',
+        })
         .default([]),
 })
 
