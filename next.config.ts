@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Dev server is opened via 127.0.0.1 as well as localhost; allow it to load /_next/* assets.
-  allowedDevOrigins: ["127.0.0.1", "localhost"],
+  // Hosts allowed to load /_next/* dev assets when running `next dev` (hostnames, not URLs).
+  allowedDevOrigins: ["127.0.0.1", "localhost", "tax.aazify.com"],
   logging: {
     fetches: {
       fullUrl: true,
