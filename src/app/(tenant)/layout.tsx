@@ -25,6 +25,14 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
     const [config, setConfig] = useState<{ configured: boolean; environment: 'SANDBOX' | 'PRODUCTION' | null; hasProductionToken: boolean } | null>(null)
     const [switchingEnv, setSwitchingEnv] = useState(false)
     const [notification, setNotification] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+    const [subscription, setSubscription] = useState<{
+        allowed: boolean
+        reason: string | null
+        planName: string | null
+        expiresAt: string | null
+        daysLeft: number | null
+        expiringSoon: boolean
+    } | null>(null)
 
     const loadConfig = () => {
         fetch('/api/tenant/fbr-credentials')
@@ -43,6 +51,10 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
 
     useEffect(() => {
         loadConfig()
+        fetch('/api/tenant/subscription')
+            .then(r => r.ok ? r.json() : null)
+            .then(data => { if (data) setSubscription(data) })
+            .catch(() => {})
     }, [])
 
     useEffect(() => {
@@ -239,6 +251,18 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                     style={{ letterSpacing: '0.10em' }}
                 >
                     {config.environment === 'SANDBOX' ? 'SANDBOX MODE — Test submissions only' : 'LIVE MODE — Production submissions enabled'}
+                </div>
+            )}
+
+            {/* Subscription banner */}
+            {subscription && !subscription.allowed && (
+                <div className="border-b border-error-border bg-error-bg px-6 py-2.5 text-center text-xs font-medium text-error">
+                    {subscription.reason} New invoices and FBR submissions are paused. Call +92 300 7395147 to renew.
+                </div>
+            )}
+            {subscription?.allowed && subscription.expiringSoon && subscription.expiresAt && (
+                <div className="border-b border-border bg-accent-light px-6 py-2.5 text-center text-xs font-medium text-warning">
+                    Your {subscription.planName} plan expires {subscription.daysLeft && subscription.daysLeft > 1 ? `in ${subscription.daysLeft} days` : 'soon'} ({new Date(subscription.expiresAt).toLocaleDateString()}). Call +92 300 7395147 to renew.
                 </div>
             )}
 

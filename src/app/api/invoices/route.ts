@@ -8,6 +8,7 @@ import { isValidMobile, isValidNtnCnic, normalizeMobile, normalizeNtnCnic } from
 import { resolveDIRateDescriptor } from '@/lib/di/rate'
 import { calculateSalesTaxApplicable } from '@/lib/di/tax'
 import { getDefaultHSCode } from '@/lib/hscode'
+import { getSubscriptionBlockReason } from '@/lib/billing/subscription'
 
 const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
 
@@ -108,6 +109,11 @@ const CreateInvoiceSchema = z.object({
 
 export async function POST(req: NextRequest) {
     const { tenant, userId } = await getTenantFromSession()
+
+    const subscriptionBlock = await getSubscriptionBlockReason(tenant.id)
+    if (subscriptionBlock) {
+        return NextResponse.json({ error: subscriptionBlock, subscriptionRequired: true }, { status: 402 })
+    }
 
     // Check plan limit
     const limit = await checkPlanLimit(tenant.id, 'maxInvoicesMonth')

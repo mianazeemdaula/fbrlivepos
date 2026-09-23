@@ -12,6 +12,7 @@ import { resolveDIRateDescriptor } from '@/lib/di/rate'
 import { calculateDILineValues, round2 } from '@/lib/di/tax'
 import { stringifyError } from '@/lib/fbr/submission-log'
 import { getDefaultHSCode } from '@/lib/hscode'
+import { getSubscriptionBlockReason } from '@/lib/billing/subscription'
 
 const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
 
@@ -134,6 +135,11 @@ function buildDirectPayload(input: z.infer<typeof DirectSubmissionSchema>, creds
 
 export async function POST(req: NextRequest) {
     const { tenant } = await getTenantFromSession()
+
+    const subscriptionBlock = await getSubscriptionBlockReason(tenant.id)
+    if (subscriptionBlock) {
+        return NextResponse.json({ error: subscriptionBlock, subscriptionRequired: true }, { status: 402 })
+    }
 
     try {
         const body = DirectSubmissionSchema.parse(await req.json())

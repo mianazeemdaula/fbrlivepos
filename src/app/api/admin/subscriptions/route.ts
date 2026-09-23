@@ -26,7 +26,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     const { actor } = await assertSuperAdmin(req)
-    const body = CreatePlanSchema.parse(await req.json())
+    const parsed = CreatePlanSchema.safeParse(await req.json())
+    if (!parsed.success) {
+        return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid plan data' }, { status: 400 })
+    }
+    const body = parsed.data
 
     const { features, ...planData } = body
 

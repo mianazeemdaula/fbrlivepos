@@ -3,6 +3,16 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { PaginationControls } from '@/components/pagination-controls'
+import { SubscriptionStatusBadge } from './[tenantId]/SubscriptionManager'
+
+function subscriptionExpiry(sub: NonNullable<Tenant['subscription']>) {
+    const iso = sub.status === 'TRIALING' && sub.trialEndsAt ? sub.trialEndsAt : sub.currentPeriodEnd
+    if (!iso) return null
+    const date = new Date(iso)
+    const daysLeft = Math.ceil((date.getTime() - Date.now()) / 86_400_000)
+    const lapsed = (sub.status === 'ACTIVE' || sub.status === 'TRIALING') && daysLeft < 0
+    return { date, daysLeft, status: lapsed ? 'PAST_DUE' : sub.status }
+}
 
 interface Tenant {
     id: string
@@ -15,6 +25,8 @@ interface Tenant {
     subscription?: {
         plan?: { name: string; slug: string }
         status: string
+        currentPeriodEnd?: string | null
+        trialEndsAt?: string | null
     } | null
     _count?: { invoices: number; users: number }
 }
@@ -94,6 +106,7 @@ export default function TenantsPage() {
                         <tr className="border-b border-border bg-surface-subtle">
                             <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Business</th>
                             <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Plan</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Expires</th>
                             <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">DI Status</th>
                             <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Invoices</th>
                             <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Status</th>
@@ -105,14 +118,14 @@ export default function TenantsPage() {
                         {loading ? (
                             Array.from({ length: 5 }).map((_, i) => (
                                 <tr key={i} className="border-b border-border">
-                                    <td colSpan={7} className="px-4 py-3">
+                                    <td colSpan={8} className="px-4 py-3">
                                         <div className="h-4 rounded bg-border animate-pulse" />
                                     </td>
                                 </tr>
                             ))
                         ) : tenants.length === 0 ? (
                             <tr>
-                                <td colSpan={7} className="px-4 py-12 text-center text-sm text-muted">
+                                <td colSpan={8} className="px-4 py-12 text-center text-sm text-muted">
                                     No tenants found.
                                 </td>
                             </tr>
@@ -125,6 +138,20 @@ export default function TenantsPage() {
                                     </td>
                                     <td className="px-4 py-3 text-sm text-ink">
                                         {t.subscription?.plan?.name || <span className="text-muted">—</span>}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        {(() => {
+                                            const expiry = t.subscription ? subscriptionExpiry(t.subscription) : null
+                                            if (!expiry) return <span className="text-xs text-muted">—</span>
+                                            return (
+                                                <div className="space-y-1">
+                                                    <SubscriptionStatusBadge status={expiry.status} />
+                                                    <p className={`text-xs ${expiry.daysLeft < 0 ? 'text-rose-600' : expiry.daysLeft <= 7 ? 'text-amber-600' : 'text-muted'}`}>
+                                                        {expiry.date.toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                            )
+                                        })()}
                                     </td>
                                     <td className="px-4 py-3">
                                         {t.diCredentials?.isProductionReady ? (

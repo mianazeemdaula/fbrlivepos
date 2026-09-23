@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { assertSuperAdmin } from '@/lib/admin/guard'
 import { prisma } from '@/lib/db/prisma'
 import { writeAuditLog } from '@/lib/admin/audit'
+import type { BillingRecord, SubscriptionPlan, TenantSubscription } from '@/generated/prisma/client'
 import { digitsOnly, isValidSellerNtn, normalizeSellerNtn } from '@/lib/validation/pakistan'
 
 function formatTenantPayload(tenant: any) {
@@ -37,20 +38,7 @@ function formatTenantPayload(tenant: any) {
             }
             : null,
         createdAt: tenant.createdAt instanceof Date ? tenant.createdAt.toISOString() : tenant.createdAt,
-        subscription: tenant.subscription
-            ? {
-                plan: tenant.subscription.plan
-                    ? {
-                        id: tenant.subscription.plan.id,
-                        name: tenant.subscription.plan.name,
-                    }
-                    : undefined,
-                status: tenant.subscription.status,
-                currentPeriodEnd: tenant.subscription.currentPeriodEnd instanceof Date
-                    ? tenant.subscription.currentPeriodEnd.toISOString()
-                    : tenant.subscription.currentPeriodEnd ?? null,
-            }
-            : undefined,
+        subscription: tenant.subscription ? formatSubscription(tenant.subscription) : undefined,
         users: (tenant.users || []).map((user: any) => ({
             id: user.id,
             name: user.name,
@@ -65,6 +53,58 @@ function formatTenantPayload(tenant: any) {
             products: tenant._count?.products ?? 0,
             posTerminals: tenant._count?.posTerminals ?? 0,
         },
+    }
+}
+
+function toIso(value: unknown): string | null {
+    if (value instanceof Date) return value.toISOString()
+    return typeof value === 'string' ? value : null
+}
+
+type SubscriptionWithRelations = TenantSubscription & {
+    plan?: Pick<SubscriptionPlan, 'id' | 'name' | 'priceMonthly' | 'priceYearly'> | null
+    billingHistory?: BillingRecord[]
+}
+
+function formatSubscription(sub: SubscriptionWithRelations) {
+    const currentPeriodEnd = toIso(sub.currentPeriodEnd)
+    const trialEndsAt = toIso(sub.trialEndsAt)
+    const expiresAt = sub.status === 'TRIALING' && trialEndsAt ? trialEndsAt : currentPeriodEnd
+    const isLapsed = (sub.status === 'ACTIVE' || sub.status === 'TRIALING')
+        && !!expiresAt && new Date(expiresAt).getTime() < Date.now()
+
+    return {
+        id: sub.id,
+        plan: sub.plan
+            ? {
+                id: sub.plan.id,
+                name: sub.plan.name,
+                priceMonthly: sub.plan.priceMonthly != null ? Number(sub.plan.priceMonthly) : undefined,
+                priceYearly: sub.plan.priceYearly != null ? Number(sub.plan.priceYearly) : undefined,
+            }
+            : undefined,
+        status: sub.status,
+        effectiveStatus: isLapsed ? 'PAST_DUE' : sub.status,
+        billingCycle: sub.billingCycle ?? 'MONTHLY',
+        currentPeriodStart: toIso(sub.currentPeriodStart),
+        currentPeriodEnd,
+        trialEndsAt,
+        expiresAt,
+        cancelAtPeriodEnd: sub.cancelAtPeriodEnd ?? false,
+        cancelledAt: toIso(sub.cancelledAt),
+        billingHistory: (sub.billingHistory || []).map((record) => ({
+            id: record.id,
+            amount: Number(record.amount),
+            currency: record.currency,
+            status: record.status,
+            description: record.description,
+            periodStart: toIso(record.periodStart),
+            periodEnd: toIso(record.periodEnd),
+            paidAt: toIso(record.paidAt),
+            paymentMethod: record.paymentMethod ?? null,
+            paymentRef: record.paymentRef ?? null,
+            createdAt: toIso(record.createdAt),
+        })),
     }
 }
 

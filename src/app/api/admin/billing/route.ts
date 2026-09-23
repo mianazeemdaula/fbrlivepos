@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { assertSuperAdmin } from '@/lib/admin/guard'
 import { prisma } from '@/lib/db/prisma'
 import { writeAuditLog } from '@/lib/admin/audit'
+import { recordPaymentAndExtend } from '@/lib/billing/subscription'
 
 // GET — list billing records
 export async function GET(req: NextRequest) {
@@ -34,43 +35,51 @@ export async function GET(req: NextRequest) {
         prisma.billingRecord.count({ where }),
     ])
 
-    return NextResponse.json({ data: records, total, page, pages: Math.ceil(total / limit) })
+    return NextResponse.json({
+        data: records.map((record) => ({ ...record, amount: Number(record.amount) })),
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+    })
 }
 
-// POST — Record a manual payment
+// POST — Record a manual payment. A PAID record extends the tenant's subscription to periodEnd.
 export async function POST(req: NextRequest) {
     const { actor } = await assertSuperAdmin(req)
 
-    const body = z
+    const parsed = z
         .object({
             tenantId: z.string(),
-            amount: z.number().positive(),
-            description: z.string(),
+            amount: z.number().min(0),
+            description: z.string().trim().min(1),
             periodStart: z.string().datetime(),
             periodEnd: z.string().datetime(),
-            paymentMethod: z.string(),
-            paymentRef: z.string().optional(),
+            paymentMethod: z.string().trim().min(1),
+            paymentRef: z.string().trim().optional(),
         })
-        .parse(await req.json())
+        .refine((b) => new Date(b.periodEnd) > new Date(b.periodStart), {
+            message: 'Period end must be after period start',
+        })
+        .safeParse(await req.json())
 
-    const sub = await prisma.tenantSubscription.findUniqueOrThrow({
-        where: { tenantId: body.tenantId },
-    })
+    if (!parsed.success) {
+        return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid request' }, { status: 400 })
+    }
+    const body = parsed.data
 
-    const record = await prisma.billingRecord.create({
-        data: {
-            subscriptionId: sub.id,
-            tenantId: body.tenantId,
-            amount: body.amount,
-            currency: 'PKR',
-            status: 'PAID',
-            paidAt: new Date(),
-            description: body.description,
-            periodStart: new Date(body.periodStart),
-            periodEnd: new Date(body.periodEnd),
-            paymentMethod: body.paymentMethod,
-            paymentRef: body.paymentRef,
-        },
+    const sub = await prisma.tenantSubscription.findUnique({ where: { tenantId: body.tenantId } })
+    if (!sub) {
+        return NextResponse.json({ error: 'Tenant has no subscription. Assign a plan first.' }, { status: 404 })
+    }
+
+    const { record, subscription } = await recordPaymentAndExtend({
+        tenantId: body.tenantId,
+        amount: body.amount,
+        description: body.description,
+        periodStart: new Date(body.periodStart),
+        periodEnd: new Date(body.periodEnd),
+        paymentMethod: body.paymentMethod,
+        paymentRef: body.paymentRef,
     })
 
     await writeAuditLog({
@@ -80,8 +89,8 @@ export async function POST(req: NextRequest) {
         tenantId: body.tenantId,
         action: 'BILLING_RECORD_ADDED',
         entityId: record.id,
-        after: record as unknown as object,
+        after: { record, subscription } as unknown as object,
     })
 
-    return NextResponse.json(record, { status: 201 })
+    return NextResponse.json({ ...record, amount: Number(record.amount) }, { status: 201 })
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db/prisma'
 import { hash } from '@/lib/crypto/password'
+import { addBillingCycle } from '@/lib/billing/subscription'
 
 const SignupSchema = z.object({
     email: z.string().email(),
@@ -59,27 +60,30 @@ export async function POST(req: NextRequest) {
             },
         })
 
-        // Assign free plan if one exists
+        // Assign the free plan (slug "free", or any active zero-priced plan) if one exists
         const freePlan = await tx.subscriptionPlan.findFirst({
-            where: { slug: 'free', isActive: true },
+            where: {
+                isActive: true,
+                OR: [{ slug: 'free' }, { priceMonthly: 0 }],
+            },
+            orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
         })
 
         if (freePlan) {
             const now = new Date()
-            const periodEnd = new Date(now)
-            periodEnd.setMonth(periodEnd.getMonth() + 1)
+            const trialEndsAt = freePlan.trialDays > 0
+                ? new Date(now.getTime() + freePlan.trialDays * 86400000)
+                : null
 
             await tx.tenantSubscription.create({
                 data: {
                     tenantId: tenant.id,
                     planId: freePlan.id,
-                    status: freePlan.trialDays > 0 ? 'TRIALING' : 'ACTIVE',
+                    status: trialEndsAt ? 'TRIALING' : 'ACTIVE',
+                    billingCycle: 'MONTHLY',
                     currentPeriodStart: now,
-                    currentPeriodEnd: periodEnd,
-                    trialEndsAt:
-                        freePlan.trialDays > 0
-                            ? new Date(now.getTime() + freePlan.trialDays * 86400000)
-                            : null,
+                    currentPeriodEnd: trialEndsAt ?? addBillingCycle(now, 'MONTHLY'),
+                    trialEndsAt,
                 },
             })
         }

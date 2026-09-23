@@ -1,206 +1,224 @@
 import Link from 'next/link'
-import { ArrowRight, BadgeCheck, Building2, ChartColumnBig, FileCheck2, ShieldCheck, Sparkles } from 'lucide-react'
-import { featureHighlights, testimonials, trustStats } from '@/lib/marketing'
+import { ArrowRight, Building2, Check, FileCheck2, FlaskConical, ScrollText } from 'lucide-react'
+import { featureHighlights, trustStats } from '@/lib/marketing'
 import { getPublicMarketingPlans } from '@/lib/marketing-plans.server'
+import SiteHeader from '@/components/marketing/site-header'
+import SiteFooter from '@/components/marketing/site-footer'
+
+const featureIcons = [FileCheck2, Building2, FlaskConical, ScrollText]
+
+const steps = [
+    { title: 'Create your account', description: 'Add your business details and NTN.' },
+    { title: 'Test in FBR sandbox', description: 'Validate your invoice scenarios with FBR.' },
+    { title: 'Go live', description: 'Issue invoices with IRN and QR from day one.' },
+]
+
+const sampleInvoices = [
+    { no: 'INV-1042', buyer: 'Raza Trading Co.', amount: 'PKR 118,000' },
+    { no: 'INV-1041', buyer: 'Al-Noor Stores', amount: 'PKR 42,480' },
+    { no: 'INV-1040', buyer: 'Metro Wholesale', amount: 'PKR 260,540' },
+]
+
+function formatLimit(value: number | 'unlimited') {
+    return value === 'unlimited' ? 'Unlimited' : value.toLocaleString()
+}
 
 export default async function HomePage() {
-  const featuredPlans = (await getPublicMarketingPlans()).slice(0, 4)
+    const featuredPlans = (await getPublicMarketingPlans()).slice(0, 4)
 
-  return (
-    <div className="min-h-screen text-ink">
-      <nav className="sticky top-0 z-20 border-b border-border bg-nav-blur backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-xl font-bold text-primary">FBR Live POS</p>
-            <p className="text-xs text-muted">Digital invoicing, compliance, and advisory</p>
-          </div>
-          <div className="hidden items-center gap-6 text-sm md:flex">
-            <Link href="/pricing" className="text-muted transition hover:text-primary">Pricing</Link>
-            <Link href="/login" className="text-muted transition hover:text-primary">Sign in</Link>
-            <Link href="/signup" className="rounded-full bg-primary px-5 py-2.5 font-medium text-white transition hover:bg-primary-dark">Start Free</Link>
-          </div>
-        </div>
-      </nav>
+    return (
+        <div className="min-h-screen bg-white text-slate-900">
+            <SiteHeader />
 
-      <main>
-        <section className="mx-auto grid max-w-7xl gap-10 px-6 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:py-24">
-          <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm brand-chip">
-              <Sparkles size={16} />
-              SRO 709 aligned, FBR DI API ready, no setup fee
-            </div>
+            <main>
+                {/* Hero */}
+                <section className="border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white">
+                    <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-24">
+                        <div>
+                            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                Compliant with SRO 709(I)/2024
+                            </span>
+                            <h1 className="mt-5 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+                                FBR digital invoicing, made simple.
+                            </h1>
+                            <p className="mt-4 max-w-lg text-base leading-7 text-slate-600">
+                                Create invoices, submit them to FBR in real time and keep audit-ready records in one place.
+                            </p>
+                            <div className="mt-8 flex flex-wrap gap-3">
+                                <Link href="/signup" className="inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-medium text-white transition hover:bg-primary-dark">
+                                    Start free
+                                    <ArrowRight size={16} />
+                                </Link>
+                                <Link href="/pricing" className="inline-flex h-11 items-center rounded-lg border border-slate-300 bg-white px-5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900">
+                                    View pricing
+                                </Link>
+                            </div>
+                            <p className="mt-4 text-xs text-slate-500">No setup fee. No credit card required.</p>
+                        </div>
 
-            <div className="space-y-5">
-              <h1 className="max-w-4xl text-5xl font-extrabold leading-none md:text-7xl">
-                Pakistan&apos;s smartest FBR digital invoicing and advisory workspace.
-              </h1>
-              <p className="max-w-2xl text-lg leading-8 brand-muted md:text-xl">
-                Run invoicing, sandbox validation, live submission, subscription packages, and admin operations from one system built for compliance-first businesses in Pakistan.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-4">
-              <Link href="/signup" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 font-semibold text-white transition hover:bg-primary-dark">
-                Start Free - No Credit Card
-                <ArrowRight size={18} />
-              </Link>
-              <Link href="/pricing" className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-6 py-3.5 font-semibold text-ink transition hover:border-ink hover:bg-white">
-                View Packages
-              </Link>
-            </div>
-
-            <div className="grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
-              {trustStats.map((item) => (
-                <div key={item} className="brand-panel rounded-2xl px-4 py-3 font-medium text-ink">
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="brand-gradient rounded-modal p-6 text-white shadow-brand">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold">Live Compliance Desk</p>
-                <p className="mt-1 text-sm text-white/70">Real-time FBR DI submissions, audit trail, and tenant isolation.</p>
-              </div>
-              <div className="rounded-full bg-white/15 px-3 py-1 text-xs text-nowrap font-medium text-white/90 border border-white/20">Unified Ops</div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="bg-white rounded-chip p-4">
-                <div className="flex items-center gap-3">
-                  <BadgeCheck className="text-success shrink-0" size={20} />
-                  <div>
-                    <p className="text-sm font-semibold text-ink">DI submissions monitored</p>
-                    <p className="text-xs text-muted mt-0.5">Queue visibility, tenant isolation, and audit-ready status history.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="bg-white rounded-chip p-4">
-                  <p className="text-xs font-semibold uppercase tracking-caps-md text-muted">Plans</p>
-                  <p className="mt-2 text-3xl font-bold text-ink">7</p>
-                  <p className="mt-1 text-xs text-muted">Package bands from starter to enterprise</p>
-                </div>
-                <div className="bg-white rounded-chip p-4">
-                  <p className="text-xs font-semibold uppercase tracking-caps-md text-muted">Turnaround</p>
-                  <p className="mt-2 text-3xl font-bold text-ink">&lt; 2s</p>
-                  <p className="mt-1 text-xs text-muted">Target response for live DI submission</p>
-                </div>
-              </div>
-
-              <div className="rounded-chip bg-white/10 border border-white/15 p-4">
-                <p className="text-sm font-semibold text-white">Advisory &amp; Setup Assistance</p>
-                <p className="mt-2 text-sm leading-6 text-white/75">
-                  FBR mandates digital invoicing under SRO 709. For setup help or compliance queries, talk to our desk: <a href="tel:+923007395147" className="font-semibold text-white hover:underline">+92 300 7395147</a> or <a href="tel:+923334103160" className="font-semibold text-white hover:underline">+92 333 4103160</a>.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-7xl px-6 pb-8">
-          <div className="rounded-modal border border-primary-muted bg-primary-light px-6 py-5 text-sm font-medium text-ink md:flex md:items-center md:justify-between">
-            <span>FBR mandates digital invoicing under SRO 709(I)/2024. Non-compliance risks penalties and operational friction.</span>
-            <Link href="/pricing" className="mt-3 inline-flex items-center gap-2 font-semibold text-primary md:mt-0">
-              Get compliant today
-              <ArrowRight size={16} />
-            </Link>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-7xl px-6 py-12 lg:py-16">
-          <div className="mb-8 flex items-end justify-between gap-6">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-caps-xl text-accent">Why teams switch</p>
-              <h2 className="mt-3 text-4xl font-bold text-ink">Built for compliance operations, not just billing screens.</h2>
-            </div>
-          </div>
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {featureHighlights.map((feature, index) => {
-              const Icon = [FileCheck2, Building2, ShieldCheck, ChartColumnBig][index]
-              return (
-                <div key={feature.title} className="brand-panel rounded-panel p-6">
-                  <div className="mb-5 inline-flex rounded-2xl bg-primary-light p-3 text-primary">
-                    <Icon size={20} />
-                  </div>
-                  <h3 className="text-lg font-semibold text-ink">{feature.title}</h3>
-                  <p className="mt-3 text-sm leading-7 brand-muted">{feature.description}</p>
-                </div>
-              )
-            })}
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-7xl px-6 py-12 lg:py-16">
-          <div className="mb-8 flex items-end justify-between gap-6">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-caps-xl text-accent">Packages</p>
-              <h2 className="mt-3 text-4xl font-bold text-ink">Subscription plans aligned with the admin package model.</h2>
-            </div>
-            <Link href="/pricing" className="hidden text-sm font-semibold text-primary md:block">See full pricing</Link>
-          </div>
-          {featuredPlans.length > 0 ? (
-            <div className="grid gap-5 lg:grid-cols-4">
-              {featuredPlans.map((plan) => (
-                <div key={plan.id} className={`rounded-panel p-6 ${plan.highlight ? 'brand-gradient text-white shadow-brand' : 'brand-panel'}`}>
-                  {plan.badge && (
-                    <div className={`mb-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${plan.highlight ? 'bg-white/15 text-white' : 'brand-chip'}`}>
-                      {plan.badge}
+                        {/* Product preview */}
+                        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+                            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5">
+                                <p className="text-sm font-semibold">Recent invoices</p>
+                                <span className="text-xs text-slate-500">Today</span>
+                            </div>
+                            <ul className="divide-y divide-slate-100">
+                                {sampleInvoices.map((invoice) => (
+                                    <li key={invoice.no} className="flex items-center justify-between gap-4 px-5 py-4">
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-medium">{invoice.buyer}</p>
+                                            <p className="text-xs text-slate-500">{invoice.no}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-sm font-medium tabular-nums">{invoice.amount}</p>
+                                            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                                                <Check size={12} />
+                                                Accepted by FBR
+                                            </span>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                            <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-5 py-3 text-xs text-slate-500">
+                                <span>IRN and QR code issued</span>
+                                <span className="font-medium text-slate-700">3 of 3</span>
+                            </div>
+                        </div>
                     </div>
-                  )}
-                  <h3 className={`text-2xl font-semibold ${plan.highlight ? 'text-white' : 'text-ink'}`}>{plan.name}</h3>
-                  <p className={`mt-2 text-sm leading-7 ${plan.highlight ? 'text-white/80' : 'brand-muted'}`}>{plan.tagline}</p>
-                  <p className={`mt-5 text-4xl font-bold ${plan.highlight ? 'text-white' : 'text-ink'}`}>
-                    {plan.monthlyPrice ? `PKR ${plan.monthlyPrice.toLocaleString()}` : 'Custom'}
-                  </p>
-                  <p className={`mt-1 text-sm ${plan.highlight ? 'text-white/70' : 'brand-muted'}`}>
-                    {plan.monthlyPrice ? `PKR ${plan.annualPrice?.toLocaleString()} yearly` : 'Talk to sales'}
-                  </p>
-                  <div className={`mt-5 space-y-2 text-sm ${plan.highlight ? 'text-white/90' : 'text-ink'}`}>
-                    <p>Invoices: {plan.invoicesPerMonth === 'unlimited' ? 'Unlimited' : plan.invoicesPerMonth}</p>
-                    <p>Users: {plan.users === 'unlimited' ? 'Unlimited' : plan.users}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="brand-panel rounded-3xl p-6 text-sm brand-muted">
-              Subscription plans are not configured yet. Visit pricing after your super-admin publishes active public plans.
-            </div>
-          )}
-        </section>
+                </section>
 
-        <section className="mx-auto max-w-7xl px-6 py-12 lg:py-16">
-          <div className="grid gap-5 lg:grid-cols-3">
-            {testimonials.map((item) => (
-              <div key={item.author} className="brand-panel rounded-panel p-6">
-                <p className="text-lg leading-8 text-ink">&ldquo;{item.quote}&rdquo;</p>
-                <p className="mt-5 text-sm font-semibold text-muted">{item.author}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      </main>
+                {/* Stats */}
+                <section className="border-b border-slate-200">
+                    <div className="mx-auto grid max-w-6xl grid-cols-2 gap-y-8 px-4 py-10 sm:px-6 md:grid-cols-4">
+                        {trustStats.map((stat) => (
+                            <div key={stat.label} className="text-center">
+                                <p className="text-2xl font-semibold tracking-tight">{stat.value}</p>
+                                <p className="mt-1 text-sm text-slate-500">{stat.label}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
 
-      <footer className="border-t border-border bg-surface-subtle">
-        <div className="mx-auto max-w-7xl px-6 py-8">
-          <div className="flex flex-col gap-4 text-sm text-muted md:flex-row md:items-center md:justify-between">
-            <p>FBR Live POS - Pakistan GST compliance, digital invoicing, and package-led operations.</p>
-            <div className="flex gap-5">
-              <Link href="/pricing">Pricing</Link>
-              <Link href="/login">Login</Link>
-              <Link href="/signup">Register</Link>
-            </div>
-          </div>
-          <div className="mt-4 border-t border-border-muted pt-4 flex flex-col sm:flex-row sm:justify-between text-xs text-muted gap-2">
-            <p>Support / Sales helpline: <a href="tel:+923007395147" className="font-medium text-ink hover:underline">+92 300 7395147</a> or <a href="tel:+923334103160" className="font-medium text-ink hover:underline">+92 333 4103160</a></p>
-            <p>© {new Date().getFullYear()} FBR Live POS. All rights reserved.</p>
-          </div>
+                {/* Features */}
+                <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
+                    <div className="max-w-xl">
+                        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Everything you need to stay compliant</h2>
+                        <p className="mt-3 text-slate-600">Built around FBR&apos;s Digital Invoicing requirements.</p>
+                    </div>
+                    <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                        {featureHighlights.map((feature, index) => {
+                            const Icon = featureIcons[index] ?? FileCheck2
+                            return (
+                                <div key={feature.title} className="rounded-xl border border-slate-200 p-5">
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                                        <Icon size={18} />
+                                    </span>
+                                    <h3 className="mt-4 text-sm font-semibold">{feature.title}</h3>
+                                    <p className="mt-1.5 text-sm leading-6 text-slate-600">{feature.description}</p>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </section>
+
+                {/* How it works */}
+                <section className="border-y border-slate-200 bg-slate-50">
+                    <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
+                        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Live in three steps</h2>
+                        <ol className="mt-10 grid gap-6 md:grid-cols-3">
+                            {steps.map((step, index) => (
+                                <li key={step.title} className="flex gap-4">
+                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">
+                                        {index + 1}
+                                    </span>
+                                    <div>
+                                        <h3 className="text-sm font-semibold">{step.title}</h3>
+                                        <p className="mt-1 text-sm text-slate-600">{step.description}</p>
+                                    </div>
+                                </li>
+                            ))}
+                        </ol>
+                    </div>
+                </section>
+
+                {/* Plans */}
+                <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
+                    <div className="flex flex-wrap items-end justify-between gap-4">
+                        <div>
+                            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Simple, transparent pricing</h2>
+                            <p className="mt-3 text-slate-600">Pick a plan that fits your invoice volume.</p>
+                        </div>
+                        <Link href="/pricing" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary-dark">
+                            Compare all plans
+                            <ArrowRight size={14} />
+                        </Link>
+                    </div>
+
+                    {featuredPlans.length > 0 ? (
+                        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                            {featuredPlans.map((plan) => (
+                                <div
+                                    key={plan.id}
+                                    className={`relative flex flex-col rounded-xl border p-6 ${plan.highlight ? 'border-primary ring-1 ring-primary' : 'border-slate-200'}`}
+                                >
+                                    {plan.badge && (
+                                        <span className="absolute -top-2.5 left-6 rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-medium text-white">
+                                            {plan.badge}
+                                        </span>
+                                    )}
+                                    <h3 className="text-sm font-semibold">{plan.name}</h3>
+                                    <p className="mt-1 text-sm text-slate-500">{plan.tagline}</p>
+                                    <p className="mt-5">
+                                        {plan.monthlyPrice === null ? (
+                                            <span className="text-2xl font-semibold tracking-tight">Custom</span>
+                                        ) : plan.monthlyPrice === 0 ? (
+                                            <span className="text-2xl font-semibold tracking-tight">Free</span>
+                                        ) : (
+                                            <>
+                                                <span className="text-2xl font-semibold tracking-tight">PKR {plan.monthlyPrice.toLocaleString()}</span>
+                                                <span className="text-sm text-slate-500"> /month</span>
+                                            </>
+                                        )}
+                                    </p>
+                                    <ul className="mt-5 space-y-2 text-sm text-slate-600">
+                                        <li className="flex items-center gap-2"><Check size={14} className="text-primary" />{formatLimit(plan.invoicesPerMonth)} invoices / month</li>
+                                        <li className="flex items-center gap-2"><Check size={14} className="text-primary" />{formatLimit(plan.users)} users</li>
+                                    </ul>
+                                    <Link
+                                        href={plan.monthlyPrice === null ? '/pricing' : '/signup'}
+                                        className={`mt-6 inline-flex h-9 items-center justify-center rounded-lg text-sm font-medium transition ${plan.highlight ? 'bg-primary text-white hover:bg-primary-dark' : 'border border-slate-300 text-slate-700 hover:border-slate-400'}`}
+                                    >
+                                        {plan.monthlyPrice === null ? 'Contact sales' : 'Get started'}
+                                    </Link>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="mt-10 rounded-xl border border-slate-200 p-6 text-sm text-slate-500">
+                            Plans will be available soon.
+                        </p>
+                    )}
+                </section>
+
+                {/* CTA */}
+                <section className="px-4 pb-16 sm:px-6 lg:pb-20">
+                    <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 rounded-2xl bg-slate-900 px-8 py-10 text-white md:flex-row md:items-center">
+                        <div>
+                            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">Ready to invoice with FBR?</h2>
+                            <p className="mt-2 text-sm text-slate-300">
+                                Need help with setup? Call <a href="tel:+923007395147" className="font-medium text-white hover:underline">+92 300 7395147</a>
+                            </p>
+                        </div>
+                        <Link href="/signup" className="inline-flex h-11 items-center gap-2 rounded-lg bg-white px-5 text-sm font-medium text-slate-900 transition hover:bg-slate-100">
+                            Create free account
+                            <ArrowRight size={16} />
+                        </Link>
+                    </div>
+                </section>
+            </main>
+
+            <SiteFooter />
         </div>
-      </footer>
-    </div>
-  )
+    )
 }

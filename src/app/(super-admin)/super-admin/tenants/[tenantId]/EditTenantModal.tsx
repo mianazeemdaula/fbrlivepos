@@ -3,6 +3,35 @@
 import { useState, useEffect } from 'react'
 import { X, AlertCircle, Building2, Shield, Loader2, Check } from 'lucide-react'
 
+export interface BillingHistoryEntry {
+    id: string
+    amount: number
+    currency: string
+    status: string
+    description: string
+    periodStart: string | null
+    periodEnd: string | null
+    paidAt: string | null
+    paymentMethod: string | null
+    paymentRef: string | null
+    createdAt: string | null
+}
+
+export interface TenantSubscriptionDetail {
+    id?: string
+    plan?: { id: string; name: string; priceMonthly?: number; priceYearly?: number }
+    status: string
+    effectiveStatus?: string
+    billingCycle?: 'MONTHLY' | 'YEARLY'
+    currentPeriodStart?: string | null
+    currentPeriodEnd: string | null
+    trialEndsAt?: string | null
+    expiresAt?: string | null
+    cancelAtPeriodEnd?: boolean
+    cancelledAt?: string | null
+    billingHistory?: BillingHistoryEntry[]
+}
+
 export interface TenantDetail {
     id: string
     businessName: string
@@ -29,11 +58,7 @@ export interface TenantDetail {
         lastVerifiedAt?: string | null
     } | null
     createdAt: string
-    subscription?: {
-        plan?: { id: string; name: string }
-        status: string
-        currentPeriodEnd: string | null
-    }
+    subscription?: TenantSubscriptionDetail
     users?: Array<{
         id: string
         name: string

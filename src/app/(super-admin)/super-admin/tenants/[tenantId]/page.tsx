@@ -4,12 +4,7 @@ import { Suspense, useEffect, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Edit2, Shield, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react'
 import { EditTenantModal, type TenantDetail } from './EditTenantModal'
-
-interface Plan {
-    id: string
-    name: string
-    monthlyPrice: number
-}
+import { SubscriptionManager, type PlanOption } from './SubscriptionManager'
 
 function TenantDetailContent() {
     const params = useParams()
@@ -17,7 +12,7 @@ function TenantDetailContent() {
     const searchParams = useSearchParams()
 
     const [tenant, setTenant] = useState<TenantDetail | null>(null)
-    const [plans, setPlans] = useState<Plan[]>([])
+    const [plans, setPlans] = useState<PlanOption[]>([])
     const [loading, setLoading] = useState(true)
     const [actionLoading, setActionLoading] = useState('')
     const [passwordDrafts, setPasswordDrafts] = useState<Record<string, string>>({})
@@ -84,8 +79,7 @@ function TenantDetailContent() {
         try {
             const res = await fetch(`/api/admin/tenants/${params.tenantId}/suspend`, { method: 'POST' })
             if (res.ok) {
-                setTenant((t) => (t ? { ...t, isActive: false } : t))
-                setNotification({ type: 'success', message: 'Tenant suspended successfully.' })
+                await reloadTenant('Tenant suspended successfully.')
             }
         } catch {
             setNotification({ type: 'error', message: 'Failed to suspend tenant.' })
@@ -99,8 +93,7 @@ function TenantDetailContent() {
         try {
             const res = await fetch(`/api/admin/tenants/${params.tenantId}/activate`, { method: 'POST' })
             if (res.ok) {
-                setTenant((t) => (t ? { ...t, isActive: true } : t))
-                setNotification({ type: 'success', message: 'Tenant activated successfully.' })
+                await reloadTenant('Tenant activated successfully.')
             }
         } catch {
             setNotification({ type: 'error', message: 'Failed to activate tenant.' })
@@ -109,25 +102,13 @@ function TenantDetailContent() {
         }
     }
 
-    async function handleChangePlan(planId: string) {
-        setActionLoading('plan')
-        try {
-            await fetch(`/api/admin/tenants/${params.tenantId}/subscription`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ planId }),
-            })
-            const res = await fetch(`/api/admin/tenants/${params.tenantId}`)
-            if (res.ok) {
-                const data = await res.json()
-                setTenant(data.tenant)
-                setNotification({ type: 'success', message: 'Subscription plan updated successfully.' })
-            }
-        } catch {
-            setNotification({ type: 'error', message: 'Failed to update subscription plan.' })
-        } finally {
-            setActionLoading('')
+    async function reloadTenant(message: string) {
+        const res = await fetch(`/api/admin/tenants/${params.tenantId}`)
+        if (res.ok) {
+            const data = await res.json()
+            setTenant(data.tenant)
         }
+        setNotification({ type: 'success', message })
     }
 
     async function handleImpersonate() {
@@ -415,31 +396,13 @@ function TenantDetailContent() {
             </div>
 
             {/* Subscription Card */}
-            <div className="bg-white rounded-2xl border border-border mb-6 p-6 shadow-xs">
-                <h2 className="text-sm font-semibold text-ink mb-4">Subscription</h2>
-                <p className="mb-4 text-sm text-muted">
-                    Current plan:{' '}
-                    <span className="text-ink font-semibold">{tenant.subscription?.plan?.name || 'Free'}</span>
-                    <span className="mx-2 text-muted">·</span>
-                    Status: <span className="text-ink font-medium">{tenant.subscription?.status || 'N/A'}</span>
-                </p>
-                <div className="flex flex-wrap gap-2">
-                    {plans.map((plan) => (
-                        <button
-                            key={plan.id}
-                            onClick={() => handleChangePlan(plan.id)}
-                            disabled={actionLoading === 'plan' || tenant.subscription?.plan?.id === plan.id}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                                tenant.subscription?.plan?.id === plan.id
-                                    ? 'border border-primary/30 bg-primary/10 text-primary font-semibold'
-                                    : 'border border-border bg-surface-subtle text-ink hover:bg-surface'
-                            }`}
-                        >
-                            {plan.name} — PKR {plan.monthlyPrice.toLocaleString()}
-                        </button>
-                    ))}
-                </div>
-            </div>
+            <SubscriptionManager
+                tenantId={String(params.tenantId)}
+                subscription={tenant.subscription}
+                plans={plans}
+                onChanged={reloadTenant}
+                onError={(message) => setNotification({ type: 'error', message })}
+            />
 
             {/* Actions Card */}
             <div className="bg-white rounded-2xl border border-border mb-6 p-6 shadow-xs">

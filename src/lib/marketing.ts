@@ -88,28 +88,28 @@ export const defaultMarketingPlans: MarketingPlan[] = [
 ]
 
 export const trustStats = [
-    '500+ businesses onboarded',
-    '99.8% FBR approval rate',
-    '<2s DI response target',
-    '10,000+ invoices processed',
+    { value: '500+', label: 'Businesses onboarded' },
+    { value: '99.8%', label: 'FBR approval rate' },
+    { value: '<2s', label: 'DI response target' },
+    { value: '10,000+', label: 'Invoices processed' },
 ]
 
 export const featureHighlights = [
     {
-        title: 'Real-time FBR compliance',
-        description: 'Submit invoices directly to the DI API and track approval, queue state, and validation from one system.',
+        title: 'Direct FBR submission',
+        description: 'Invoices go straight to the FBR DI API with IRN and QR code on every receipt.',
     },
     {
-        title: 'Consultant-grade tenancy',
-        description: 'Run multiple businesses, teams, and environments from one platform without mixing operational data.',
+        title: 'Multi-business workspace',
+        description: 'Manage several businesses and teams with fully separated data.',
     },
     {
-        title: 'Operational resilience',
-        description: 'Retry handling, sandbox-first workflows, and encrypted credentials protect live invoice operations.',
+        title: 'Sandbox before live',
+        description: 'Validate every scenario in FBR sandbox, then switch to production.',
     },
     {
-        title: 'Advisory-led positioning',
-        description: 'Packages and UX are aligned with compliance, audit readiness, and rollout support instead of generic POS messaging.',
+        title: 'Audit-ready records',
+        description: 'Every submission, response and change is logged for review.',
     },
 ]
 

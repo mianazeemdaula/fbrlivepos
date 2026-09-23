@@ -6,8 +6,8 @@
    ───────────────────────────────────────────────────────────── */
 @theme {
   /* Fonts */
-  --font-sans:            'DM Sans', sans-serif;
-  --font-display:         'DM Sans', sans-serif;
+  --font-sans:            var(--font-dm-sans), 'DM Sans', system-ui, sans-serif;
+  --font-display:         var(--font-dm-sans), 'DM Sans', system-ui, sans-serif;
 
   /* ── Layout surfaces ── */
   --color-canvas:         #E8E8E6;   /* outer page bg — warm gray   */
@@ -102,7 +102,7 @@ html {
 body {
   background-color: #E8E8E6; /* canvas */
   color: #1A1A1A;             /* ink */
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-dm-sans), 'DM Sans', system-ui, sans-serif;
   font-size: 14px;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;

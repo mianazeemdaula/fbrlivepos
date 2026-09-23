@@ -7,6 +7,7 @@ import { evaluateDISubmissionEligibility } from '@/lib/di/eligibility'
 import { enqueueInvoiceSubmission } from '@/lib/fbr/queue'
 import { prisma } from '@/lib/db/prisma'
 import { Prisma } from '@/generated/prisma/client'
+import { getSubscriptionBlockReason } from '@/lib/billing/subscription'
 import {
     getNextSubmissionAttempt,
     recordFBRSubmissionLog,
@@ -16,6 +17,11 @@ import {
 
 export async function POST(req: NextRequest) {
     const { tenant } = await getTenantFromSession()
+
+    const subscriptionBlock = await getSubscriptionBlockReason(tenant.id)
+    if (subscriptionBlock) {
+        return NextResponse.json({ error: subscriptionBlock, subscriptionRequired: true }, { status: 402 })
+    }
     const { invoiceId, scenarioId } = await req.json()
 
     const start = Date.now()

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { assertSuperAdmin } from '@/lib/admin/guard'
 import { prisma } from '@/lib/db/prisma'
 import { getGlobalQueueStats } from '@/lib/fbr/queue'
+import { expireOverdueSubscriptions } from '@/lib/billing/subscription'
 
 const DEFAULT_QUEUE_STATS = { waiting: 0, active: 0, failed: 0, delayed: 0 }
 
@@ -20,6 +21,7 @@ async function getQueueStats() {
 
 export async function GET(req: NextRequest) {
     await assertSuperAdmin(req)
+    await expireOverdueSubscriptions()
 
     const now = new Date()
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -45,7 +47,7 @@ export async function GET(req: NextRequest) {
             where: { status: { in: ['ACTIVE', 'TRIALING'] } },
         }),
         prisma.tenantSubscription.groupBy({
-            by: ['planId'],
+            by: ['planId', 'billingCycle'],
             where: { status: 'ACTIVE' },
             _count: { planId: true },
         }),
@@ -83,10 +85,15 @@ export async function GET(req: NextRequest) {
     const plans = await prisma.subscriptionPlan.findMany()
     const planMap = Object.fromEntries(plans.map((p) => [p.id, p]))
 
-    const mrr = mrrByPlan.reduce((sum, row) => {
+    // Yearly subscribers contribute a twelfth of the yearly price per month
+    const monthlyValue = (row: (typeof mrrByPlan)[number]) => {
         const plan = planMap[row.planId]
-        return sum + (plan ? Number(plan.priceMonthly) * row._count.planId : 0)
-    }, 0)
+        if (!plan) return 0
+        const perTenant = row.billingCycle === 'YEARLY' ? Number(plan.priceYearly) / 12 : Number(plan.priceMonthly)
+        return perTenant * row._count.planId
+    }
+
+    const mrr = mrrByPlan.reduce((sum, row) => sum + monthlyValue(row), 0)
 
     const diQueueStats = await getQueueStats()
     const totalRevenue = Number(monthlyRevenue._sum.totalAmount ?? 0)
@@ -102,10 +109,14 @@ export async function GET(req: NextRequest) {
         churnedThisMonth,
         totalInvoicesToday,
         diQueue: diQueueStats,
-        breakdown: mrrByPlan.map((row) => ({
-            plan: planMap[row.planId]?.name,
-            tenants: row._count.planId,
-            contribution: Number(planMap[row.planId]?.priceMonthly ?? 0) * row._count.planId,
-        })),
+        breakdown: Object.values(
+            mrrByPlan.reduce<Record<string, { plan: string | undefined; tenants: number; contribution: number }>>((acc, row) => {
+                const entry = acc[row.planId] ?? { plan: planMap[row.planId]?.name, tenants: 0, contribution: 0 }
+                entry.tenants += row._count.planId
+                entry.contribution += monthlyValue(row)
+                acc[row.planId] = entry
+                return acc
+            }, {}),
+        ),
     })
 }

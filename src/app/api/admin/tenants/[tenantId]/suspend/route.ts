@@ -19,8 +19,8 @@ export async function POST(
             where: { id: tenantId },
             data: { isActive: false },
         }),
-        prisma.tenantSubscription.update({
-            where: { tenantId },
+        prisma.tenantSubscription.updateMany({
+            where: { tenantId, status: { in: ['ACTIVE', 'TRIALING', 'PAST_DUE'] } },
             data: { status: 'SUSPENDED' },
         }),
     ])

@@ -1,185 +1,281 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useCallback, useEffect, useState } from 'react'
 import { PaginationControls } from '@/components/pagination-controls'
+import { SubscriptionStatusBadge } from '../tenants/[tenantId]/SubscriptionManager'
 
 interface BillingRecord {
     id: string
+    tenantId: string
     amount: number
     status: string
-    billingCycle: string
+    description: string
     periodStart: string
     periodEnd: string
     paidAt: string | null
-    tenant: { businessName: string }
-    plan: { name: string }
+    paymentMethod: string | null
+    paymentRef: string | null
+    createdAt: string
+    subscription?: {
+        tenant?: { name?: string }
+        plan?: { name?: string }
+    }
 }
 
+interface TenantSubscriptionRow {
+    id: string
+    tenant: { id: string; name: string; email: string; isActive: boolean }
+    plan: { id: string; name: string; priceMonthly: number; priceYearly: number }
+    status: string
+    billingCycle: 'MONTHLY' | 'YEARLY'
+    expiresAt: string
+    daysLeft: number
+}
+
+type View = 'expiring' | 'expired' | 'suspended' | 'all' | 'payments'
+
 const LIMIT = 25
+const RECORD_STATUSES = ['PENDING', 'PAID', 'FAILED', 'REFUNDED', 'WAIVED']
+
+const RECORD_STATUS_STYLE: Record<string, string> = {
+    PAID: 'bg-emerald-50 text-emerald-700',
+    PENDING: 'bg-amber-50 text-amber-700',
+    FAILED: 'bg-rose-50 text-rose-700',
+    REFUNDED: 'bg-slate-100 text-slate-600',
+    WAIVED: 'bg-sky-50 text-sky-700',
+}
+
+function formatDate(iso?: string | null) {
+    return iso ? new Date(iso).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
+}
 
 export default function BillingPage() {
+    const [view, setView] = useState<View>('expiring')
+    const [summary, setSummary] = useState({ active: 0, expiring: 0, expired: 0 })
+    const [subs, setSubs] = useState<TenantSubscriptionRow[]>([])
     const [records, setRecords] = useState<BillingRecord[]>([])
+    const [recordFilter, setRecordFilter] = useState('all')
     const [loading, setLoading] = useState(true)
-    const [filter, setFilter] = useState('all')
     const [page, setPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
     const [total, setTotal] = useState(0)
+    const [error, setError] = useState('')
+
+    const loadSubscriptions = useCallback(async (filter: Exclude<View, 'payments'>) => {
+        const res = await fetch(`/api/admin/tenant-subscriptions?filter=${filter}`)
+        if (!res.ok) throw new Error('Failed to load subscriptions')
+        const data = await res.json()
+        setSubs(data.data || [])
+        setSummary(data.summary || { active: 0, expiring: 0, expired: 0 })
+    }, [])
+
+    const loadRecords = useCallback(async () => {
+        const params = new URLSearchParams({ page: String(page) })
+        if (recordFilter !== 'all') params.set('status', recordFilter)
+        const res = await fetch(`/api/admin/billing?${params.toString()}`)
+        if (!res.ok) throw new Error('Failed to load billing records')
+        const data = await res.json()
+        setRecords(data.data || [])
+        setTotal(data.total ?? 0)
+        setTotalPages(data.pages ?? 1)
+    }, [page, recordFilter])
 
     useEffect(() => {
+        let cancelled = false
         async function load() {
             setLoading(true)
+            setError('')
             try {
-                const params = new URLSearchParams({ page: String(page) })
-                if (filter !== 'all') params.set('status', filter)
-                const res = await fetch(`/api/admin/billing?${params.toString()}`)
-                if (res.ok) {
-                    const data = await res.json()
-                    setRecords((data.data || []).map((record: {
-                        id: string
-                        amount: number
-                        status: string
-                        billingCycle: string
-                        periodStart: string
-                        periodEnd: string
-                        paidAt: string | null
-                        subscription?: {
-                            tenant?: { name?: string }
-                            plan?: { name?: string }
-                        }
-                    }) => ({
-                        id: record.id,
-                        amount: record.amount,
-                        status: record.status,
-                        billingCycle: record.billingCycle,
-                        periodStart: record.periodStart,
-                        periodEnd: record.periodEnd,
-                        paidAt: record.paidAt,
-                        tenant: { businessName: record.subscription?.tenant?.name || 'Unknown tenant' },
-                        plan: { name: record.subscription?.plan?.name || 'Unknown plan' },
-                    })))
-                    setTotal(data.total ?? 0)
-                    setTotalPages(data.pages ?? 1)
+                if (view === 'payments') {
+                    await loadRecords()
+                } else {
+                    await loadSubscriptions(view)
                 }
-            } catch {
-                // Ignore
+            } catch (err) {
+                if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load')
             } finally {
-                setLoading(false)
+                if (!cancelled) setLoading(false)
             }
         }
         load()
-    }, [filter, page])
+        return () => { cancelled = true }
+    }, [view, loadRecords, loadSubscriptions])
 
-    async function handleMarkPaid(recordId: string) {
-        try {
-            await fetch('/api/admin/billing', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ recordId, action: 'mark_paid' }),
-            })
-            setRecords((prev) =>
-                prev.map((r) =>
-                    r.id === recordId ? { ...r, status: 'PAID', paidAt: new Date().toISOString() } : r
-                )
-            )
-        } catch {
-            // Ignore
+    async function updateRecordStatus(recordId: string, status: string) {
+        setError('')
+        const res = await fetch(`/api/admin/billing/${recordId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status }),
+        })
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}))
+            setError(data.error || 'Failed to update billing record')
+            return
         }
+        await loadRecords()
     }
 
     const from = total === 0 ? 0 : (page - 1) * LIMIT + 1
     const to = Math.min(page * LIMIT, total)
 
+    const tabs: Array<{ id: View; label: string; count?: number }> = [
+        { id: 'expiring', label: 'Expiring soon', count: summary.expiring },
+        { id: 'expired', label: 'Expired', count: summary.expired },
+        { id: 'suspended', label: 'Suspended / cancelled' },
+        { id: 'all', label: 'All subscriptions' },
+        { id: 'payments', label: 'Payments' },
+    ]
+
     return (
         <div className="p-8">
-            <div className="mb-8 flex items-start justify-between">
-                <div>
-                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Revenue</p>
-                    <h1 className="text-page-title font-normal text-ink">Billing</h1>
-                    <p className="mt-1 text-sm text-muted">Track and manage tenant billing records</p>
+            <div className="mb-6">
+                <p className="text-xs font-medium uppercase tracking-caps text-muted">Revenue</p>
+                <h1 className="text-page-title font-normal text-ink">Billing</h1>
+                <p className="mt-1 text-sm text-muted">Subscriptions, expiry dates and payments across all tenants</p>
+            </div>
+
+            <div className="mb-6 grid gap-4 sm:grid-cols-3">
+                <SummaryCard label="Active subscriptions" value={summary.active} />
+                <SummaryCard label="Expiring in 7 days" value={summary.expiring} tone="amber" />
+                <SummaryCard label="Expired (unpaid)" value={summary.expired} tone="rose" />
+            </div>
+
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap gap-1 rounded-xl border border-border bg-white p-1">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => { setView(tab.id); setPage(1) }}
+                            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${view === tab.id ? 'bg-primary text-white' : 'text-ink-secondary hover:bg-surface'}`}
+                        >
+                            {tab.label}
+                            {tab.count !== undefined && tab.count > 0 && (
+                                <span className={`ml-1.5 rounded-full px-1.5 text-[10px] ${view === tab.id ? 'bg-white/20' : 'bg-surface'}`}>{tab.count}</span>
+                            )}
+                        </button>
+                    ))}
                 </div>
-                <select
-                    value={filter}
-                    onChange={(e) => {
-                        setFilter(e.target.value)
-                        setPage(1)
-                    }}
-                    className="rounded-input border border-border bg-white px-3 py-2 text-sm text-ink"
-                >
-                    <option value="all">All records</option>
-                    <option value="PENDING">Pending</option>
-                    <option value="PAID">Paid</option>
-                    <option value="OVERDUE">Overdue</option>
-                </select>
+                {view === 'payments' && (
+                    <select
+                        value={recordFilter}
+                        onChange={(e) => { setRecordFilter(e.target.value); setPage(1) }}
+                        className="rounded-input border border-border bg-white px-3 py-2 text-sm text-ink"
+                    >
+                        <option value="all">All statuses</option>
+                        {RECORD_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+                    </select>
+                )}
             </div>
 
-            <div className="bg-white rounded-card shadow-card overflow-hidden rounded-2xl">
-                <table className="w-full">
-                    <thead>
-                        <tr className="border-b border-border">
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Tenant</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Plan</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Amount</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Period</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">Status</th>
-                            <th className="px-4 py-3" />
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
-                            Array.from({ length: 3 }).map((_, i) => (
-                                <tr key={i} className="border-b border-border">
-                                    <td colSpan={6} className="px-4 py-3">
-                                        <div className="h-4 rounded bg-border animate-pulse" />
-                                    </td>
-                                </tr>
-                            ))
-                        ) : records.length === 0 ? (
-                            <tr>
-                                <td colSpan={6} className="px-4 py-12 text-center text-sm text-muted">
-                                    No billing records found.
-                                </td>
+            {error && (
+                <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm text-rose-700">{error}</div>
+            )}
+
+            <div className="overflow-x-auto rounded-2xl bg-white shadow-card">
+                {view === 'payments' ? (
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-border">
+                                <Th>Tenant</Th>
+                                <Th>Description</Th>
+                                <Th>Amount</Th>
+                                <Th>Period</Th>
+                                <Th>Method</Th>
+                                <Th>Status</Th>
+                                <Th />
                             </tr>
-                        ) : (
-                            records.map((r) => (
+                        </thead>
+                        <tbody>
+                            {loading ? <LoadingRows cols={7} /> : records.length === 0 ? (
+                                <EmptyRow cols={7} text="No billing records found." />
+                            ) : records.map((r) => (
                                 <tr key={r.id} className="border-b border-border transition-colors hover:bg-surface-subtle">
-                                    <td className="px-4 py-3 text-sm text-ink font-medium">{r.tenant.businessName}</td>
-                                    <td className="px-4 py-3 text-sm text-ink">{r.plan.name}</td>
-                                    <td className="px-4 py-3 text-sm text-ink font-semibold">
-                                        PKR {r.amount.toLocaleString()}
+                                    <td className="px-4 py-3 text-sm font-medium text-ink">
+                                        <Link href={`/super-admin/tenants/${r.tenantId}`} className="hover:text-primary">
+                                            {r.subscription?.tenant?.name || 'Unknown tenant'}
+                                        </Link>
+                                        <p className="text-xs font-normal text-muted">{r.subscription?.plan?.name}</p>
                                     </td>
+                                    <td className="px-4 py-3 text-sm text-ink">{r.description}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold tabular-nums text-ink">PKR {Number(r.amount).toLocaleString()}</td>
+                                    <td className="px-4 py-3 text-xs text-muted">{formatDate(r.periodStart)} – {formatDate(r.periodEnd)}</td>
                                     <td className="px-4 py-3 text-xs text-muted">
-                                        {new Date(r.periodStart).toLocaleDateString()} — {new Date(r.periodEnd).toLocaleDateString()}
+                                        {r.paymentMethod?.replace('_', ' ') ?? '—'}
+                                        {r.paymentRef && <span className="block">{r.paymentRef}</span>}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <span
-                                            className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.status === 'PAID'
-                                                ? 'bg-emerald-500/10 text-emerald-400'
-                                                : r.status === 'OVERDUE'
-                                                    ? 'bg-red-500/10 text-red-400'
-                                                    : 'bg-amber-500/10 text-amber-400'
-                                                }`}
+                                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${RECORD_STATUS_STYLE[r.status] ?? ''}`}>{r.status}</span>
+                                    </td>
+                                    <td className="px-4 py-3 text-right">
+                                        <select
+                                            value=""
+                                            onChange={(e) => e.target.value && updateRecordStatus(r.id, e.target.value)}
+                                            className="rounded-lg border border-border bg-white px-2 py-1 text-xs text-ink"
+                                            aria-label="Change status"
                                         >
-                                            {r.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        {r.status !== 'PAID' && (
-                                            <button
-                                                onClick={() => handleMarkPaid(r.id)}
-                                                className="text-xs font-medium text-muted transition-colors hover:text-cream"
-                                            >
-                                                Mark Paid
-                                            </button>
-                                        )}
+                                            <option value="">Change…</option>
+                                            {RECORD_STATUSES.filter((s) => s !== r.status).map((status) => (
+                                                <option key={status} value={status}>{status === 'PAID' ? 'Mark paid' : status}</option>
+                                            ))}
+                                        </select>
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : (
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-border">
+                                <Th>Tenant</Th>
+                                <Th>Plan</Th>
+                                <Th>Cycle</Th>
+                                <Th>Expires</Th>
+                                <Th>Status</Th>
+                                <Th />
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? <LoadingRows cols={6} /> : subs.length === 0 ? (
+                                <EmptyRow cols={6} text="No subscriptions in this view." />
+                            ) : subs.map((sub) => (
+                                <tr key={sub.id} className="border-b border-border transition-colors hover:bg-surface-subtle">
+                                    <td className="px-4 py-3 text-sm font-medium text-ink">
+                                        {sub.tenant.name}
+                                        <p className="text-xs font-normal text-muted">{sub.tenant.email}</p>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-ink">
+                                        {sub.plan.name}
+                                        <p className="text-xs text-muted">
+                                            PKR {(sub.billingCycle === 'YEARLY' ? sub.plan.priceYearly : sub.plan.priceMonthly).toLocaleString()}
+                                        </p>
+                                    </td>
+                                    <td className="px-4 py-3 text-xs text-muted">{sub.billingCycle === 'YEARLY' ? 'Yearly' : 'Monthly'}</td>
+                                    <td className="px-4 py-3 text-sm text-ink">
+                                        {formatDate(sub.expiresAt)}
+                                        <p className={`text-xs ${sub.daysLeft < 0 ? 'text-rose-600' : sub.daysLeft <= 7 ? 'text-amber-600' : 'text-muted'}`}>
+                                            {sub.daysLeft < 0 ? `${Math.abs(sub.daysLeft)} days ago` : sub.daysLeft === 0 ? 'Today' : `in ${sub.daysLeft} days`}
+                                        </p>
+                                    </td>
+                                    <td className="px-4 py-3"><SubscriptionStatusBadge status={sub.status} /></td>
+                                    <td className="px-4 py-3 text-right">
+                                        <Link
+                                            href={`/super-admin/tenants/${sub.tenant.id}`}
+                                            className="text-xs font-semibold text-primary hover:text-primary-dark"
+                                        >
+                                            Manage / renew →
+                                        </Link>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
             </div>
 
-            {!loading && total > 0 && (
+            {view === 'payments' && !loading && total > 0 && (
                 <PaginationControls
                     page={page}
                     totalPages={totalPages}
@@ -187,6 +283,40 @@ export default function BillingPage() {
                     summary={`Showing ${from}-${to} of ${total.toLocaleString()} billing records`}
                 />
             )}
+        </div>
+    )
+}
+
+function Th({ children }: { children?: React.ReactNode }) {
+    return <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted">{children}</th>
+}
+
+function LoadingRows({ cols }: { cols: number }) {
+    return (
+        <>
+            {Array.from({ length: 3 }).map((_, i) => (
+                <tr key={i} className="border-b border-border">
+                    <td colSpan={cols} className="px-4 py-3"><div className="h-4 animate-pulse rounded bg-border" /></td>
+                </tr>
+            ))}
+        </>
+    )
+}
+
+function EmptyRow({ cols, text }: { cols: number; text: string }) {
+    return (
+        <tr>
+            <td colSpan={cols} className="px-4 py-12 text-center text-sm text-muted">{text}</td>
+        </tr>
+    )
+}
+
+function SummaryCard({ label, value, tone }: { label: string; value: number; tone?: 'amber' | 'rose' }) {
+    const color = tone === 'amber' ? 'text-amber-600' : tone === 'rose' ? 'text-rose-600' : 'text-ink'
+    return (
+        <div className="rounded-2xl border border-border bg-white p-4 shadow-card">
+            <p className="text-xs font-medium text-muted">{label}</p>
+            <p className={`mt-1 text-2xl font-semibold ${color}`}>{value}</p>
         </div>
     )
 }

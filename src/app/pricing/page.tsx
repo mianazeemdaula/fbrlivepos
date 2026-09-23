@@ -1,113 +1,130 @@
 import Link from 'next/link'
-import { Check, Sparkles } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { getPublicMarketingPlans } from '@/lib/marketing-plans.server'
+import SiteHeader from '@/components/marketing/site-header'
+import SiteFooter from '@/components/marketing/site-footer'
 
-async function getPublicPlans() {
-    return getPublicMarketingPlans()
+const faqs = [
+    { q: 'Is there a setup fee?', a: 'No. You only pay for your plan.' },
+    { q: 'Can I test before going live?', a: 'Yes. Every account starts in FBR sandbox so you can validate your invoices first.' },
+    { q: 'Can I change my plan later?', a: 'Yes. Upgrade as your invoice volume or team grows.' },
+]
+
+function formatLimit(value: number | 'unlimited') {
+    return value === 'unlimited' ? 'Unlimited' : value.toLocaleString()
 }
 
 export default async function PricingPage() {
-    const plans = await getPublicPlans()
+    const plans = await getPublicMarketingPlans()
 
     return (
-        <div className="min-h-screen text-ink">
-            <nav className="border-b border-border bg-nav-blur backdrop-blur-xl">
-                <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-                    <Link href="/" className="text-xl font-bold text-primary">
-                        FBR Live POS
-                    </Link>
-                    <div className="flex items-center gap-4">
-                        <Link href="/login" className="text-sm text-muted hover:text-primary">
-                            Login
-                        </Link>
-                        <Link
-                            href="/signup"
-                            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-dark"
-                        >
-                            Get Started
-                        </Link>
-                    </div>
-                </div>
-            </nav>
+        <div className="min-h-screen bg-white text-slate-900">
+            <SiteHeader />
 
-            <main className="mx-auto max-w-7xl px-6 py-16">
-                <div className="mx-auto mb-14 max-w-3xl text-center">
-                    <div className="mb-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm brand-chip">
-                        <Sparkles size={16} />
-                        No setup fee, sandbox-first onboarding, admin-managed packages
+            <main>
+                <section className="border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white">
+                    <div className="mx-auto max-w-2xl px-4 py-14 text-center sm:px-6 lg:py-20">
+                        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Simple, transparent pricing</h1>
+                        <p className="mt-3 text-slate-600">
+                            Choose a plan by monthly invoice volume. No setup fee.
+                        </p>
                     </div>
-                    <h1 className="text-5xl font-bold text-ink">Pricing designed for compliance rollout, not guesswork.</h1>
-                    <p className="mt-5 text-lg leading-8 brand-muted">
-                        Public pricing now reflects the same package structure your super-admin team manages in the platform. If plans already exist in the database, those are shown here automatically.
-                    </p>
-                </div>
+                </section>
 
-                {plans.length > 0 ? (
-                    <div className="grid gap-6 lg:grid-cols-3 xl:grid-cols-4">
-                        {plans.map((plan) => (
-                            <div
-                                key={plan.id}
-                                className={`rounded-modal p-6 ${plan.highlight ? 'brand-gradient text-white shadow-brand' : 'brand-panel'}`}
-                            >
-                                <div className="mb-4 flex items-start justify-between gap-4">
-                                    <div>
-                                        <h2 className={`text-2xl font-bold ${plan.highlight ? 'text-white' : 'text-ink'}`}>{plan.name}</h2>
-                                        <p className={`mt-2 text-sm leading-7 ${plan.highlight ? 'text-white/80' : 'brand-muted'}`}>{plan.tagline}</p>
+                <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:py-16">
+                    {plans.length > 0 ? (
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {plans.map((plan) => {
+                                const isCustom = plan.monthlyPrice === null
+                                const isFree = plan.monthlyPrice === 0
+                                return (
+                                    <div
+                                        key={plan.id}
+                                        className={`relative flex flex-col rounded-xl border p-6 ${plan.highlight ? 'border-primary ring-1 ring-primary' : 'border-slate-200'}`}
+                                    >
+                                        {plan.badge && (
+                                            <span className="absolute -top-2.5 left-6 rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-medium text-white">
+                                                {plan.badge}
+                                            </span>
+                                        )}
+
+                                        <h2 className="text-sm font-semibold">{plan.name}</h2>
+                                        <p className="mt-1 min-h-10 text-sm text-slate-500">{plan.tagline}</p>
+
+                                        <div className="mt-5">
+                                            {isCustom || isFree ? (
+                                                <span className="text-3xl font-semibold tracking-tight">{isFree ? 'Free' : 'Custom'}</span>
+                                            ) : (
+                                                <>
+                                                    <span className="text-3xl font-semibold tracking-tight">PKR {plan.monthlyPrice!.toLocaleString()}</span>
+                                                    <span className="text-sm text-slate-500"> /month</span>
+                                                </>
+                                            )}
+                                            <p className="mt-1 text-xs text-slate-500">
+                                                {isFree
+                                                    ? 'No credit card required'
+                                                    : isCustom || !plan.annualPrice
+                                                    ? 'Annual billing on request'
+                                                    : `or PKR ${plan.annualPrice.toLocaleString()} billed yearly`}
+                                            </p>
+                                        </div>
+
+                                        <Link
+                                            href={isCustom ? 'tel:+923007395147' : '/signup'}
+                                            className={`mt-6 inline-flex h-10 items-center justify-center rounded-lg text-sm font-medium transition ${plan.highlight ? 'bg-primary text-white hover:bg-primary-dark' : 'border border-slate-300 text-slate-700 hover:border-slate-400 hover:text-slate-900'}`}
+                                        >
+                                            {isCustom ? 'Contact sales' : 'Get started'}
+                                        </Link>
+
+                                        <ul className="mt-6 space-y-2.5 border-t border-slate-100 pt-6 text-sm text-slate-600">
+                                            <li className="flex items-start gap-2">
+                                                <Check size={16} className="mt-0.5 shrink-0 text-primary" />
+                                                {formatLimit(plan.invoicesPerMonth)} invoices / month
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <Check size={16} className="mt-0.5 shrink-0 text-primary" />
+                                                {formatLimit(plan.users)} users
+                                            </li>
+                                            {plan.features.map((feature) => (
+                                                <li key={feature} className="flex items-start gap-2">
+                                                    <Check size={16} className="mt-0.5 shrink-0 text-primary" />
+                                                    {feature}
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
-                                    {plan.badge && (
-                                        <span className={`rounded-full px-3 py-1 text-xs font-semibold text-nowrap ${plan.highlight ? 'bg-white/16 text-white' : 'brand-chip'}`}>
-                                            {plan.badge}
-                                        </span>
-                                    )}
+                                )
+                            })}
+                        </div>
+                    ) : (
+                        <p className="rounded-xl border border-slate-200 p-6 text-center text-sm text-slate-500">
+                            Plans will be available soon. Call <a href="tel:+923007395147" className="font-medium text-slate-700">+92 300 7395147</a> for pricing.
+                        </p>
+                    )}
+                </section>
+
+                <section className="border-t border-slate-200 bg-slate-50">
+                    <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6 lg:py-16">
+                        <h2 className="text-2xl font-semibold tracking-tight">Common questions</h2>
+                        <dl className="mt-8 divide-y divide-slate-200">
+                            {faqs.map((faq) => (
+                                <div key={faq.q} className="py-4">
+                                    <dt className="text-sm font-semibold">{faq.q}</dt>
+                                    <dd className="mt-1 text-sm text-slate-600">{faq.a}</dd>
                                 </div>
-
-                                <div className="mb-5">
-                                    <span className={`text-4xl font-bold ${plan.highlight ? 'text-white' : 'text-ink'}`}>
-                                        {plan.monthlyPrice === null ? 'Custom' : `PKR ${plan.monthlyPrice.toLocaleString()}`}
-                                    </span>
-                                    <span className={`ml-2 text-sm ${plan.highlight ? 'text-white/70' : 'brand-muted'}`}>
-                                        {plan.monthlyPrice === null ? 'pricing' : '/month'}
-                                    </span>
-                                    <p className={`mt-2 text-sm ${plan.highlight ? 'text-white/72' : 'brand-muted'}`}>
-                                        {plan.annualPrice === null ? 'Annual plan available on request' : `PKR ${plan.annualPrice.toLocaleString()} yearly`}
-                                    </p>
-                                </div>
-
-                                <div className={`mb-5 grid grid-cols-2 gap-3 rounded-2xl border p-3 text-sm ${plan.highlight ? 'border-white/10 bg-white/10' : 'border-border bg-surface'}`}>
-                                    <div>
-                                        <p className={plan.highlight ? 'text-white/65' : 'brand-muted'}>Invoices</p>
-                                        <p className="font-semibold">{plan.invoicesPerMonth === 'unlimited' ? 'Unlimited' : plan.invoicesPerMonth}</p>
-                                    </div>
-                                    <div>
-                                        <p className={plan.highlight ? 'text-white/65' : 'brand-muted'}>Users</p>
-                                        <p className="font-semibold">{plan.users === 'unlimited' ? 'Unlimited' : plan.users}</p>
-                                    </div>
-                                </div>
-
-                                <Link
-                                    href="/signup"
-                                    className={`mb-5 inline-flex w-full items-center justify-center rounded-full px-4 py-3 text-sm font-semibold transition ${plan.highlight ? 'bg-white text-primary hover:bg-primary-light' : 'bg-primary text-white hover:bg-primary-dark'}`}
-                                >
-                                    Get Compliant Today
-                                </Link>
-
-                                <ul className="space-y-3">
-                                    {plan.features.map((feature) => (
-                                        <li key={feature} className={`flex items-start gap-3 text-sm ${plan.highlight ? 'text-white/86' : 'text-ink'}`}>
-                                            <Check size={16} className="mt-0.5 shrink-0 text-accent" />
-                                            <span>{feature}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
+                            ))}
+                        </dl>
+                        <p className="mt-8 text-sm text-slate-600">
+                            Still have questions? Call{' '}
+                            <a href="tel:+923007395147" className="font-medium text-primary hover:text-primary-dark">+92 300 7395147</a>
+                            {' '}or{' '}
+                            <a href="tel:+923334103160" className="font-medium text-primary hover:text-primary-dark">+92 333 4103160</a>.
+                        </p>
                     </div>
-                ) : (
-                    <div className="brand-panel rounded-3xl p-6 text-center text-sm brand-muted">
-                        No public plans are available yet. Ask your super-admin to mark plans as active and public.
-                    </div>
-                )}
+                </section>
             </main>
+
+            <SiteFooter />
         </div>
     )
 }

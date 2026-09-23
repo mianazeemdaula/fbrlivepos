@@ -28,7 +28,17 @@ export async function PATCH(
 ) {
     const { actor } = await assertSuperAdmin(req)
     const { planId } = await params
-    const body = CreatePlanSchema.partial().parse(await req.json())
+    const raw = await req.json()
+    const parsed = CreatePlanSchema.partial().safeParse(raw)
+    if (!parsed.success) {
+        return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid plan data' }, { status: 400 })
+    }
+    // Zod 4 applies .default() values even inside .partial(); keep only the fields actually sent
+    // so a partial update (e.g. toggling isActive) doesn't reset limits or wipe features.
+    const sentKeys = new Set(Object.keys(raw ?? {}))
+    const body = Object.fromEntries(
+        Object.entries(parsed.data).filter(([key]) => sentKeys.has(key)),
+    ) as typeof parsed.data
 
     const before = await prisma.subscriptionPlan.findUniqueOrThrow({
         where: { id: planId },

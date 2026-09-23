@@ -53,6 +53,10 @@ vi.mock('@/lib/fbr/submission-log', () => ({
     updateInvoiceForTenant,
 }))
 
+vi.mock('@/lib/billing/subscription', () => ({
+    getSubscriptionBlockReason: vi.fn().mockResolvedValue(null),
+}))
+
 vi.mock('@/lib/db/prisma', () => ({
     prisma,
 }))
