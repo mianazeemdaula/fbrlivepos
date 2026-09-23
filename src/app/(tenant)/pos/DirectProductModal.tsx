@@ -4,8 +4,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { SALE_TYPE_CONFIG, SALE_TYPE_LIST, type SaleTypeConfig } from '@/lib/di/sale-type-config'
 import { calculateItemTax } from '@/lib/di/scenario-tax-calculator'
 
-const DEFAULT_FALLBACK_UOM = 'Numbers, pieces, units'
-
 interface RateOption {
     id: number
     desc: string
@@ -127,7 +125,7 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
                             return {
                                 ...current,
                                 hsCode: data.code,
-                                uom: current.uom || data.unit || DEFAULT_FALLBACK_UOM,
+                                uom: current.uom || data.unit || '',
                             }
                         })
                         void loadUomForHSCode(data.code)
@@ -173,22 +171,21 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
             return
         }
 
+        // Server tries the FBR DI HS_UOM API first, then falls back to the HS code table unit.
         try {
             const res = await fetch(`/api/tenant/fbr/hs-uom?hs_code=${encodeURIComponent(hsCode)}`)
-            if (!res.ok) {
-                setForm((current) => ({ ...current, uom: current.uom || DEFAULT_FALLBACK_UOM }))
-                return
-            }
+            if (!res.ok) return
             const data = await res.json()
             const uoms: Array<{ description: string }> = data.uoms || []
-            if (uoms.length === 1) {
-                setForm((current) => ({ ...current, uom: uoms[0].description }))
-            } else if (!form.uom.trim()) {
-                setForm((current) => ({ ...current, uom: DEFAULT_FALLBACK_UOM }))
-            }
+            if (uoms.length === 0) return
+            setForm((current) => {
+                const existing = current.uom.trim().toLowerCase()
+                const keepCurrent = uoms.length > 1 && !!existing
+                    && uoms.some((u) => u.description.trim().toLowerCase() === existing)
+                return { ...current, uom: keepCurrent ? current.uom : uoms[0].description }
+            })
         } catch {
-            // Non-blocking for POS data entry; use a safe fallback for unmapped HS codes.
-            setForm((current) => ({ ...current, uom: current.uom || DEFAULT_FALLBACK_UOM }))
+            // Non-blocking for POS data entry; the user can still enter the UOM manually.
         }
     }
 
@@ -389,6 +386,12 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
             return
         }
 
+        const effectiveUom = form.uom.trim() || cfg?.uomLocked || ''
+        if (!effectiveUom) {
+            setError('UOM is required.')
+            return
+        }
+
         if (!form.saleTypeId || !cfg) {
             setError('Sale type is required.')
             return
@@ -421,7 +424,7 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
             diRate: form.diRate,
             diSaleType: cfg.label,
             diFixedNotifiedValueOrRetailPrice: cfg.taxBase === 'retailPrice' ? price : null,
-            unit: form.uom || cfg.uomLocked || DEFAULT_FALLBACK_UOM,
+            unit: effectiveUom,
             sroScheduleNo: form.sroScheduleNo || null,
             sroItemSerialNo: form.sroItemSerialNo || null,
             isLocalOnly: true,
