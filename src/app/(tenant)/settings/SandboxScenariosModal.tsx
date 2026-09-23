@@ -44,7 +44,7 @@ function StatusBadge({ status }: { status: string }) {
 
     if (status === 'FAILED') {
         return (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/20">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/15 text-red-600 border border-red-500/20">
                 FAILED
             </span>
         )
@@ -355,19 +355,19 @@ export function SandboxScenariosModal({ open = false, onClose, diConfig, onScena
                                                     </div>
                                                 ) : (
                                                     <div className="space-y-2">
-                                                        <p className="text-red-400 font-medium">
+                                                        <p className="text-red-600 font-medium">
                                                             Submission failed: {result.error ?? 'Validation failed'}
                                                         </p>
                                                         {result.errors && result.errors.length > 0 && (
                                                             <ul className="space-y-1">
                                                                 {result.errors.map((error, index) => (
                                                                     <li key={index} className="text-xs text-red-300">
-                                                                        <span className="font-mono text-red-400">
+                                                                        <span className="font-mono text-red-600">
                                                                             [{error.code}]
                                                                         </span>{' '}
                                                                         {error.message}
                                                                         {error.item && (
-                                                                            <span className="text-red-400/60">
+                                                                            <span className="text-red-600/60">
                                                                                 {' '}
                                                                                 ({error.item})
                                                                             </span>

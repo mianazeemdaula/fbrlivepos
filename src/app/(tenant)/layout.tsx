@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
-import { User, Menu, X } from 'lucide-react'
+import { LogOut, Menu, ReceiptText, User, X } from 'lucide-react'
 
 const navItems = [
     { href: '/dashboard', label: 'Dashboard' },
@@ -138,14 +138,17 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
             )}
 
             {/* Top Navigation Bar */}
-            <header className="sticky top-0 z-30 bg-surface border-b border-border shadow-nav">
-                <div className="flex items-center justify-between px-6 h-16">
+            <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
+                <div className="mx-auto flex h-14 max-w-[1600px] items-center justify-between gap-4 px-4 sm:px-6">
                     {/* Logo + Nav */}
-                    <div className="flex items-center gap-4">
-                        <div className="border border-border-strong rounded-full px-4 py-1.5 shrink-0">
-                            <span className="font-semibold text-ui-sm text-ink">AAZIFY FBR</span>
-                        </div>
-                        <nav className="hidden lg:flex items-center gap-1">
+                    <div className="flex min-w-0 items-center gap-6">
+                        <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-white">
+                                <ReceiptText size={15} />
+                            </span>
+                            <span className="text-sm font-semibold tracking-tight text-ink">AAZIFY FBR</span>
+                        </Link>
+                        <nav className="hidden items-center gap-0.5 lg:flex">
                             {visibleNavItems.map((item) => {
                                 const active = pathname === item.href ||
                                     (item.href !== '/invoices' && pathname.startsWith(item.href + '/'))
@@ -153,9 +156,9 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        className={`px-3 py-1.5 rounded-full text-ui-xs font-medium transition-colors duration-150 ${active
-                                            ? 'bg-primary text-white'
-                                            : 'text-ink-secondary hover:text-ink hover:bg-surface'
+                                        className={`rounded-md px-3 py-1.5 text-ui-xs font-medium transition-colors duration-150 ${active
+                                            ? 'bg-primary-light text-primary-dark'
+                                            : 'text-ink-secondary hover:bg-surface hover:text-ink'
                                             }`}
                                     >
                                         {item.label}
@@ -166,44 +169,49 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                     </div>
 
                     {/* Right side */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex shrink-0 items-center gap-3">
                         {/* Global Environment Switch */}
                         {config?.configured && config.environment && (
-                            <div className="flex items-center gap-2 rounded-full border border-border bg-canvas px-3 py-1 shadow-sm mr-2 shrink-0">
-                                <span className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${config.environment !== 'PRODUCTION' ? 'text-gold' : 'text-muted'}`}>
+                            <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-subtle px-2.5 py-1">
+                                <span className={`text-[11px] font-medium transition-colors ${config.environment !== 'PRODUCTION' ? 'text-warning' : 'text-muted'}`}>
                                     Sandbox
                                 </span>
                                 <button
                                     type="button"
                                     role="switch"
                                     aria-checked={config.environment === 'PRODUCTION'}
+                                    aria-label="Toggle live mode"
                                     disabled={switchingEnv}
                                     onClick={handleToggleEnvironment}
                                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus-visible:outline-none disabled:opacity-50 ${config.environment === 'PRODUCTION' ? 'bg-primary' : 'bg-border-strong'}`}
                                 >
                                     <span className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${config.environment === 'PRODUCTION' ? 'translate-x-4' : 'translate-x-0'}`} />
                                 </button>
-                                <span className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${config.environment === 'PRODUCTION' ? 'text-primary' : 'text-muted'}`}>
+                                <span className={`text-[11px] font-medium transition-colors ${config.environment === 'PRODUCTION' ? 'text-primary' : 'text-muted'}`}>
                                     Live
                                 </span>
                             </div>
                         )}
 
-                        <span className="hidden sm:block text-ui-xs text-muted mr-1">
-                            {session?.user?.name || ''}
-                        </span>
-                        <button
-                            onClick={() => signOut({ callbackUrl: '/login' })}
-                            className="hidden sm:flex items-center gap-1.5 border border-border rounded-full px-3 py-1.5 text-ui-xs text-ink bg-white hover:bg-surface transition-colors"
-                        >
-                            Sign Out
-                        </button>
-                        <div className="w-8 h-8 rounded-full bg-subtle/50 flex items-center justify-center">
-                            <User size={15} className="text-muted" />
+                        <div className="hidden items-center gap-2 sm:flex">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface">
+                                <User size={14} className="text-muted" />
+                            </span>
+                            <span className="max-w-40 truncate text-ui-xs font-medium text-ink">
+                                {session?.user?.name || ''}
+                            </span>
                         </div>
                         <button
-                            className="flex lg:hidden h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-canvas transition-colors"
+                            onClick={() => signOut({ callbackUrl: '/login' })}
+                            className="hidden items-center gap-1.5 rounded-md px-2 py-1.5 text-ui-xs font-medium text-muted transition-colors hover:bg-surface hover:text-ink sm:flex"
+                        >
+                            <LogOut size={14} />
+                            Sign out
+                        </button>
+                        <button
+                            className="flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface lg:hidden"
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            aria-label="Toggle menu"
                         >
                             {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
                         </button>
@@ -212,8 +220,8 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
 
                 {/* Mobile Nav Dropdown */}
                 {mobileMenuOpen && (
-                    <div className="lg:hidden border-t border-border bg-surface px-4 py-3">
-                        <nav className="flex flex-col gap-1">
+                    <div className="border-t border-border bg-white px-4 py-3 lg:hidden">
+                        <nav className="flex flex-col gap-0.5">
                             {visibleNavItems.map((item) => {
                                 const active = pathname === item.href ||
                                     (item.href !== '/invoices' && pathname.startsWith(item.href + '/'))
@@ -221,8 +229,8 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${active
-                                            ? 'bg-primary text-white'
+                                        className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${active
+                                            ? 'bg-primary-light text-primary-dark'
                                             : 'text-ink-secondary hover:bg-surface hover:text-ink'
                                             }`}
                                     >
@@ -232,9 +240,10 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                             })}
                             <button
                                 onClick={() => signOut({ callbackUrl: '/login' })}
-                                className="mt-2 px-4 py-2.5 rounded-xl text-sm font-medium text-ink-secondary hover:bg-canvas hover:text-ink text-left transition-colors"
+                                className="mt-2 flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium text-ink-secondary transition-colors hover:bg-surface hover:text-ink"
                             >
-                                Sign Out
+                                <LogOut size={15} />
+                                Sign out
                             </button>
                         </nav>
                     </div>
@@ -244,30 +253,29 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
             {/* Environment banner */}
             {config?.environment && (
                 <div
-                    className={`text-xs font-semibold text-center py-2 ${config.environment === 'SANDBOX'
-                        ? 'bg-accent-light text-warning'
-                        : 'bg-success-bg text-success'
+                    className={`border-b px-4 py-1.5 text-center text-xs font-medium ${config.environment === 'SANDBOX'
+                        ? 'border-amber-200 bg-warning-bg text-warning'
+                        : 'border-success-border bg-success-bg text-success'
                         }`}
-                    style={{ letterSpacing: '0.10em' }}
                 >
-                    {config.environment === 'SANDBOX' ? 'SANDBOX MODE — Test submissions only' : 'LIVE MODE — Production submissions enabled'}
+                    {config.environment === 'SANDBOX' ? 'Sandbox mode — test submissions only' : 'Live mode — invoices are submitted to FBR'}
                 </div>
             )}
 
             {/* Subscription banner */}
             {subscription && !subscription.allowed && (
-                <div className="border-b border-error-border bg-error-bg px-6 py-2.5 text-center text-xs font-medium text-error">
+                <div className="border-b border-error-border bg-error-bg px-4 py-2 text-center text-xs font-medium text-error">
                     {subscription.reason} New invoices and FBR submissions are paused. Call +92 300 7395147 to renew.
                 </div>
             )}
             {subscription?.allowed && subscription.expiringSoon && subscription.expiresAt && (
-                <div className="border-b border-border bg-accent-light px-6 py-2.5 text-center text-xs font-medium text-warning">
+                <div className="border-b border-amber-200 bg-warning-bg px-4 py-2 text-center text-xs font-medium text-warning">
                     Your {subscription.planName} plan expires {subscription.daysLeft && subscription.daysLeft > 1 ? `in ${subscription.daysLeft} days` : 'soon'} ({new Date(subscription.expiresAt).toLocaleDateString()}). Call +92 300 7395147 to renew.
                 </div>
             )}
 
             {/* Page content */}
-            <main className="min-h-[calc(100vh-64px)]">
+            <main className="mx-auto min-h-[calc(100vh-56px)] max-w-[1600px]">
                 {children}
             </main>
         </div>

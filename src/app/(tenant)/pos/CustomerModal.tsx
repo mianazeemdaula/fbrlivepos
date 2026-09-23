@@ -364,14 +364,14 @@ export default function CustomerModal({
                                     type="button"
                                     onClick={handleSave}
                                     disabled={saving}
-                                    className="flex-1 rounded-full bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark disabled:opacity-50"
+                                    className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark disabled:opacity-50"
                                 >
                                     {saving ? 'Saving…' : 'Save & Select'}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={onClose}
-                                    className="rounded-full border border-border px-4 py-2.5 text-sm text-muted hover:bg-surface-subtle"
+                                    className="rounded-lg border border-border px-4 py-2.5 text-sm text-muted hover:bg-surface-subtle"
                                 >
                                     Cancel
                                 </button>

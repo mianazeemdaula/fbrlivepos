@@ -102,24 +102,24 @@ function StatCard({
 }) {
     const base: Record<string, string> = {
         black: 'bg-primary text-white',
-        yellow: 'bg-accent text-ink',
-        green: 'bg-green-50 text-green-800 border border-green-200',
-        red: 'bg-red-50 text-red-800 border border-red-200',
+        yellow: 'bg-amber-50 text-amber-900 border border-amber-200',
+        green: 'bg-emerald-50 text-emerald-900 border border-emerald-200',
+        red: 'bg-rose-50 text-rose-900 border border-rose-200',
         blue: 'bg-blue-50 text-blue-800 border border-blue-200',
         outlined: 'bg-white border border-border text-ink',
     }
     const subCls: Record<string, string> = {
         black: 'text-white/70',
-        yellow: 'text-ink/60',
-        green: 'text-green-600',
-        red: 'text-red-500',
+        yellow: 'text-amber-700',
+        green: 'text-emerald-700',
+        red: 'text-rose-700',
         blue: 'text-blue-600',
         outlined: 'text-muted',
     }
     return (
-        <div className={`rounded-xl p-3.5 shadow-card ${base[style]}`}>
+        <div className={`rounded-card p-4 shadow-card ${base[style]}`}>
             <div className="flex items-start justify-between gap-1 mb-1">
-                <p className={`text-[10px] font-semibold uppercase tracking-wider ${style === 'black' ? 'text-white/70' : style === 'yellow' ? 'text-ink/50' : 'opacity-60 text-current'}`}>
+                <p className={`text-[10px] font-semibold uppercase tracking-wider ${style === 'black' ? 'text-white/70' : style === 'yellow' ? 'text-amber-800/70' : 'opacity-60 text-current'}`}>
                     {label}
                 </p>
                 {badge && (
@@ -128,7 +128,7 @@ function StatCard({
                     </span>
                 )}
             </div>
-            <p className="text-lg font-bold leading-tight truncate">{value}</p>
+            <p className="text-lg font-semibold leading-tight tracking-tight tabular-nums truncate">{value}</p>
             {sub && <p className={`mt-0.5 text-[10px] truncate ${subCls[style]}`}>{sub}</p>}
         </div>
     )
@@ -239,10 +239,9 @@ export default function DashboardPage() {
 
     if (loading) {
         return (
-            <div className="p-6 lg:p-8">
-                <div className="mb-8">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted">Tenant overview</p>
-                    <h1 className="mt-1 text-2xl font-normal text-ink">Dashboard</h1>
+            <div className="p-4 lg:p-6">
+                <div className="mb-4">
+                    <h1 className="text-page-title font-semibold tracking-tight text-ink">Dashboard</h1>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {Array.from({ length: 8 }).map((_, i) => (
@@ -257,12 +256,11 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="p-6 lg:p-8 space-y-8">
+        <div className="space-y-5 p-4 lg:p-6">
             {/* Header */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted">Tenant overview</p>
-                    <h1 className="mt-1 text-2xl font-normal text-ink">Dashboard</h1>
+                    <h1 className="text-page-title font-semibold tracking-tight text-ink">Dashboard</h1>
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
                     <span
@@ -304,7 +302,7 @@ export default function DashboardPage() {
                         </div>
                         <Link
                             href="/settings"
-                            className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors shrink-0"
+                            className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors shrink-0"
                         >
                             Open Settings
                         </Link>
@@ -383,15 +381,15 @@ export default function DashboardPage() {
                                 <AreaChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="gradSales" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#1d1d1f" stopOpacity={0.15} />
-                                            <stop offset="95%" stopColor="#1d1d1f" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#16a34a" stopOpacity={0.15} />
+                                            <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
                                         </linearGradient>
                                         <linearGradient id="gradTax" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#f5a623" stopOpacity={0.2} />
-                                            <stop offset="95%" stopColor="#f5a623" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#d97706" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#d97706" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                                     <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                                     <YAxis
                                         tickFormatter={(v) => fmt(v)}
@@ -406,7 +404,7 @@ export default function DashboardPage() {
                                         type="monotone"
                                         dataKey="sales"
                                         name="Sales"
-                                        stroke="#1d1d1f"
+                                        stroke="#16a34a"
                                         strokeWidth={2}
                                         fill="url(#gradSales)"
                                     />
@@ -414,7 +412,7 @@ export default function DashboardPage() {
                                         type="monotone"
                                         dataKey="tax"
                                         name="Tax"
-                                        stroke="#f5a623"
+                                        stroke="#d97706"
                                         strokeWidth={2}
                                         fill="url(#gradTax)"
                                     />
@@ -427,7 +425,7 @@ export default function DashboardPage() {
                             <p className="text-xs text-muted font-medium uppercase tracking-wide mb-3">Invoice Counts</p>
                             <ResponsiveContainer width="100%" height={200}>
                                 <BarChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barGap={2}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                                     <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                                     <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={30} allowDecimals={false} />
                                     <Tooltip content={<CustomTooltip />} />

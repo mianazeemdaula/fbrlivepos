@@ -176,12 +176,11 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="p-6 lg:p-8 ">
+        <div className="p-4 lg:p-6">
             {/* ── Page header ── */}
-            <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+            <div className="mb-4 flex items-center justify-between gap-4 flex-wrap">
                 <div>
-                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Compliance setup</p>
-                    <h1 className="text-page-title font-normal text-ink">Settings</h1>
+                    <h1 className="text-page-title font-semibold tracking-tight text-ink">Settings</h1>
                 </div>
 
 
@@ -294,7 +293,7 @@ export default function SettingsPage() {
                                     <button
                                         type="submit"
                                         disabled={savingTokens}
-                                        className="rounded-full bg-primary px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-primary-dark disabled:opacity-60"
+                                        className="rounded-lg bg-primary px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-primary-dark disabled:opacity-60"
                                     >
                                         {savingTokens ? 'Saving…' : 'Save Tokens'}
                                     </button>
@@ -303,7 +302,7 @@ export default function SettingsPage() {
                                             type="button"
                                             onClick={handleVerify}
                                             disabled={verifying}
-                                            className="rounded-full border border-border bg-white px-4 py-2 text-xs font-medium text-ink transition-colors hover:bg-surface disabled:opacity-60"
+                                            className="rounded-lg border border-border bg-white px-4 py-2 text-xs font-medium text-ink transition-colors hover:bg-surface disabled:opacity-60"
                                         >
                                             {verifying ? 'Verifying…' : 'Verify Active Token'}
                                         </button>
@@ -313,7 +312,7 @@ export default function SettingsPage() {
                                             type="button"
                                             onClick={handleResetCircuit}
                                             disabled={resettingCircuit}
-                                            className="rounded-full border border-warning-bg bg-warning-bg px-4 py-2 text-xs font-medium text-warning transition-colors hover:opacity-80 disabled:opacity-60"
+                                            className="rounded-lg border border-warning-bg bg-warning-bg px-4 py-2 text-xs font-medium text-warning transition-colors hover:opacity-80 disabled:opacity-60"
                                             title="Reset DI circuit breaker if submissions are stuck with DI_CIRCUIT_OPEN"
                                         >
                                             {resettingCircuit ? 'Resetting…' : 'Reset DI Circuit'}
@@ -346,7 +345,7 @@ export default function SettingsPage() {
                                     type="button"
                                     onClick={handleSaveIdType}
                                     disabled={savingIdType}
-                                    className="rounded-full bg-primary px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-primary-dark disabled:opacity-60"
+                                    className="rounded-lg bg-primary px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-primary-dark disabled:opacity-60"
                                 >
                                     {savingIdType ? 'Saving…' : 'Save Preference'}
                                 </button>

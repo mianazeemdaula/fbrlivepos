@@ -46,18 +46,17 @@ export default function SandboxScenariosPage() {
     }, [])
 
     return (
-        <div className="p-6 lg:p-8">
-            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="p-4 lg:p-6">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Testing</p>
-                    <h1 className="mt-2 text-page-title font-normal text-ink">Sandbox Scenarios</h1>
-                    <p className="mt-1 text-sm text-muted">
+                    <h1 className="text-page-title font-semibold tracking-tight text-ink">Sandbox Scenarios</h1>
+                    <p className="mt-0.5 text-ui-xs text-muted">
                         Run PRAL DI sandbox cases outside Settings so testing has a dedicated page.
                     </p>
                 </div>
                 <Link
                     href="/settings"
-                    className="rounded-full border border-border px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface-subtle hover:text-white"
+                    className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface-subtle"
                 >
                     Back to Settings
                 </Link>

@@ -110,16 +110,15 @@ export default function ProductsPage() {
     const to = Math.min(page * limit, total)
 
     return (
-        <div className="p-6 lg:p-8">
+        <div className="p-4 lg:p-6">
             {/* Header */}
-            <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="mb-4 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
-                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Catalog Management</p>
-                    <h1 className="mt-1 text-page-title font-normal text-ink">Products</h1>
+                    <h1 className="text-page-title font-semibold tracking-tight text-ink">Products</h1>
                 </div>
                 <button
                     onClick={handleAddNew}
-                    className="rounded-full bg-primary px-5 py-2.5 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors"
+                    className="rounded-lg bg-primary px-5 py-2.5 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors"
                 >
                     + Define New Product
                 </button>
@@ -149,23 +148,23 @@ export default function ProductsPage() {
             <div className="bg-white rounded-card shadow-card overflow-hidden">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-border-muted">
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Name</th>
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">SKU</th>
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">HS Code</th>
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Price</th>
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Tax %</th>
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Unit</th>
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">DI Ready</th>
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Status</th>
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Actions</th>
+                        <tr className="border-b border-border bg-surface-subtle">
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Name</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">SKU</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">HS Code</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Price</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Tax %</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Unit</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">DI Ready</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Status</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             Array.from({ length: 3 }).map((_, i) => (
                                 <tr key={i} className="border-b border-border-muted">
-                                    <td colSpan={9} className="px-4 py-3">
+                                    <td colSpan={9} className="px-3 py-2">
                                         <div className="h-4 bg-border rounded-full animate-pulse" />
                                     </td>
                                 </tr>
@@ -179,33 +178,29 @@ export default function ProductsPage() {
                         ) : (
                             products.map((p) => (
                                 <tr key={p.id} className="border-b border-border-muted transition-colors hover:bg-surface-subtle">
-                                    <td className="px-4 py-3 text-sm font-medium text-ink">{p.name}</td>
-                                    <td className="px-4 py-3 text-ui-xs text-muted font-mono">{p.sku || '—'}</td>
-                                    <td className="px-4 py-3 text-ui-xs text-muted font-mono">{p.hsCode}</td>
-                                    <td className="px-4 py-3 text-sm font-medium text-ink">PKR {Number(p.price).toLocaleString()}</td>
-                                    <td className="px-4 py-3 text-ui-xs text-muted">{Number(p.taxRate)}%</td>
-                                    <td className="px-4 py-3 text-ui-xs text-muted">{p.unit}</td>
-                                    <td className="px-4 py-3 align-top">
-                                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${p.diReady ? 'bg-success-bg text-success' : 'bg-accent-light text-warning'}`}>
-                                            <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
-                                            {p.diReady ? 'Ready' : 'Needs fields'}
+                                    <td className="px-3 py-2 text-sm font-medium text-ink">{p.name}</td>
+                                    <td className="px-3 py-2 text-ui-xs text-muted font-mono">{p.sku || '—'}</td>
+                                    <td className="px-3 py-2 text-ui-xs text-muted font-mono">{p.hsCode}</td>
+                                    <td className="px-3 py-2 text-sm font-medium text-ink">PKR {Number(p.price).toLocaleString()}</td>
+                                    <td className="px-3 py-2 text-ui-xs text-muted">{Number(p.taxRate)}%</td>
+                                    <td className="px-3 py-2 text-ui-xs text-muted">{p.unit}</td>
+                                    <td className="px-3 py-2">
+                                        <span
+                                            title={!p.diReady && p.diIssues.length > 0 ? p.diIssues.join(' · ') : undefined}
+                                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${p.diReady ? 'bg-success-bg text-success' : 'bg-accent-light text-warning cursor-help'}`}
+                                        >
+                                            {p.diReady ? 'Ready' : p.diIssues.length === 1 ? 'Needs 1 field' : p.diIssues.length > 1 ? `Needs ${p.diIssues.length} fields` : 'Needs fields'}
                                         </span>
-                                        {!p.diReady && p.diIssues.length > 0 && (
-                                            <div className="mt-1.5 text-xs text-warning max-w-xs space-y-0.5">
-                                                {p.diIssues.slice(0, 2).map((issue) => <p key={issue}>{issue}</p>)}
-                                            </div>
-                                        )}
                                     </td>
-                                    <td className="px-4 py-3">
-                                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${p.isActive ? 'bg-success-bg text-success' : 'bg-error-bg text-error'}`}>
-                                            <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
+                                    <td className="px-3 py-2">
+                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${p.isActive ? 'bg-success-bg text-success' : 'bg-error-bg text-error'}`}>
                                             {p.isActive ? 'Active' : 'Inactive'}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-3 py-2">
                                         <button
                                             onClick={() => handleEditProduct(p)}
-                                            className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-ink hover:bg-surface transition-colors"
+                                            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-ink hover:bg-surface transition-colors"
                                         >
                                             Edit
                                         </button>

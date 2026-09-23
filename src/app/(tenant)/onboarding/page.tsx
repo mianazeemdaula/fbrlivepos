@@ -126,13 +126,12 @@ export default function OnboardingPage() {
     ]
 
     return (
-        <div className="min-h-screen p-6 lg:p-10">
+        <div className="min-h-screen p-4 lg:p-6">
             <div className="mx-auto max-w-2xl">
                 {/* Header */}
-                <div className="mb-8">
-                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Setup Wizard</p>
-                    <h1 className="mt-2 text-page-title font-normal text-ink">FBR Digital Invoicing Setup</h1>
-                    <p className="mt-2 text-sm text-muted">
+                <div className="mb-4">
+                    <h1 className="text-page-title font-semibold tracking-tight text-ink">FBR Digital Invoicing Setup</h1>
+                    <p className="mt-0.5 text-ui-xs text-muted">
                         Complete these steps to configure your FBR DI credentials and start issuing compliant invoices.
                     </p>
                 </div>
@@ -159,7 +158,7 @@ export default function OnboardingPage() {
                 {/* Panel */}
                 <div className="bg-white rounded-card shadow-card rounded-2xl p-6">
                     {error && (
-                        <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+                        <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-600">
                             {error}
                         </div>
                     )}
@@ -234,7 +233,7 @@ export default function OnboardingPage() {
                                     setError('')
                                     setStep(2)
                                 }}
-                                className="w-full rounded-full bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
+                                className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
                             >
                                 Next: Activity & Sector →
                             </button>
@@ -282,7 +281,7 @@ export default function OnboardingPage() {
                                     <div className="max-h-48 overflow-auto space-y-1">
                                         {applicableScenarios.map(s => (
                                             <div key={s.scenarioId} className="flex items-start gap-2 text-xs">
-                                                <span className="shrink-0 font-mono text-gold">{s.scenarioId}</span>
+                                                <span className="shrink-0 font-mono text-warning">{s.scenarioId}</span>
                                                 <span className="text-muted">{s.description}</span>
                                             </div>
                                         ))}
@@ -293,13 +292,13 @@ export default function OnboardingPage() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setStep(1)}
-                                    className="flex-1 rounded-full border border-border py-2.5 text-sm text-muted hover:bg-surface-subtle"
+                                    className="flex-1 rounded-lg border border-border py-2.5 text-sm text-muted hover:bg-surface-subtle"
                                 >
                                     ← Back
                                 </button>
                                 <button
                                     onClick={() => { setError(''); setStep(3) }}
-                                    className="flex-1 rounded-full bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark"
+                                    className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark"
                                 >
                                     Next: PRAL Token →
                                 </button>
@@ -333,7 +332,7 @@ export default function OnboardingPage() {
                                     ))}
                                 </div>
                                 {step3.environment === 'PRODUCTION' && (
-                                    <p className="mt-2 text-xs text-amber-400">
+                                    <p className="mt-2 text-xs text-amber-600">
                                         ⚠ Production token enables live FBR submissions. Use Sandbox for testing.
                                     </p>
                                 )}
@@ -364,13 +363,13 @@ export default function OnboardingPage() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setStep(2)}
-                                    className="flex-1 rounded-full border border-border py-2.5 text-sm text-muted hover:bg-surface-subtle"
+                                    className="flex-1 rounded-lg border border-border py-2.5 text-sm text-muted hover:bg-surface-subtle"
                                 >
                                     ← Back
                                 </button>
                                 <button
                                     onClick={() => { setError(''); setStep(4) }}
-                                    className="flex-1 rounded-full bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark"
+                                    className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark"
                                 >
                                     Review →
                                 </button>
@@ -400,14 +399,14 @@ export default function OnboardingPage() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setStep(3)}
-                                    className="flex-1 rounded-full border border-border py-2.5 text-sm text-muted hover:bg-surface-subtle"
+                                    className="flex-1 rounded-lg border border-border py-2.5 text-sm text-muted hover:bg-surface-subtle"
                                 >
                                     ← Back
                                 </button>
                                 <button
                                     onClick={handleComplete}
                                     disabled={loading}
-                                    className="flex-1 rounded-full bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     {loading ? 'Saving…' : '✓ Complete Setup'}
                                 </button>

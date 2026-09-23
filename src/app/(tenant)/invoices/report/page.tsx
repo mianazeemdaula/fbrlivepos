@@ -154,18 +154,17 @@ export default function InvoiceReportPage() {
                 .print-only { display: none; }
             `}</style>
 
-            <div className="p-6 lg:p-8">
+            <div className="p-4 lg:p-6">
                 {/* ── Screen header ───────────────────────────────────────── */}
-                <div className="no-print mb-6 flex flex-wrap items-start justify-between gap-4">
+                <div className="no-print mb-4 flex flex-wrap items-start justify-between gap-4">
                     <div>
-                        <p className="text-xs font-medium uppercase tracking-caps text-muted">FBR Submitted</p>
-                        <h1 className="text-page-title font-normal text-ink">Invoice Report</h1>
+                        <h1 className="text-page-title font-semibold tracking-tight text-ink">Invoice Report</h1>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={handleDownloadCSV}
                             disabled={invoices.length === 0}
-                            className="flex items-center gap-1.5 rounded-full border border-border bg-white px-4 py-2 text-ui-xs font-medium text-ink hover:bg-surface disabled:opacity-40 transition-colors"
+                            className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-4 py-2 text-ui-xs font-medium text-ink hover:bg-surface disabled:opacity-40 transition-colors"
                         >
                             <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -175,7 +174,7 @@ export default function InvoiceReportPage() {
                         <button
                             onClick={handlePrint}
                             disabled={invoices.length === 0}
-                            className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark disabled:opacity-40 transition-colors"
+                            className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark disabled:opacity-40 transition-colors"
                         >
                             <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z" />
@@ -229,7 +228,7 @@ export default function InvoiceReportPage() {
                     </div>
                     <button
                         onClick={loadReport}
-                        className="rounded-full bg-primary px-4 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors"
+                        className="rounded-lg bg-primary px-4 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors"
                     >
                         Apply
                     </button>
@@ -277,47 +276,47 @@ export default function InvoiceReportPage() {
                     ) : (
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-b border-border-muted">
-                                    <th className="px-4 py-3 text-left text-ui-xs font-semibold text-muted whitespace-nowrap">#</th>
-                                    <th className="px-4 py-3 text-left text-ui-xs font-semibold text-muted whitespace-nowrap">Invoice #</th>
-                                    <th className="px-4 py-3 text-left text-ui-xs font-semibold text-muted whitespace-nowrap">Date</th>
-                                    <th className="px-4 py-3 text-left text-ui-xs font-semibold text-muted whitespace-nowrap">FBR Invoice #</th>
-                                    <th className="px-4 py-3 text-left text-ui-xs font-semibold text-muted whitespace-nowrap">Buyer</th>
-                                    <th className="px-4 py-3 text-left text-ui-xs font-semibold text-muted whitespace-nowrap">NTN / CNIC</th>
-                                    <th className="px-4 py-3 text-left text-ui-xs font-semibold text-muted whitespace-nowrap">Payment</th>
-                                    <th className="px-4 py-3 text-right text-ui-xs font-semibold text-muted whitespace-nowrap">Subtotal</th>
-                                    <th className="px-4 py-3 text-right text-ui-xs font-semibold text-muted whitespace-nowrap">Discount</th>
-                                    <th className="px-4 py-3 text-right text-ui-xs font-semibold text-muted whitespace-nowrap">GST</th>
-                                    <th className="px-4 py-3 text-right text-ui-xs font-semibold text-muted whitespace-nowrap">Total</th>
+                                <tr className="border-b border-border bg-surface-subtle">
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">#</th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Invoice #</th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Date</th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">FBR Invoice #</th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Buyer</th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">NTN / CNIC</th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Payment</th>
+                                    <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">Subtotal</th>
+                                    <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">Discount</th>
+                                    <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">GST</th>
+                                    <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">Total</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {invoices.map((inv, idx) => (
                                     <tr key={inv.id} className="border-b border-border-muted hover:bg-surface-subtle transition-colors">
-                                        <td className="px-4 py-2.5 text-xs text-muted">{(page - 1) * 200 + idx + 1}</td>
-                                        <td className="px-4 py-2.5 font-medium text-ink whitespace-nowrap">{inv.invoiceNumber}</td>
-                                        <td className="px-4 py-2.5 text-xs text-muted whitespace-nowrap">
+                                        <td className="px-3 py-2 text-xs text-muted">{(page - 1) * 200 + idx + 1}</td>
+                                        <td className="px-3 py-2 font-medium text-ink whitespace-nowrap">{inv.invoiceNumber}</td>
+                                        <td className="px-3 py-2 text-xs text-muted whitespace-nowrap">
                                             {formatPKTDateTime(inv.createdAt)}
                                         </td>
-                                        <td className="px-4 py-2.5 text-xs font-mono text-success whitespace-nowrap">
+                                        <td className="px-3 py-2 text-xs font-mono text-success whitespace-nowrap">
                                             {inv.diInvoiceNumber ?? <span className="text-muted">—</span>}
                                         </td>
-                                        <td className="px-4 py-2.5 text-ink max-w-[180px] truncate">{inv.buyerName || '—'}</td>
-                                        <td className="px-4 py-2.5 text-xs text-muted font-mono">{inv.buyerNTN || '—'}</td>
-                                        <td className="px-4 py-2.5 text-xs text-muted">{inv.paymentMethod}</td>
-                                        <td className="px-4 py-2.5 text-right text-ink">PKR {fmt(inv.subtotal)}</td>
-                                        <td className="px-4 py-2.5 text-right text-muted">
+                                        <td className="px-3 py-2 text-ink max-w-[180px] truncate">{inv.buyerName || '—'}</td>
+                                        <td className="px-3 py-2 text-xs text-muted font-mono">{inv.buyerNTN || '—'}</td>
+                                        <td className="px-3 py-2 text-xs text-muted">{inv.paymentMethod}</td>
+                                        <td className="px-3 py-2 text-right text-ink">PKR {fmt(inv.subtotal)}</td>
+                                        <td className="px-3 py-2 text-right text-muted">
                                             {Number(inv.discountAmount) > 0 ? `PKR ${fmt(inv.discountAmount)}` : '—'}
                                         </td>
-                                        <td className="px-4 py-2.5 text-right text-ink">PKR {fmt(inv.taxAmount)}</td>
-                                        <td className="px-4 py-2.5 text-right font-semibold text-ink">PKR {fmt(inv.totalAmount)}</td>
+                                        <td className="px-3 py-2 text-right text-ink">PKR {fmt(inv.taxAmount)}</td>
+                                        <td className="px-3 py-2 text-right font-semibold text-ink">PKR {fmt(inv.totalAmount)}</td>
                                     </tr>
                                 ))}
                             </tbody>
                             {/* Totals footer */}
                             <tfoot>
                                 <tr className="border-t-2 border-border bg-surface-subtle font-semibold">
-                                    <td colSpan={7} className="px-4 py-3 text-sm text-ink">
+                                    <td colSpan={7} className="px-3 py-2 text-sm text-ink">
                                         Totals — {invoices.length} invoice{invoices.length !== 1 ? 's' : ''}
                                         {meta.total > invoices.length && (
                                             <span className="ml-2 text-xs font-normal text-muted">
@@ -325,12 +324,12 @@ export default function InvoiceReportPage() {
                                             </span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-right text-ink">PKR {fmt(totals.subtotal)}</td>
-                                    <td className="px-4 py-3 text-right text-muted">
+                                    <td className="px-3 py-2 text-right text-ink">PKR {fmt(totals.subtotal)}</td>
+                                    <td className="px-3 py-2 text-right text-muted">
                                         {totals.discount > 0 ? `PKR ${fmt(totals.discount)}` : '—'}
                                     </td>
-                                    <td className="px-4 py-3 text-right text-ink">PKR {fmt(totals.tax)}</td>
-                                    <td className="px-4 py-3 text-right text-ink">PKR {fmt(totals.total)}</td>
+                                    <td className="px-3 py-2 text-right text-ink">PKR {fmt(totals.tax)}</td>
+                                    <td className="px-3 py-2 text-right text-ink">PKR {fmt(totals.total)}</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -343,7 +342,7 @@ export default function InvoiceReportPage() {
                         <button
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
-                            className="rounded-full border border-border bg-white px-3 py-1.5 text-ui-xs text-ink disabled:opacity-40 hover:bg-surface transition-colors"
+                            className="rounded-lg border border-border bg-white px-3 py-1.5 text-ui-xs text-ink disabled:opacity-40 hover:bg-surface transition-colors"
                         >
                             Previous
                         </button>
@@ -353,7 +352,7 @@ export default function InvoiceReportPage() {
                         <button
                             onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
                             disabled={page === meta.totalPages}
-                            className="rounded-full border border-border bg-white px-3 py-1.5 text-ui-xs text-ink disabled:opacity-40 hover:bg-surface transition-colors"
+                            className="rounded-lg border border-border bg-white px-3 py-1.5 text-ui-xs text-ink disabled:opacity-40 hover:bg-surface transition-colors"
                         >
                             Next
                         </button>

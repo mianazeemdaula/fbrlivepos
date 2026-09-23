@@ -73,12 +73,11 @@ export default function HSCodesPage() {
     const to = Math.min(page * LIMIT, total)
 
     return (
-        <div className="space-y-6 p-6 lg:p-8">
+        <div className="space-y-4 p-4 lg:p-6">
             {/* Header */}
             <div>
-                <p className="text-xs font-medium uppercase tracking-caps text-muted">Reference library</p>
-                <h1 className="mt-2 text-page-title font-normal text-ink">FBR HS Codes</h1>
-                <p className="mt-1 text-sm text-muted">
+                <h1 className="text-page-title font-semibold tracking-tight text-ink">FBR HS Codes</h1>
+                <p className="mt-0.5 text-ui-xs text-muted">
                     Browse the complete list of FBR-approved Harmonised System codes and applicable tax rates.
                 </p>
             </div>
@@ -121,33 +120,33 @@ export default function HSCodesPage() {
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-b border-border text-xs uppercase tracking-wider text-muted">
-                                    <th className="px-4 py-3 text-left">Code</th>
-                                    <th className="px-4 py-3 text-left">Description</th>
-                                    <th className="px-4 py-3 text-left">Category</th>
-                                    <th className="px-4 py-3 text-left">Unit</th>
-                                    <th className="px-4 py-3 text-right">Tax Rate</th>
+                                <tr className="border-b border-border bg-surface-subtle">
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Code</th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Description</th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Category</th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Unit</th>
+                                    <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">Tax Rate</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-white/10">
+                            <tbody className="divide-y divide-border-muted">
                                 {hsCodes.map((hs) => (
                                     <tr
                                         key={hs.id}
                                         className="transition-colors hover:bg-surface-subtle"
                                     >
-                                        <td className="px-4 py-3 font-mono whitespace-nowrap text-muted">
+                                        <td className="px-3 py-2 font-mono whitespace-nowrap text-muted">
                                             {hs.code}
                                         </td>
-                                        <td className="max-w-xs truncate px-4 py-3 text-xs text-ink">
+                                        <td className="px-3 py-2 max-w-xs truncate text-xs text-ink" title={hs.description}>
                                             {hs.description}
                                         </td>
-                                        <td className="px-4 py-3">
+                                        <td className="px-3 py-2">
                                             <span className="rounded-full bg-surface px-2 py-0.5 text-xs text-ink">
                                                 {hs.category}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3">{hs.unit}</td>
-                                        <td className="px-4 py-3 text-right font-medium">
+                                        <td className="px-3 py-2">{hs.unit}</td>
+                                        <td className="px-3 py-2 text-right font-medium">
                                             {Number(hs.defaultTaxRate).toFixed(0)}%
                                         </td>
                                     </tr>

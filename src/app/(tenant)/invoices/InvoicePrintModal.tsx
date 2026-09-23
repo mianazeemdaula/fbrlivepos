@@ -140,13 +140,13 @@ export default function InvoicePrintModal({ invoice, onClose, standalone = false
                         <div className="border-t border-border p-4 flex gap-3">
                             <button
                                 onClick={handlePrint}
-                                className="flex-1 rounded-full bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark"
+                                className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark"
                             >
                                 Print / Save as PDF
                             </button>
                             <button
                                 onClick={onClose}
-                                className="rounded-full border border-border px-4 py-2.5 text-sm text-muted hover:bg-surface-subtle"
+                                className="rounded-lg border border-border px-4 py-2.5 text-sm text-muted hover:bg-surface-subtle"
                             >
                                 Cancel
                             </button>
@@ -165,13 +165,13 @@ export default function InvoicePrintModal({ invoice, onClose, standalone = false
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={handlePrint}
-                                className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark"
+                                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark"
                             >
                                 Print / Save as PDF
                             </button>
                             <button
                                 onClick={onClose}
-                                className="rounded-full border border-white/15 px-4 py-2 text-sm text-ink hover:bg-surface"
+                                className="rounded-lg border border-white/15 px-4 py-2 text-sm text-ink hover:bg-surface"
                             >
                                 Close Tab
                             </button>

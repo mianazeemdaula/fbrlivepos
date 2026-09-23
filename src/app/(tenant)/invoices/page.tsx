@@ -154,19 +154,18 @@ export default function InvoicesPage() {
     }
 
     return (
-        <div className="p-6 lg:p-8">
+        <div className="p-4 lg:p-6">
             {/* Header */}
-            <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+            <div className="mb-4 flex items-center justify-between gap-4 flex-wrap">
                 <div>
-                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Sales ledger</p>
                     <div className="flex items-center gap-2.5">
-                        <h1 className="text-page-title font-normal text-ink">Invoices</h1>
+                        <h1 className="text-page-title font-semibold tracking-tight text-ink">Invoices</h1>
                         {environment && (
                             <span
                                 className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${
                                     environment === 'PRODUCTION'
                                         ? 'border-success-border bg-success-bg text-success'
-                                        : 'border-border-muted bg-surface-subtle text-gold'
+                                        : 'border-border-muted bg-surface-subtle text-warning'
                                 }`}
                             >
                                 <span className="h-1.5 w-1.5 rounded-full bg-current" />
@@ -184,7 +183,7 @@ export default function InvoicesPage() {
                             placeholder="Search by invoice # or buyer name..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full rounded-full border border-border bg-white px-4 py-2 text-sm text-ink placeholder:text-muted focus:outline-none focus:border-primary"
+                            className="w-full rounded-lg border border-border bg-white px-4 py-2 text-sm text-ink placeholder:text-muted focus:outline-none focus:border-primary"
                         />
                         {search && (
                             <button
@@ -211,7 +210,7 @@ export default function InvoicesPage() {
 
                     <Link
                         href="/pos"
-                        className="rounded-full bg-primary px-4 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors whitespace-nowrap"
+                        className="rounded-lg bg-primary px-4 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors whitespace-nowrap"
                     >
                         + New Invoice
                     </Link>
@@ -231,21 +230,21 @@ export default function InvoicesPage() {
             <div className="bg-white rounded-card shadow-card overflow-hidden">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-border-muted">
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Invoice #</th>
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Buyer</th>
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Amount</th>
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Payment</th>
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Status</th>
-                            <th className="px-4 py-3 text-left text-ui-xs font-normal text-muted">Date & Time (PKT)</th>
-                            <th className="px-4 py-3 text-right text-ui-xs font-normal text-muted">Actions</th>
+                        <tr className="border-b border-border bg-surface-subtle">
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Invoice #</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Buyer</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Amount</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Payment</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Status</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Date & Time (PKT)</th>
+                            <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             Array.from({ length: limit > 10 ? 10 : limit }).map((_, i) => (
                                 <tr key={i} className="border-b border-border-muted">
-                                    <td colSpan={7} className="px-4 py-3">
+                                    <td colSpan={7} className="px-3 py-2">
                                         <div className="h-4 rounded-full bg-border animate-pulse" />
                                     </td>
                                 </tr>
@@ -259,27 +258,27 @@ export default function InvoicesPage() {
                         ) : (
                             invoices.map((inv) => (
                                 <tr key={inv.id} className="border-b border-border-muted transition-colors hover:bg-surface-subtle">
-                                    <td className="px-4 py-3">
+                                    <td className="px-3 py-2">
                                         <Link href={`/invoices/${inv.id}`} className="text-ui-xs font-medium text-ink hover:underline">
                                             {inv.invoiceNumber}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-muted">{inv.buyerName || '—'}</td>
-                                    <td className="px-4 py-3 text-sm font-medium text-ink">PKR {inv.totalAmount.toLocaleString()}</td>
-                                    <td className="px-4 py-3 text-ui-xs text-muted">{inv.paymentMethod}</td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-3 py-2 text-sm text-muted">{inv.buyerName || '—'}</td>
+                                    <td className="px-3 py-2 text-sm font-medium text-ink">PKR {inv.totalAmount.toLocaleString()}</td>
+                                    <td className="px-3 py-2 text-ui-xs text-muted">{inv.paymentMethod}</td>
+                                    <td className="px-3 py-2">
                                         <StatusBadge status={inv.status} />
                                     </td>
-                                    <td className="px-4 py-3 text-ui-xs text-muted whitespace-nowrap">
+                                    <td className="px-3 py-2 text-ui-xs text-muted whitespace-nowrap">
                                         {formatPKTDateTime(inv.createdAt)}
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-3 py-2">
                                         <div className="flex items-center justify-end gap-1.5">
                                             {inv.status === 'DRAFT' && (
                                                 <button
                                                     onClick={() => handleAction(inv.id, 'validate')}
                                                     disabled={actionLoading === inv.id + 'validate'}
-                                                    className="rounded-full border border-border px-2.5 py-1 text-xs font-medium text-ink hover:bg-surface disabled:opacity-50 transition-colors"
+                                                    className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-ink hover:bg-surface disabled:opacity-50 transition-colors"
                                                 >
                                                     {actionLoading === inv.id + 'validate' ? '...' : 'Validate'}
                                                 </button>
@@ -288,7 +287,7 @@ export default function InvoicesPage() {
                                                 <button
                                                     onClick={() => handleAction(inv.id, 'confirm')}
                                                     disabled={actionLoading === inv.id + 'confirm'}
-                                                    className="rounded-full border border-success-bg bg-success-bg px-2.5 py-1 text-xs font-medium text-success hover:bg-primary-light disabled:opacity-50 transition-colors"
+                                                    className="rounded-lg border border-success-bg bg-success-bg px-2.5 py-1 text-xs font-medium text-success hover:bg-primary-light disabled:opacity-50 transition-colors"
                                                 >
                                                     {actionLoading === inv.id + 'confirm' ? '...' : 'Confirm'}
                                                 </button>
@@ -297,7 +296,7 @@ export default function InvoicesPage() {
                                                 <button
                                                     onClick={() => handleAction(inv.id, 'validate')}
                                                     disabled={actionLoading === inv.id + 'validate'}
-                                                    className="rounded-full border border-error-bg bg-error-bg px-2.5 py-1 text-xs font-medium text-error hover:bg-error-border disabled:opacity-50 transition-colors"
+                                                    className="rounded-lg border border-error-bg bg-error-bg px-2.5 py-1 text-xs font-medium text-error hover:bg-error-border disabled:opacity-50 transition-colors"
                                                 >
                                                     {actionLoading === inv.id + 'validate' ? '...' : 'Retry'}
                                                 </button>
@@ -308,13 +307,13 @@ export default function InvoicesPage() {
                                                         <button
                                                             onClick={() => handleDelete(inv.id)}
                                                             disabled={deleteLoading === inv.id}
-                                                            className="rounded-full border border-error bg-error px-2 py-1 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50 transition-colors"
+                                                            className="rounded-lg border border-error bg-error px-2 py-1 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50 transition-colors"
                                                         >
                                                             {deleteLoading === inv.id ? '...' : 'Confirm'}
                                                         </button>
                                                         <button
                                                             onClick={() => setDeleteConfirm(null)}
-                                                            className="rounded-full border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface transition-colors"
+                                                            className="rounded-lg border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface transition-colors"
                                                         >
                                                             Cancel
                                                         </button>
@@ -492,8 +491,7 @@ function StatusBadge({ status }: { status: string }) {
     }
     const s = styles[status] || 'bg-surface-subtle text-muted'
     return (
-        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${s}`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${s}`}>
             {status}
         </span>
     )

@@ -131,17 +131,16 @@ export default function InvoiceDetailPage() {
     }
 
     return (
-        <div className="p-6 lg:p-8">
+        <div className="p-4 lg:p-6">
             <button onClick={() => router.back()} className="mb-4 inline-block text-sm text-muted hover:text-ink">
                 ← Back to Invoices
             </button>
 
             <div className="bg-card rounded-card shadow-card p-6">
-                <div className="flex justify-between items-start mb-6">
+                <div className="flex justify-between items-start mb-4">
                     <div>
-                        <p className="text-xs uppercase tracking-caps-xl text-muted">Invoice detail</p>
-                        <h1 className="mt-2 text-3xl font-bold text-ink">{invoice.invoiceNumber}</h1>
-                        <p className="mt-1 text-sm text-muted">
+                        <h1 className="text-page-title font-semibold tracking-tight text-ink">{invoice.invoiceNumber}</h1>
+                        <p className="mt-0.5 text-ui-xs text-muted">
                             Created {formatPKTDateTime(invoice.createdAt)} (PKT)
                         </p>
                     </div>
@@ -149,7 +148,7 @@ export default function InvoiceDetailPage() {
                         className={`text-xs px-3 py-1 rounded-full border ${invoice.status === 'SUBMITTED'
                             ? 'bg-green-500/10 text-green-400 border-green-500/30'
                             : invoice.status === 'FAILED'
-                                ? 'bg-red-500/10 text-red-400 border-red-500/30'
+                                ? 'bg-red-500/10 text-red-600 border-red-500/30'
                                 : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30'
                             }`}
                     >
@@ -234,7 +233,7 @@ export default function InvoiceDetailPage() {
                             {isAuthError(invoice.submissionError || invoice.latestSubmissionLog?.error) && (
                                 <a
                                     href="/settings"
-                                    className="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-cream hover:underline"
+                                    className="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-primary hover:underline"
                                 >
                                     Go to Settings → PRAL DI Setup
                                 </a>
@@ -281,24 +280,24 @@ export default function InvoiceDetailPage() {
                 {/* Items */}
                 <table className="w-full mb-6">
                     <thead>
-                        <tr className="border-b border-border">
-                            <th className="pb-2 text-left text-xs font-medium text-muted">Item</th>
-                            <th className="pb-2 text-right text-xs font-medium text-muted">Qty</th>
-                            <th className="pb-2 text-right text-xs font-medium text-muted">Price</th>
-                            <th className="pb-2 text-right text-xs font-medium text-muted">GST</th>
-                            <th className="pb-2 text-right text-xs font-medium text-muted">Total</th>
+                        <tr className="border-b border-border bg-surface-subtle">
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Item</th>
+                            <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">Qty</th>
+                            <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">Price</th>
+                            <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">GST</th>
+                            <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         {invoice.items.map((item) => (
                             <tr key={item.id} className="border-b border-border">
-                                <td className="py-2 text-sm text-ink">{item.product.name}</td>
-                                <td className="py-2 text-right text-sm text-ink">{item.quantity}</td>
-                                <td className="py-2 text-right text-sm text-ink">
+                                <td className="px-3 py-2 text-sm text-ink">{item.product.name}</td>
+                                <td className="px-3 py-2 text-right text-sm text-ink">{item.quantity}</td>
+                                <td className="px-3 py-2 text-right text-sm text-ink">
                                     PKR {item.unitPrice.toLocaleString()}
                                 </td>
-                                <td className="py-2 text-right text-sm text-muted">{item.gstRate}%</td>
-                                <td className="py-2 text-sm text-ink text-right font-medium">
+                                <td className="px-3 py-2 text-right text-sm text-muted">{item.gstRate}%</td>
+                                <td className="px-3 py-2 text-sm text-ink text-right font-medium">
                                     PKR {item.totalPrice.toLocaleString()}
                                 </td>
                             </tr>

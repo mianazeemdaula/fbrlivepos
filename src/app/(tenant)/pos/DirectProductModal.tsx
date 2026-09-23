@@ -450,7 +450,7 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
 
     return (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/60 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-7xl rounded-3xl border border-border bg-canvas shadow-2xl">
+            <div className="w-full max-w-7xl rounded-panel border border-border bg-canvas shadow-modal">
                 <div className="flex items-center justify-between border-b border-border px-6 py-4">
                     <div>
                         <p className="text-xs font-medium uppercase tracking-wider text-muted">Direct POS Product</p>
@@ -649,17 +649,17 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
 
                             <div className="col-span-3 text-right">
                                 <p className="text-xs font-semibold uppercase tracking-wider text-emerald-200">Value Incl. Tax</p>
-                                <p className="text-4xl font-black">Rs {valueInclTax.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                                <p className="text-3xl font-bold tracking-tight">Rs {valueInclTax.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                             </div>
                         </div>
                         <p className="mt-2 text-xs text-emerald-200">Cascade status: {footerInfo}</p>
                     </div>
 
                     <div className="flex items-center justify-end gap-3 border-t border-border pt-3">
-                        <button type="button" onClick={onClose} className="rounded-full border border-border px-5 py-2 text-sm text-ink-secondary hover:bg-surface">
+                        <button type="button" onClick={onClose} className="rounded-lg border border-border px-5 py-2 text-sm text-ink-secondary hover:bg-surface">
                             Cancel
                         </button>
-                        <button type="submit" className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-white hover:bg-primary-dark">
+                        <button type="submit" className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white hover:bg-primary-dark">
                             Validate & Add
                         </button>
                     </div>

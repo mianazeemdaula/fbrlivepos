@@ -203,10 +203,10 @@ export default function POSPage() {
                 {/* ══ LEFT SIDE: Cart Items ══ */}
                 <div className="flex-1 flex flex-col min-h-0 min-w-0 bg-canvas">
                     {/* TOP BAR */}
-                    <div className="shrink-0 border-b border-border bg-surface px-6 py-4 flex items-center justify-between gap-4">
+                    <div className="shrink-0 border-b border-border bg-white px-4 py-3 flex items-center justify-between gap-4 lg:px-6">
                         <div>
-                            <h1 className="text-lg font-semibold text-ink">POS Terminal</h1>
-                            <p className="text-xs text-muted">Manage items and draft FBR invoices</p>
+                            <h1 className="text-page-title font-semibold tracking-tight text-ink">POS Terminal</h1>
+                            <p className="mt-0.5 text-ui-xs text-muted">Manage items and draft FBR invoices</p>
                         </div>
                         <button
                             onClick={() => setShowProductModal(true)}
@@ -233,67 +233,46 @@ export default function POSPage() {
                                 </button>
                             </div>
                         ) : (
-                            <div className="p-6">
-                                <table className="w-full border-collapse text-sm table-fixed bg-white rounded-2xl overflow-hidden border border-border shadow-card">
+                            <div className="p-4 lg:p-6">
+                                <div className="overflow-x-auto rounded-card border border-border bg-white shadow-card">
+                                <table className="w-full min-w-[860px] border-collapse text-sm">
                                     <thead>
-                                        <tr className="border-b border-border bg-surface sticky top-0 z-10">
-                                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[34%]">Product</th>
-                                            <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[14%]">Unit Price</th>
-                                            <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[8%]">Qty</th>
-                                            <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[12%]">Rate</th>
-                                            <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-caps text-muted w-[12%]">Discount</th>
-                                            <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-caps text-muted w-[16%]">Total</th>
-                                            <th className="px-3 py-3 w-10" />
+                                        <tr className="border-b border-border bg-surface-subtle">
+                                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Product</th>
+                                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">HS Code</th>
+                                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Sale Type</th>
+                                            <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">Unit Price</th>
+                                            <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">Qty</th>
+                                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Rate</th>
+                                            <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">Discount</th>
+                                            <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">Sales Tax</th>
+                                            <th className="px-3 py-2 text-right text-xs font-medium text-muted whitespace-nowrap">Total</th>
+                                            <th className="w-10 px-3 py-2" />
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {items.map((item, idx) => {
+                                        {items.map((item) => {
+                                            const sroInfo = item.sroScheduleNo || item.sroItemSerialNo
+                                                ? `SRO: ${item.sroScheduleNo || 'N/A'} · SR#: ${item.sroItemSerialNo || 'N/A'}`
+                                                : undefined
+                                            const saleType = item.diSaleType || 'Goods at standard rate (default)'
                                             return (
-                                                <tr key={item.productId} className={`border-b border-border-muted transition-colors hover:bg-surface-subtle ${idx % 2 === 0 ? '' : 'bg-surface-subtle/40'}`}>
-                                                    {/* Product */}
-                                                    <td className="px-4 py-3">
-                                                        <p className="font-medium text-ink truncate">{item.name}</p>
-                                                        <p className="text-xs text-muted font-mono truncate">{item.hsCode}</p>
-                                                        <p className="text-[11px] text-muted truncate">{item.diSaleType || 'Goods at standard rate (default)'}</p>
-                                                        {(item.sroScheduleNo || item.sroItemSerialNo) && (
-                                                            <p className="text-[11px] text-muted truncate">
-                                                                SRO: {item.sroScheduleNo || 'N/A'} · SR#: {item.sroItemSerialNo || 'N/A'}
-                                                            </p>
-                                                        )}
-                                                    </td>
-
-                                                    {/* Unit Price */}
-                                                    <td className="px-3 py-3">
-                                                        <span className="text-sm font-medium text-ink">PKR {item.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-                                                    </td>
-
-                                                    {/* Qty */}
-                                                    <td className="px-3 py-3">
-                                                        <span className="text-sm font-medium text-ink">{item.quantity}</span>
-                                                    </td>
-
-                                                    {/* Rate */}
-                                                    <td className="px-3 py-3">
-                                                        <p className="text-sm font-medium text-ink">{(item.diRate ?? '').trim() || `${item.taxRate}%`}</p>
-                                                        <p className="text-xs text-muted">Tax {item.taxRate}%</p>
-                                                    </td>
-
-                                                    {/* Discount */}
-                                                    <td className="px-3 py-3">
-                                                        <span className="text-sm text-ink">PKR {item.discount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-                                                    </td>
-
-                                                    {/* Total */}
-                                                    <td className="px-3 py-3 text-right">
-                                                        <p className="text-sm font-bold text-ink">PKR {getItemLineTotal(item).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
-                                                        <p className="text-xs text-muted">+{getItemSalesTax(item).toLocaleString(undefined, { maximumFractionDigits: 2 })} tax</p>
-                                                    </td>
-
-                                                    {/* Remove */}
-                                                    <td className="px-3 py-3 text-center">
+                                                <tr key={item.productId} className="border-b border-border-muted last:border-0 transition-colors hover:bg-surface-subtle">
+                                                    <td className="max-w-[220px] truncate px-3 py-2 font-medium text-ink" title={item.name}>{item.name}</td>
+                                                    <td className="whitespace-nowrap px-3 py-2 font-mono text-xs text-muted">{item.hsCode}</td>
+                                                    <td className="max-w-[200px] truncate px-3 py-2 text-xs text-muted" title={sroInfo ? `${saleType} — ${sroInfo}` : saleType}>{saleType}</td>
+                                                    <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-ink">PKR {item.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                                                    <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-ink">{item.quantity}</td>
+                                                    <td className="max-w-[140px] truncate px-3 py-2 text-ink" title={`Tax ${item.taxRate}%`}>{(item.diRate ?? '').trim() || `${item.taxRate}%`}</td>
+                                                    <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-ink">PKR {item.discount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                                                    <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-muted">PKR {getItemSalesTax(item).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                                                    <td className="whitespace-nowrap px-3 py-2 text-right font-semibold tabular-nums text-ink">PKR {getItemLineTotal(item).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                                                    <td className="px-3 py-2 text-center">
                                                         <button
                                                             onClick={() => removeItem(item.productId)}
-                                                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-error-bg text-xs text-error transition-colors hover:bg-error hover:text-white mx-auto"
+                                                            className="mx-auto flex h-6 w-6 items-center justify-center rounded-md text-xs text-muted transition-colors hover:bg-error-bg hover:text-error"
+                                                            title="Remove item"
+                                                            aria-label={`Remove ${item.name}`}
                                                         >✕</button>
                                                     </td>
                                                 </tr>
@@ -301,6 +280,7 @@ export default function POSPage() {
                                         })}
                                     </tbody>
                                 </table>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -439,7 +419,7 @@ export default function POSPage() {
                             type="button"
                             onClick={handleDraft}
                             disabled={items.length === 0 || draftLoading}
-                            className="w-full rounded-full bg-primary py-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
+                            className="w-full rounded-lg bg-primary py-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             {draftLoading ? 'Saving…' : 'Save Draft'}
                         </button>

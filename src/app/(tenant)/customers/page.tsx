@@ -170,24 +170,23 @@ export default function CustomersPage() {
     }
 
     return (
-        <div className="p-6 lg:p-8">
+        <div className="p-4 lg:p-6">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
                 <div>
-                    <p className="text-xs font-medium uppercase tracking-caps text-muted">Buyer registry</p>
-                    <h1 className="mt-1 text-page-title font-normal text-ink">Customers</h1>
-                    <p className="mt-1 text-ui-xs text-muted">{total} total customers</p>
+                    <h1 className="text-page-title font-semibold tracking-tight text-ink">Customers</h1>
+                    <p className="mt-0.5 text-ui-xs text-muted">{total} total customers</p>
                 </div>
                 <div className="flex gap-3">
                     <button
                         onClick={() => setShowVerifyModal(true)}
-                        className="rounded-full border border-border bg-white px-4 py-2 text-ui-xs font-medium text-ink hover:bg-surface transition-colors"
+                        className="rounded-lg border border-border bg-white px-4 py-2 text-ui-xs font-medium text-ink hover:bg-surface transition-colors"
                     >
                         Verify NTN/CNIC
                     </button>
                     <button
                         onClick={() => setShowForm(!showForm)}
-                        className="rounded-full bg-primary px-4 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors"
+                        className="rounded-lg bg-primary px-4 py-2 text-ui-xs font-medium text-white hover:bg-primary-dark transition-colors"
                     >
                         {showForm ? 'Cancel' : '+ Add Customer'}
                     </button>
@@ -268,7 +267,7 @@ export default function CustomersPage() {
                             </div>
                         </div>
                         <button type="submit" disabled={saving}
-                            className="rounded-full bg-primary px-4 py-2 text-ui-xs font-medium text-white disabled:opacity-70 hover:bg-primary-dark transition-colors">
+                            className="rounded-lg bg-primary px-4 py-2 text-ui-xs font-medium text-white disabled:opacity-70 hover:bg-primary-dark transition-colors">
                             {saving ? 'Saving...' : 'Add Customer'}
                         </button>
                     </form>
@@ -286,52 +285,50 @@ export default function CustomersPage() {
             <div className="bg-white rounded-card shadow-card overflow-hidden">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="border-b border-border-muted">
-                            <th className="p-4 text-left text-ui-xs font-normal text-muted">Name</th>
-                            <th className="p-4 text-left text-ui-xs font-normal text-muted">NTN/CNIC</th>
-                            <th className="p-4 text-left text-ui-xs font-normal text-muted">Phone</th>
-                            <th className="p-4 text-left text-ui-xs font-normal text-muted">Province</th>
-                            <th className="p-4 text-left text-ui-xs font-normal text-muted">FBR Register</th>
-                            <th className="p-4 text-left text-ui-xs font-normal text-muted">FBR Status</th>
-                            <th className="p-4 text-left text-ui-xs font-normal text-muted">Actions</th>
+                        <tr className="border-b border-border bg-surface-subtle">
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Name</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">NTN/CNIC</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Phone</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Province</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">FBR Register</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">FBR Status</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-muted whitespace-nowrap">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan={6} className="p-8 text-center text-muted">Loading...</td></tr>
+                            <tr><td colSpan={7} className="p-8 text-center text-muted">Loading...</td></tr>
                         ) : customers.length === 0 ? (
-                            <tr><td colSpan={6} className="p-8 text-center text-muted">No customers found</td></tr>
+                            <tr><td colSpan={7} className="p-8 text-center text-muted">No customers found</td></tr>
                         ) : (
                             customers.map((c) => (
                                 <tr key={c.id} className="border-b border-border-muted hover:bg-surface-subtle transition-colors">
-                                    <td className="px-4 py-2 font-medium text-ink">{c.name}</td>
-                                    <td className="px-4 py-2 font-mono text-ui-xs text-muted">{c.ntnCnic || '—'}</td>
-                                    <td className="px-4 py-2 text-muted">{c.phone || '—'}</td>
-                                    <td className="px-4 py-2 text-muted">{c.province || '—'}</td>
-                                    <td className="px-4 py-2">
+                                    <td className="px-3 py-2 font-medium text-ink">{c.name}</td>
+                                    <td className="px-3 py-2 font-mono text-ui-xs text-muted">{c.ntnCnic || '—'}</td>
+                                    <td className="px-3 py-2 text-muted">{c.phone || '—'}</td>
+                                    <td className="px-3 py-2 text-muted">{c.province || '—'}</td>
+                                    <td className="px-3 py-2">
                                         {c.fbrVerified ? (
-                                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium w-fit ${c.registrationType === 'Registered' ? 'bg-success-bg text-success' : 'bg-accent-light text-warning'}`}>
-                                                <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap w-fit ${c.registrationType === 'Registered' ? 'bg-success-bg text-success' : 'bg-accent-light text-warning'}`}>
                                                 {c.registrationType}
                                             </span>
                                         ) : (
                                             <span className="text-xs text-muted">Not verified</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-2">
+                                    <td className="px-3 py-2">
                                         {c.atlStatus ? (
-                                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium w-fit ${c.atlStatus === 'Active' ? 'bg-success-bg text-success' : 'bg-error-bg text-error'}`}>
-                                                <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap w-fit ${c.atlStatus === 'Active' ? 'bg-success-bg text-success' : 'bg-error-bg text-error'}`}>
                                                 ATL: {c.atlStatus}
                                             </span>
                                         ) : (
                                             <span className="text-xs text-muted">Not verified</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-2">
+                                    <td className="px-3 py-2">
                                         {c.ntnCnic && (
                                             <button onClick={() => handleVerifyBuyer(c.id, c.ntnCnic!)} disabled={verifying === c.id}
-                                                className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-ink hover:bg-surface disabled:opacity-50 transition-colors">
+                                                className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-ink hover:bg-surface disabled:opacity-50 transition-colors">
                                                 {verifying === c.id ? 'Checking...' : c.fbrVerified ? 'Re-verify' : 'Verify FBR'}
                                             </button>
                                         )}
@@ -347,12 +344,12 @@ export default function CustomersPage() {
             {pages > 1 && (
                 <div className="mt-4 flex justify-center gap-2">
                     <button disabled={page <= 1} onClick={() => setPage(page - 1)}
-                        className="rounded-full border border-border bg-white px-3 py-1.5 text-ui-xs text-ink disabled:opacity-40 hover:bg-surface transition-colors">
+                        className="rounded-lg border border-border bg-white px-3 py-1.5 text-ui-xs text-ink disabled:opacity-40 hover:bg-surface transition-colors">
                         Prev
                     </button>
                     <span className="px-3 py-1.5 text-ui-xs text-muted">Page {page} of {pages}</span>
                     <button disabled={page >= pages} onClick={() => setPage(page + 1)}
-                        className="rounded-full border border-border bg-white px-3 py-1.5 text-ui-xs text-ink disabled:opacity-40 hover:bg-surface transition-colors">
+                        className="rounded-lg border border-border bg-white px-3 py-1.5 text-ui-xs text-ink disabled:opacity-40 hover:bg-surface transition-colors">
                         Next
                     </button>
                 </div>
@@ -371,7 +368,7 @@ export default function CustomersPage() {
                                 inputMode="numeric" maxLength={13} placeholder="Enter 7-digit NTN or 13-digit CNIC"
                                 className="flex-1 rounded-input border border-border px-3 py-2 text-sm text-ink bg-white focus:outline-none focus:border-primary" />
                             <button onClick={handleQuickVerify} disabled={verifying === 'quick' || !verifyNtn}
-                                className="rounded-full bg-primary px-4 py-2 text-ui-xs font-medium text-white disabled:opacity-70 hover:bg-primary-dark transition-colors">
+                                className="rounded-lg bg-primary px-4 py-2 text-ui-xs font-medium text-white disabled:opacity-70 hover:bg-primary-dark transition-colors">
                                 {verifying === 'quick' ? 'Checking...' : 'Verify'}
                             </button>
                         </div>

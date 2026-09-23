@@ -10,8 +10,8 @@
   --font-display:         var(--font-dm-sans), 'DM Sans', system-ui, sans-serif;
 
   /* ── Layout surfaces ── */
-  --color-canvas:         #E8E8E6;   /* outer page bg — warm gray   */
-  --color-surface:        #F4F3EF;   /* panel / nav / section bg    */
+  --color-canvas:         #F8FAFC;   /* outer page bg — slate-50    */
+  --color-surface:        #F1F5F9;   /* panel / section / hover bg  */
   --color-card:           #FFFFFF;   /* white inner cards           */
 
   /* ── Primary brand — GREEN (change hex here to retheme) ── */
@@ -21,74 +21,74 @@
   --color-primary-muted:  #bbf7d0;   /* green-200 — tint            */
 
   /* ── Text hierarchy ── */
-  --color-ink:            #1A1A1A;   /* primary text                */
-  --color-muted:          #8A8A8A;   /* secondary / label text      */
-  --color-subtle:         #C4C4C4;   /* placeholders, dividers      */
+  --color-ink:            #0F172A;   /* primary text — slate-900    */
+  --color-muted:          #64748B;   /* secondary text — slate-500  */
+  --color-subtle:         #CBD5E1;   /* placeholders, dividers      */
 
   /* ── Yellow accent (badges, stat bars, highlights) ── */
-  --color-accent:         #F5C518;
-  --color-accent-light:   #FDF6C3;
-  --color-accent-muted:   #FAF0A0;
+  --color-accent:         #F59E0B;
+  --color-accent-light:   #FEF3C7;
+  --color-accent-muted:   #FDE68A;
 
   /* ── Borders (extra weights) ── */
-  --color-border:         #E8E8E8;   /* default border              */
-  --color-border-strong:  #D0D0D0;   /* logo pills, prominent edges */
-  --color-border-muted:   #F0F0F0;   /* subtle table dividers       */
+  --color-border:         #E2E8F0;   /* default border — slate-200  */
+  --color-border-strong:  #CBD5E1;   /* prominent edges             */
+  --color-border-muted:   #F1F5F9;   /* subtle table dividers       */
 
   /* ── Surfaces (extra tones) ── */
-  --color-surface-subtle: #FAFAF8;   /* table row hover, light chip */
-  --color-ink-secondary:  #444444;   /* inactive nav links          */
+  --color-surface-subtle: #F8FAFC;   /* table row hover, light chip */
+  --color-ink-secondary:  #475569;   /* inactive nav links          */
 
   /* ── Semantic status ── */
-  --color-success:        #1DB97A;
-  --color-success-bg:     #E6F9F0;
-  --color-error:          #E53E3E;
-  --color-error-bg:       #FDECEA;
-  --color-warning:        #B8860B;
-  --color-warning-bg:     #FDF6C3;
+  --color-success:        #15803D;
+  --color-success-bg:     #F0FDF4;
+  --color-error:          #B91C1C;
+  --color-error-bg:       #FEF2F2;
+  --color-warning:        #B45309;
+  --color-warning-bg:     #FFFBEB;
 
   /* ── Semantic error border ── */
-  --color-error-border:   #FCCDD0;   /* error state input/box border  */
+  --color-error-border:   #FECACA;   /* error state input/box border  */
   --color-error-dark:     #C53030;   /* darker red for hover states   */
-  --color-success-border: #B8EDD5;   /* light green border / hover bg */
+  --color-success-border: #BBF7D0;   /* light green border / hover bg */
 
   /* ── Contextual / special-purpose colors ── */
   --color-gold:      #c8a45a;   /* amber/gold — onboarding steps, sandbox labels */
   --color-cream:     #f6e7bf;   /* warm cream — link hover text on dark bg       */
-  --color-code-bg:   #1A1A1A;   /* dark terminal / JSON preview blocks           */
+  --color-code-bg:   #0F172A;   /* dark terminal / JSON preview blocks           */
   --color-print-bg:  #0d140f;   /* dark print-preview header                     */
 
   /* ── Nav frosted glass background ── */
-  --color-nav-blur: rgba(247,246,242,0.92); /* sticky nav + marketing nav */
+  --color-nav-blur: rgba(255,255,255,0.92); /* sticky nav + marketing nav */
 
   /* ── Typography scale (non-standard sizes) ── */
   --text-micro:      0.625rem;    /* 10px — tiny badge labels       */
   --text-ui-xs:      0.8125rem;   /* 13px — nav links, table meta   */
   --text-ui-sm:      0.9375rem;   /* 15px — card headings           */
   --text-heading-sm: 1.0625rem;   /* 17px — modal headings          */
-  --text-page-title: 2rem;        /* 32px — page h1 titles          */
+  --text-page-title: 1.25rem;     /* 20px — page h1 titles          */
 
   /* ── Border radius ── */
-  --radius-input: 0.625rem;  /* 10px — inputs, selects             */
-  --radius-chip:  0.875rem;  /* 14px — small inline cards          */
-  --radius-card:  1.25rem;   /* 20px — app card shells             */
-  --radius-panel: 1.75rem;   /* 28px — feature / pricing panels    */
-  --radius-modal: 2rem;      /* 32px — auth page outer shell       */
+  --radius-input: 0.5rem;    /* 8px  — inputs, selects             */
+  --radius-chip:  0.625rem;  /* 10px — small inline cards          */
+  --radius-card:  0.75rem;   /* 12px — app card shells             */
+  --radius-panel: 1rem;      /* 16px — feature / pricing panels    */
+  --radius-modal: 1rem;      /* 16px — modal shells                */
 
   /* ── Letter spacing (ALL-CAPS section labels) ── */
-  --tracking-caps-xs: 0.16em;   /* stat-card labels                */
-  --tracking-caps:    0.20em;   /* standard section eyebrow labels */
-  --tracking-caps-md: 0.22em;   /* medium-width labels             */
-  --tracking-caps-lg: 0.24em;   /* wide labels                     */
-  --tracking-caps-xl: 0.26em;   /* widest hero labels              */
+  --tracking-caps-xs: 0.06em;   /* stat-card labels                */
+  --tracking-caps:    0.08em;   /* standard section eyebrow labels */
+  --tracking-caps-md: 0.08em;   /* medium-width labels             */
+  --tracking-caps-lg: 0.10em;   /* wide labels                     */
+  --tracking-caps-xl: 0.10em;   /* widest hero labels              */
 
   /* ── Shadows ── */
-  --shadow-card:   0 2px 12px rgba(0,0,0,0.05);   /* default app card       */
-  --shadow-panel:  0 8px 48px rgba(0,0,0,0.07);   /* outer rounded panel    */
-  --shadow-hover:  0 8px 32px rgba(0,0,0,0.10);   /* elevated hover         */
-  --shadow-nav:    0 1px 4px  rgba(0,0,0,0.04);   /* sticky nav header      */
-  --shadow-modal:  0 8px 32px rgba(0,0,0,0.12);   /* dialog / modal         */
-  --shadow-brand:  0 8px 32px rgba(22,163,74,0.28); /* primary green glow   */
+  --shadow-card:   0 1px 2px rgba(15,23,42,0.05);  /* default app card       */
+  --shadow-panel:  0 4px 16px rgba(15,23,42,0.06); /* outer rounded panel    */
+  --shadow-hover:  0 4px 12px rgba(15,23,42,0.08); /* elevated hover         */
+  --shadow-nav:    0 1px 0    rgba(15,23,42,0.04); /* sticky nav header      */
+  --shadow-modal:  0 16px 48px rgba(15,23,42,0.16); /* dialog / modal        */
+  --shadow-brand:  0 4px 14px rgba(22,163,74,0.20); /* primary green glow   */
 }
 
 * {
@@ -100,8 +100,8 @@ html {
 }
 
 body {
-  background-color: #E8E8E6; /* canvas */
-  color: #1A1A1A;             /* ink */
+  background-color: #F8FAFC; /* canvas */
+  color: #0F172A;             /* ink */
   font-family: var(--font-dm-sans), 'DM Sans', system-ui, sans-serif;
   font-size: 14px;
   min-height: 100vh;
@@ -120,14 +120,14 @@ a {
 /* Outer page wrapper */
 .brand-shell {
   position: relative;
-  background-color: #E8E8E6;
+  background-color: #F8FAFC;
 }
 
 /* White card with subtle border */
 .brand-panel {
   background: #FFFFFF;
-  border: 1px solid #E8E8E8;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.05);
 }
 
 /* Featured / highlighted plan card — green gradient */
@@ -139,19 +139,19 @@ a {
 .brand-heading {
   font-family: 'DM Sans', sans-serif;
   letter-spacing: -0.02em;
-  color: #1A1A1A;
+  color: #0F172A;
 }
 
 /* Secondary text */
 .brand-muted {
-  color: #8A8A8A;
+  color: #64748B;
 }
 
 /* Filter chip / badge chip */
 .brand-chip {
-  border: 1px solid #E8E8E8;
-  background: #F4F3EF;
-  color: #1A1A1A;
+  border: 1px solid #E2E8F0;
+  background: #F1F5F9;
+  color: #0F172A;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -160,39 +160,39 @@ a {
 
 .app-shell {
   min-height: 100vh;
-  background-color: #E8E8E6;
-  color: #1A1A1A;
+  background-color: #F8FAFC;
+  color: #0F172A;
 }
 
 .app-sidebar {
-  background: #F4F3EF;
-  border-right: 1px solid #E8E8E8;
+  background: #F1F5F9;
+  border-right: 1px solid #E2E8F0;
 }
 
 .app-panel {
   background: #FFFFFF;
-  border: 1px solid #E8E8E8;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.05);
 }
 
 .app-panel-soft {
-  background: #F4F3EF;
-  border: 1px solid #E8E8E8;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
 }
 
 /* Nav active pill — primary green */
 .app-nav-active {
   background-color: #16a34a;
   color: #FFFFFF;
-  border-radius: 999px;
+  border-radius: 8px;
 }
 
 .metric-value {
-  color: #1A1A1A;
+  color: #0F172A;
 }
 
 .metric-accent {
-  color: #F5C518;
+  color: #F59E0B;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -205,16 +205,16 @@ a {
 .app-panel select,
 .app-panel-soft select {
   background-color: #FFFFFF;
-  color: #1A1A1A;
+  color: #0F172A;
   color-scheme: light;
-  border: 1px solid #E8E8E8;
+  border: 1px solid #E2E8F0;
 }
 
 .app-shell select option,
 .app-panel select option,
 .app-panel-soft select option {
   background-color: #FFFFFF;
-  color: #1A1A1A;
+  color: #0F172A;
 }
 
 /* Shared input class — apply to <input>, <select>, <textarea> */
@@ -222,10 +222,10 @@ select.app-input,
 input.app-input,
 textarea.app-input {
   background: #FFFFFF;
-  border: 1px solid #E8E8E8;
-  color: #1A1A1A;
+  border: 1px solid #E2E8F0;
+  color: #0F172A;
   color-scheme: light;
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 8px 12px;
   font-size: 14px;
   font-family: 'DM Sans', sans-serif;
@@ -242,7 +242,7 @@ textarea.app-input:focus {
 
 select.app-input option {
   background-color: #FFFFFF;
-  color: #1A1A1A;
+  color: #0F172A;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -251,8 +251,8 @@ select.app-input option {
 
 .badge-invited,
 .badge-employed {
-  background: #E6F9F0;
-  color: #1DB97A;
+  background: #F0FDF4;
+  color: #15803D;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
@@ -261,8 +261,8 @@ select.app-input option {
 
 .badge-absent,
 .badge-pending {
-  background: #F2F2F2;
-  color: #8A8A8A;
+  background: #F1F5F9;
+  color: #64748B;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
@@ -270,8 +270,8 @@ select.app-input option {
 }
 
 .badge-draft {
-  background: #F2F2F2;
-  color: #8A8A8A;
+  background: #F1F5F9;
+  color: #64748B;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
@@ -281,8 +281,8 @@ select.app-input option {
 .badge-confirmed,
 .badge-submitted,
 .badge-success {
-  background: #E6F9F0;
-  color: #1DB97A;
+  background: #F0FDF4;
+  color: #15803D;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
@@ -291,8 +291,8 @@ select.app-input option {
 
 .badge-failed,
 .badge-error {
-  background: #FDECEA;
-  color: #E53E3E;
+  background: #FEF2F2;
+  color: #B91C1C;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
@@ -304,17 +304,17 @@ select.app-input option {
    ───────────────────────────────────────────────────────────── */
 
 .crextio-shell {
-  background-color: #E8E8E6;
+  background-color: #F8FAFC;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
 .crextio-inner {
-  background-color: #F4F3EF;
-  border-radius: 28px;
+  background-color: #F1F5F9;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 8px 48px rgba(0,0,0,0.07);
+  box-shadow: 0 4px 16px rgba(15,23,42,0.06);
   position: relative;
 }
 
