@@ -6,11 +6,12 @@ import { signOut, useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import { LogOut, Menu, ReceiptText, User, X } from 'lucide-react'
 
-const navItems = [
+const navItems: Array<{ href: string; label: string; feature?: 'ledgerImport' }> = [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/pos', label: 'POS Terminal' },
     { href: '/invoices', label: 'Invoices' },
     { href: '/invoices/report', label: 'Report' },
+    { href: '/ledger-import', label: 'Ledger Import', feature: 'ledgerImport' as const },
     { href: '/customers', label: 'Customers' },
     { href: '/hs-codes', label: 'HS Codes' },
     { href: '/sandbox-scenarios', label: 'Sandbox' },
@@ -24,6 +25,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [config, setConfig] = useState<{ configured: boolean; environment: 'SANDBOX' | 'PRODUCTION' | null; hasProductionToken: boolean } | null>(null)
     const [switchingEnv, setSwitchingEnv] = useState(false)
+    const [features, setFeatures] = useState<{ ledgerImport: boolean }>({ ledgerImport: false })
     const [notification, setNotification] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
     const [subscription, setSubscription] = useState<{
         allowed: boolean
@@ -51,6 +53,10 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
 
     useEffect(() => {
         loadConfig()
+        fetch('/api/tenant/features')
+            .then(r => r.ok ? r.json() : null)
+            .then(data => { if (data) setFeatures({ ledgerImport: Boolean(data.ledgerImport) }) })
+            .catch(() => {})
         fetch('/api/tenant/subscription')
             .then(r => r.ok ? r.json() : null)
             .then(data => { if (data) setSubscription(data) })
@@ -112,6 +118,9 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
 
     const visibleNavItems = navItems.filter((item) => {
         if (item.href === '/onboarding' && config?.configured) {
+            return false
+        }
+        if (item.feature && !features[item.feature]) {
             return false
         }
         return true

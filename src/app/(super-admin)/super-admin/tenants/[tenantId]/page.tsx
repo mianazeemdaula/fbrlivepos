@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { Edit2, Shield, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react'
 import { EditTenantModal, type TenantDetail } from './EditTenantModal'
 import { SubscriptionManager, type PlanOption } from './SubscriptionManager'
+import { TenantFeatures } from './TenantFeatures'
 
 function TenantDetailContent() {
     const params = useParams()
@@ -388,6 +389,13 @@ function TenantDetailContent() {
                 subscription={tenant.subscription}
                 plans={plans}
                 onChanged={reloadTenant}
+                onError={(message) => setNotification({ type: 'error', message })}
+            />
+
+            {/* Per-tenant optional features */}
+            <TenantFeatures
+                tenantId={String(params.tenantId)}
+                onChanged={(message) => setNotification({ type: 'success', message })}
                 onError={(message) => setNotification({ type: 'error', message })}
             />
 

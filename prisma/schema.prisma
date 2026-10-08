@@ -54,6 +54,12 @@ enum BillingStatus {
   WAIVED
 }
 
+enum LedgerDraftStatus {
+  DRAFT
+  CREATED
+  DISCARDED
+}
+
 enum AnnouncementType {
   INFO
   WARNING
@@ -116,6 +122,7 @@ model Tenant {
   submissionLogs   FBRSubmissionLog[]
   featureFlags     TenantFeatureFlag[]
   customers        Customer[]
+  ledgerImports    LedgerImport[]
 }
 
 model POSTerminal {
@@ -662,4 +669,123 @@ model Customer {
   @@unique([tenantId, ntnCnic])
   @@index([tenantId])
   @@index([tenantId, name])
+}
+
+// ─── SALES LEDGER IMPORT (FBR IRIS purchase ledger → generated sale invoices) ─
+
+// One uploaded IRIS ledger sheet. Its rows are pooled into LedgerItems (stock),
+// which generated LedgerDrafts consume until they are turned into real invoices.
+model LedgerImport {
+  id                 String            @id @default(cuid())
+  tenant             Tenant            @relation(fields: [tenantId], references: [id])
+  tenantId           String
+  fileName           String
+  createdById        String
+  sourceRowCount     Int
+  sourceInvoiceCount Int
+  sellerCount        Int
+  periodFrom         DateTime?
+  periodTo           DateTime?
+  totalQuantity      Decimal           @db.Decimal(14, 3)
+  totalValueExclST   Decimal           @db.Decimal(14, 2)
+  totalSalesTax      Decimal           @db.Decimal(14, 2)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  items              LedgerItem[]
+  drafts             LedgerDraft[]
+  sourceRows         LedgerSourceRow[]
+
+  @@index([tenantId])
+}
+
+// Raw sheet row, kept for audit and to stop the same IRIS row being imported twice.
+model LedgerSourceRow {
+  id          String       @id @default(cuid())
+  import      LedgerImport @relation(fields: [importId], references: [id], onDelete: Cascade)
+  importId    String
+  tenantId    String
+  rowKey      String // "Invoice Ref No." from IRIS (fallback: composite of invoice no/HS/qty/value)
+  invoiceNo   String?
+  invoiceDate DateTime?
+  sellerNTN   String?
+  sellerName  String?
+  hsCode      String
+  quantity    Decimal      @db.Decimal(14, 3)
+  valueExclST Decimal      @db.Decimal(14, 2)
+  data        Json
+
+  @@unique([tenantId, rowKey])
+  @@index([importId])
+}
+
+// Stock pooled by every field that defines how the line is taxed, so a generated
+// sale line always carries the same HS code / sale type / rate / UoM / SRO / item no.
+model LedgerItem {
+  id                  String            @id @default(cuid())
+  import              LedgerImport      @relation(fields: [importId], references: [id], onDelete: Cascade)
+  importId            String
+  tenantId            String
+  sortOrder           Int
+  hsCode              String
+  hsDescription       String?
+  productName         String
+  sourceDescriptions  String[]
+  saleType            String
+  rate                String // exact rate descriptor, e.g. "18%"
+  taxRate             Decimal           @db.Decimal(5, 2)
+  uom                 String
+  sroScheduleNo       String?
+  sroItemSerialNo     String?
+  totalQuantity       Decimal           @db.Decimal(14, 3)
+  purchaseValueExclST Decimal           @db.Decimal(14, 2)
+  purchaseSalesTax    Decimal           @db.Decimal(14, 2)
+  purchaseRetailValue Decimal           @db.Decimal(14, 2)
+  saleUnitPrice       Decimal           @db.Decimal(12, 2) // per unit, excl. sales tax
+  retailUnitPrice     Decimal?          @db.Decimal(12, 2) // per unit fixed/notified/retail price
+  sourceRowCount      Int
+  productId           String? // inactive catalogue product backing the generated InvoiceItems
+  draftLines          LedgerDraftLine[]
+
+  @@index([importId])
+}
+
+model LedgerDraft {
+  id                    String            @id @default(cuid())
+  import                LedgerImport      @relation(fields: [importId], references: [id], onDelete: Cascade)
+  importId              String
+  tenantId              String
+  sequence              Int
+  invoiceDate           DateTime
+  status                LedgerDraftStatus @default(DRAFT)
+  customerId            String?
+  buyerName             String?
+  buyerNTN              String?
+  buyerProvince         String?
+  buyerAddress          String?
+  buyerRegistrationType String?
+  subtotal              Decimal           @db.Decimal(14, 2)
+  taxAmount             Decimal           @db.Decimal(14, 2)
+  totalAmount           Decimal           @db.Decimal(14, 2)
+  invoiceId             String?           @unique
+  createdAt             DateTime          @default(now())
+  lines                 LedgerDraftLine[]
+
+  @@index([importId, status])
+}
+
+model LedgerDraftLine {
+  id          String      @id @default(cuid())
+  draft       LedgerDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  draftId     String
+  item        LedgerItem  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId      String
+  quantity    Decimal     @db.Decimal(14, 3)
+  unitPrice   Decimal     @db.Decimal(12, 2)
+  retailValue Decimal?    @db.Decimal(14, 2)
+  valueExclST Decimal     @db.Decimal(14, 2)
+  salesTax    Decimal     @db.Decimal(14, 2)
+  lineTotal   Decimal     @db.Decimal(14, 2)
+
+  @@index([draftId])
+  @@index([itemId])
 }
