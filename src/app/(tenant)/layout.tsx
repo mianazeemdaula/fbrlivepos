@@ -324,7 +324,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
             )}
 
             {/* Page content */}
-            <main className="mx-auto min-h-[calc(100vh-56px)] max-w-[1600px]">
+            <main className="mx-auto max-w-[1600px]">
                 {children}
             </main>
         </div>

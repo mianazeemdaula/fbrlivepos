@@ -64,15 +64,23 @@ export default function GenerateStep({
     useEffect(() => {
         if (minAmount || maxAmount || stockValue <= 0) return
         const average = stockValue / 20
-        setMinAmount(String(Math.max(1, Math.floor(average / 100) * 100)))
-        setMaxAmount(String(Math.ceil((average * 1.5) / 100) * 100))
+        setMinAmount(String(Math.max(1, Math.floor((average * 0.6) / 100) * 100)))
+        setMaxAmount(String(Math.ceil((average * 1.4) / 100) * 100))
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [stockValue])
 
     const min = Number(minAmount)
     const max = Number(maxAmount)
-    // Invoice count follows from the minimum amount: as many invoices as the stock covers at that minimum.
-    const n = min > 0 ? Math.min(MAX_INVOICES, Math.floor(stockValue / min)) : 0
+    // Invoice count follows from the amount band: stock split at the midpoint of min and max,
+    // kept within what the band allows (enough invoices to stay under max, few enough to reach min).
+    const n = (() => {
+        if (!(min > 0 && max >= min) || stockValue <= 0) return 0
+        const most = Math.floor(stockValue / min)
+        if (most < 1) return 0
+        const least = Math.max(1, Math.ceil(stockValue / max))
+        const target = Math.round(stockValue / ((min + max) / 2))
+        return Math.min(MAX_INVOICES, most, Math.max(least, target))
+    })()
     const average = n > 0 ? stockValue / n : 0
     const hint = !(min > 0 && max >= min)
         ? null
@@ -144,7 +152,7 @@ export default function GenerateStep({
                         <Field label="To date">
                             <input type="date" className={inputClass} value={to} max={today} onChange={(e) => setTo(e.target.value)} required />
                         </Field>
-                        <Field label="Number of invoices (from minimum amount)">
+                        <Field label="Number of invoices (from amount range)">
                             <input type="number" className={`${inputClass} bg-surface-subtle`} value={n > 0 ? n : ''} placeholder="—" readOnly tabIndex={-1} />
                         </Field>
                         <Field label="Max products per invoice">
