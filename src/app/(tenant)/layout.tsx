@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
-import { useState, useEffect } from 'react'
-import { LogOut, Menu, ReceiptText, User, X } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { ChevronDown, LogOut, Menu, ReceiptText, User, X } from 'lucide-react'
 
 const navItems: Array<{ href: string; label: string; feature?: 'ledgerImport' }> = [
     { href: '/dashboard', label: 'Dashboard' },
@@ -23,7 +23,9 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
     const pathname = usePathname()
     const { data: session } = useSession()
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-    const [config, setConfig] = useState<{ configured: boolean; environment: 'SANDBOX' | 'PRODUCTION' | null; hasProductionToken: boolean } | null>(null)
+    const [userMenuOpen, setUserMenuOpen] = useState(false)
+    const userMenuRef = useRef<HTMLDivElement>(null)
+    const [config, setConfig] = useState<{ configured: boolean; environment: 'SANDBOX' | 'PRODUCTION' | null; hasProductionToken: boolean; sandboxCompleted: boolean } | null>(null)
     const [switchingEnv, setSwitchingEnv] = useState(false)
     const [features, setFeatures] = useState<{ ledgerImport: boolean }>({ ledgerImport: false })
     const [notification, setNotification] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -44,7 +46,8 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                     setConfig({
                         configured: data.configured ?? false,
                         environment: data.environment ?? null,
-                        hasProductionToken: data.hasProductionToken ?? false
+                        hasProductionToken: data.hasProductionToken ?? false,
+                        sandboxCompleted: data.sandboxCompleted ?? false
                     })
                 }
             })
@@ -120,13 +123,34 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
         if (item.href === '/onboarding' && config?.configured) {
             return false
         }
+        if (item.href === '/sandbox-scenarios' && config?.sandboxCompleted) {
+            return false
+        }
         if (item.feature && !features[item.feature]) {
             return false
         }
         return true
     })
 
-    useEffect(() => { setMobileMenuOpen(false) }, [pathname])
+    useEffect(() => {
+        setMobileMenuOpen(false)
+        setUserMenuOpen(false)
+    }, [pathname])
+
+    // Close the user menu on outside click or Escape
+    useEffect(() => {
+        if (!userMenuOpen) return
+        const onPointerDown = (e: MouseEvent) => {
+            if (!userMenuRef.current?.contains(e.target as Node)) setUserMenuOpen(false)
+        }
+        const onKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') setUserMenuOpen(false) }
+        document.addEventListener('mousedown', onPointerDown)
+        document.addEventListener('keydown', onKeyDown)
+        return () => {
+            document.removeEventListener('mousedown', onPointerDown)
+            document.removeEventListener('keydown', onKeyDown)
+        }
+    }, [userMenuOpen])
 
     return (
         <div className="min-h-screen bg-canvas">
@@ -148,16 +172,16 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
 
             {/* Top Navigation Bar */}
             <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
-                <div className="mx-auto flex h-14 max-w-[1600px] items-center justify-between gap-4 px-4 sm:px-6">
+                <div className="mx-auto flex h-14 max-w-[1600px] items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6">
                     {/* Logo + Nav */}
-                    <div className="flex min-w-0 items-center gap-6">
+                    <div className="flex min-w-0 items-center gap-4 xl:gap-6">
                         <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
                             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-white">
                                 <ReceiptText size={15} />
                             </span>
-                            <span className="text-sm font-semibold tracking-tight text-ink">AAZIFY FBR</span>
+                            <span className="hidden text-sm font-semibold tracking-tight text-ink min-[400px]:inline">AAZIFY FBR</span>
                         </Link>
-                        <nav className="hidden items-center gap-0.5 lg:flex">
+                        <nav className="hidden min-w-0 items-center gap-0.5 xl:flex">
                             {visibleNavItems.map((item) => {
                                 const active = pathname === item.href ||
                                     (item.href !== '/invoices' && pathname.startsWith(item.href + '/'))
@@ -165,7 +189,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        className={`rounded-md px-3 py-1.5 text-ui-xs font-medium transition-colors duration-150 ${active
+                                        className={`whitespace-nowrap rounded-md px-2.5 py-1.5 text-ui-xs font-medium transition-colors duration-150 ${active
                                             ? 'bg-primary-light text-primary-dark'
                                             : 'text-ink-secondary hover:bg-surface hover:text-ink'
                                             }`}
@@ -178,10 +202,10 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                     </div>
 
                     {/* Right side */}
-                    <div className="flex shrink-0 items-center gap-3">
+                    <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
                         {/* Global Environment Switch */}
                         {config?.configured && config.environment && (
-                            <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-subtle px-2.5 py-1">
+                            <div className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-subtle px-2 py-1 sm:gap-2 sm:px-2.5">
                                 <span className={`text-[11px] font-medium transition-colors ${config.environment !== 'PRODUCTION' ? 'text-warning' : 'text-muted'}`}>
                                     Sandbox
                                 </span>
@@ -202,23 +226,46 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                             </div>
                         )}
 
-                        <div className="hidden items-center gap-2 sm:flex">
-                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface">
-                                <User size={14} className="text-muted" />
-                            </span>
-                            <span className="max-w-40 truncate text-ui-xs font-medium text-ink">
-                                {session?.user?.name || ''}
-                            </span>
+                        {/* User menu */}
+                        <div className="relative" ref={userMenuRef}>
+                            <button
+                                type="button"
+                                onClick={() => setUserMenuOpen((open) => !open)}
+                                aria-haspopup="menu"
+                                aria-expanded={userMenuOpen}
+                                aria-label="Account menu"
+                                className="flex items-center gap-2 rounded-md px-1 py-1 transition-colors hover:bg-surface sm:px-1.5"
+                            >
+                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface">
+                                    <User size={14} className="text-muted" />
+                                </span>
+                                <span className="hidden max-w-40 truncate text-ui-xs font-medium text-ink sm:inline">
+                                    {session?.user?.name || ''}
+                                </span>
+                                <ChevronDown size={14} className={`hidden text-muted transition-transform sm:block ${userMenuOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            {userMenuOpen && (
+                                <div role="menu" className="absolute right-0 top-full z-40 mt-1.5 w-56 overflow-hidden rounded-xl border border-border bg-white py-1 shadow-lg">
+                                    <div className="border-b border-border px-3.5 py-2.5">
+                                        <p className="truncate text-xs font-semibold text-ink">{session?.user?.name || 'Account'}</p>
+                                        {session?.user?.email && (
+                                            <p className="truncate text-[11px] text-muted">{session.user.email}</p>
+                                        )}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        role="menuitem"
+                                        onClick={() => signOut({ callbackUrl: '/login' })}
+                                        className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-xs font-medium text-ink-secondary transition-colors hover:bg-surface hover:text-ink"
+                                    >
+                                        <LogOut size={14} />
+                                        Sign out
+                                    </button>
+                                </div>
+                            )}
                         </div>
                         <button
-                            onClick={() => signOut({ callbackUrl: '/login' })}
-                            className="hidden items-center gap-1.5 rounded-md px-2 py-1.5 text-ui-xs font-medium text-muted transition-colors hover:bg-surface hover:text-ink sm:flex"
-                        >
-                            <LogOut size={14} />
-                            Sign out
-                        </button>
-                        <button
-                            className="flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface lg:hidden"
+                            className="flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface xl:hidden"
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             aria-label="Toggle menu"
                         >
@@ -229,8 +276,8 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
 
                 {/* Mobile Nav Dropdown */}
                 {mobileMenuOpen && (
-                    <div className="border-t border-border bg-white px-4 py-3 lg:hidden">
-                        <nav className="flex flex-col gap-0.5">
+                    <div className="max-h-[calc(100vh-56px)] overflow-y-auto border-t border-border bg-white px-4 py-3 xl:hidden">
+                        <nav className="grid gap-0.5 sm:grid-cols-2">
                             {visibleNavItems.map((item) => {
                                 const active = pathname === item.href ||
                                     (item.href !== '/invoices' && pathname.startsWith(item.href + '/'))
@@ -247,13 +294,6 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
                                     </Link>
                                 )
                             })}
-                            <button
-                                onClick={() => signOut({ callbackUrl: '/login' })}
-                                className="mt-2 flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium text-ink-secondary transition-colors hover:bg-surface hover:text-ink"
-                            >
-                                <LogOut size={15} />
-                                Sign out
-                            </button>
                         </nav>
                     </div>
                 )}

@@ -13,6 +13,9 @@ interface CustomerOption {
     ntnCnic: string | null
 }
 
+// Upper bound accepted by the drafts API
+const MAX_INVOICES = 500
+
 // PKT calendar day as YYYY-MM-DD
 function todayPKT() {
     return new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString().slice(0, 10)
@@ -33,7 +36,6 @@ export default function GenerateStep({
 
     const [from, setFrom] = useState(today.slice(0, 8) + '01')
     const [to, setTo] = useState(today)
-    const [count, setCount] = useState('20')
     const [minAmount, setMinAmount] = useState('')
     const [maxAmount, setMaxAmount] = useState('')
     const [maxItems, setMaxItems] = useState('3')
@@ -58,24 +60,24 @@ export default function GenerateStep({
             return sum + item.availableQuantity * (item.saleUnitPrice + (base * item.taxRate) / 100)
         }, 0), [usableItems, selectedItems])
 
-    // Prefill a sensible amount band around the average invoice value once.
+    // Prefill an amount band that splits the stock into about 20 invoices, once.
     useEffect(() => {
-        const n = Number(count)
-        if (minAmount || maxAmount || !(n > 0) || stockValue <= 0) return
-        const average = stockValue / n
-        setMinAmount(String(Math.max(1, Math.floor((average * 0.6) / 100) * 100)))
-        setMaxAmount(String(Math.ceil((average * 1.4) / 100) * 100))
+        if (minAmount || maxAmount || stockValue <= 0) return
+        const average = stockValue / 20
+        setMinAmount(String(Math.max(1, Math.floor(average / 100) * 100)))
+        setMaxAmount(String(Math.ceil((average * 1.5) / 100) * 100))
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [stockValue])
 
-    const n = Number(count)
     const min = Number(minAmount)
     const max = Number(maxAmount)
+    // Invoice count follows from the minimum amount: as many invoices as the stock covers at that minimum.
+    const n = min > 0 ? Math.min(MAX_INVOICES, Math.floor(stockValue / min)) : 0
     const average = n > 0 ? stockValue / n : 0
-    const hint = !(n > 0 && min > 0 && max >= min)
+    const hint = !(min > 0 && max >= min)
         ? null
-        : n * min > stockValue
-            ? { tone: 'warning', text: `Stock covers only about ${Math.floor(stockValue / min)} invoice(s) at the minimum amount; fewer invoices will be generated.` }
+        : n < 1
+            ? { tone: 'warning', text: `Selected stock is worth Rs ${formatAmount(stockValue)}, below the minimum invoice amount.` }
             : n * max < stockValue
                 ? { tone: 'warning', text: `${n} invoices at most Rs ${formatAmount(max)} sell about Rs ${formatAmount(n * max)}; the remaining stock stays available for a later batch.` }
                 : { tone: 'ok', text: `All selected stock fits: about Rs ${formatAmount(average)} per invoice on average.` }
@@ -93,8 +95,8 @@ export default function GenerateStep({
         e.preventDefault()
         setError(null)
         if (!selectedItems.size) return setError('Select at least one product.')
-        if (!(n >= 1)) return setError('Enter the number of invoices.')
         if (!(min > 0) || !(max >= min)) return setError('Enter a minimum amount and a maximum amount at least as large.')
+        if (!(n >= 1)) return setError('Selected stock does not cover a single invoice at the minimum amount.')
         if (to < from) return setError('"To" date must be on or after the "From" date.')
         if (to > today) return setError('Invoice dates cannot be in the future.')
 
@@ -106,7 +108,7 @@ export default function GenerateStep({
                 body: JSON.stringify({
                     from,
                     to,
-                    count: Math.floor(n),
+                    count: n,
                     minAmount: min,
                     maxAmount: max,
                     maxItemsPerInvoice: Math.max(1, Math.floor(Number(maxItems) || 1)),
@@ -142,8 +144,8 @@ export default function GenerateStep({
                         <Field label="To date">
                             <input type="date" className={inputClass} value={to} max={today} onChange={(e) => setTo(e.target.value)} required />
                         </Field>
-                        <Field label="Number of invoices">
-                            <input type="number" min="1" max="500" className={inputClass} value={count} onChange={(e) => setCount(e.target.value)} required />
+                        <Field label="Number of invoices (from minimum amount)">
+                            <input type="number" className={`${inputClass} bg-surface-subtle`} value={n > 0 ? n : ''} placeholder="—" readOnly tabIndex={-1} />
                         </Field>
                         <Field label="Max products per invoice">
                             <input type="number" min="1" max="10" className={inputClass} value={maxItems} onChange={(e) => setMaxItems(e.target.value)} required />
