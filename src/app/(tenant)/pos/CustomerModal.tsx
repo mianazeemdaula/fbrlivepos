@@ -150,34 +150,44 @@ export default function CustomerModal({
         }
     }
 
+    const inputCls = 'h-8 w-full min-w-0 rounded-lg border border-border bg-white px-2 text-xs text-ink placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30'
+
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4"
             onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
         >
-            <div className="bg-white flex w-full max-w-md flex-col overflow-hidden rounded-2xl shadow-2xl">
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="customer-modal-title"
+                className="flex max-h-[90dvh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-border bg-white shadow-modal sm:rounded-2xl"
+            >
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-border px-5 py-4">
-                    <div>
-                        <p className="text-xs font-medium uppercase tracking-caps text-muted">Customer</p>
-                        <h2 className="mt-0.5 text-base font-bold text-ink">Add / Search Customer</h2>
+                <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-2.5">
+                    <div className="min-w-0">
+                        <p className="text-[10px] font-medium uppercase tracking-wider text-muted">Customer</p>
+                        <h2 id="customer-modal-title" className="text-sm font-semibold text-ink">Add / Search Customer</h2>
                     </div>
                     <button
+                        type="button"
                         onClick={onClose}
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-muted hover:bg-canvas hover:text-ink"
+                        aria-label="Close"
+                        className="flex h-7 w-7 items-center justify-center rounded-md text-sm text-muted hover:bg-surface hover:text-ink"
                     >
                         ✕
                     </button>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-b border-border">
+                <div className="flex shrink-0 gap-1 border-b border-border bg-surface-subtle p-1">
                     {(['search', 'new'] as const).map((t) => (
                         <button
                             key={t}
+                            type="button"
                             onClick={() => { setTab(t); setError(null) }}
-                            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${tab === t
-                                ? 'border-b-2 border-accent text-accent'
+                            className={`flex-1 rounded-md py-1.5 text-xs font-medium transition-colors ${tab === t
+                                ? 'bg-white text-ink shadow-sm'
                                 : 'text-muted hover:text-ink'
                                 }`}
                         >
@@ -186,20 +196,21 @@ export default function CustomerModal({
                     ))}
                 </div>
 
-                <div className="max-h-[70vh] overflow-auto p-5">
+                <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
                     {/* ── Currently selected ── */}
                     {selectedCustomer && (
-                        <div className="mb-4 flex items-center gap-3 rounded-xl border border-green-300 bg-green-50 px-3 py-2.5">
-                            <span className="text-green-600">✓</span>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-ink truncate">{selectedCustomer.name}</p>
+                        <div className="mb-3 flex items-center gap-2.5 rounded-lg border border-success-border bg-success-bg px-2.5 py-2">
+                            <span className="text-xs text-success">✓</span>
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-xs font-medium text-ink">{selectedCustomer.name}</p>
                                 {selectedCustomer.ntnCnic && (
-                                    <p className="font-mono text-xs text-muted">{selectedCustomer.ntnCnic}</p>
+                                    <p className="font-mono text-[11px] text-muted">{selectedCustomer.ntnCnic}</p>
                                 )}
                             </div>
                             <button
+                                type="button"
                                 onClick={() => { onClearCustomer(); onClose() }}
-                                className="shrink-0 text-xs text-red-500 hover:text-red-700"
+                                className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium text-error hover:bg-error-bg"
                             >
                                 Remove
                             </button>
@@ -207,99 +218,107 @@ export default function CustomerModal({
                     )}
 
                     {tab === 'search' && (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                             <input
-                                type="text"
+                                type="search"
                                 placeholder="Search by name, NTN or CNIC…"
                                 value={search}
                                 onChange={(e) => handleSearch(e.target.value)}
                                 autoFocus
-                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted"
+                                className={inputCls}
                             />
                             {searching && (
-                                <p className="text-center text-xs text-muted">Searching…</p>
+                                <p className="text-center text-[11px] text-muted">Searching…</p>
                             )}
                             {results.length > 0 && (
-                                <div className="space-y-1">
+                                <div className="divide-y divide-border-muted overflow-hidden rounded-lg border border-border">
                                     {results.map((c) => (
                                         <button
                                             key={c.id}
+                                            type="button"
                                             onClick={() => { onSelectCustomer(c); onClose() }}
-                                            className="w-full rounded-xl border border-border bg-surface-subtle px-3 py-2.5 text-left hover:border-border-strong hover:bg-canvas"
+                                            className="block w-full px-2.5 py-2 text-left transition-colors hover:bg-surface-subtle"
                                         >
                                             <div className="flex items-center justify-between gap-2">
-                                                <span className="text-sm font-medium text-ink">{c.name}</span>
+                                                <span className="truncate text-xs font-medium text-ink">{c.name}</span>
                                                 {c.registrationType && (
-                                                    <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs ${c.fbrVerified
-                                                        ? 'bg-green-500/10 text-green-400'
+                                                    <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${c.fbrVerified
+                                                        ? 'bg-success-bg text-success'
                                                         : 'bg-surface text-muted'
                                                         }`}>
                                                         {c.fbrVerified ? '✓ ' : ''}{c.registrationType}
                                                     </span>
                                                 )}
                                             </div>
-                                            {c.ntnCnic && (
-                                                <span className="font-mono text-xs text-muted">{c.ntnCnic}</span>
-                                            )}
-                                            {c.phone && (
-                                                <span className="ml-2 text-xs text-muted">{c.phone}</span>
+                                            {(c.ntnCnic || c.phone) && (
+                                                <div className="mt-0.5 flex gap-2 text-[11px] text-muted">
+                                                    {c.ntnCnic && <span className="font-mono">{c.ntnCnic}</span>}
+                                                    {c.phone && <span>{c.phone}</span>}
+                                                </div>
                                             )}
                                         </button>
                                     ))}
                                 </div>
                             )}
                             {!searching && search.length >= 2 && results.length === 0 && (
-                                <div className="rounded-xl border border-border bg-surface-subtle p-4 text-center">
-                                    <p className="mb-2 text-sm text-muted">No customers found.</p>
+                                <div className="rounded-lg border border-dashed border-border-strong p-3 text-center">
+                                    <p className="mb-1 text-xs text-muted">No customers found.</p>
                                     <button
+                                        type="button"
                                         onClick={() => setTab('new')}
-                                        className="text-sm text-muted hover:underline"
+                                        className="text-xs font-medium text-primary hover:underline"
                                     >
                                         + Add new customer
                                     </button>
                                 </div>
                             )}
+                            {search.length < 2 && !selectedCustomer && (
+                                <p className="text-center text-[11px] text-muted">Type at least 2 characters to search.</p>
+                            )}
                         </div>
                     )}
 
                     {tab === 'new' && (
-                        <div className="space-y-3">
-                            <input
-                                type="text"
-                                placeholder="Full Name *"
-                                value={form.name}
-                                onChange={(e) => setField('name', e.target.value)}
-                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted"
-                            />
-
-                            {/* NTN/CNIC + verify */}
-                            <div className="flex gap-2">
+                        <div className="grid grid-cols-2 gap-2">
+                            <Field label="Full Name" required className="col-span-2">
                                 <input
                                     type="text"
-                                    placeholder="NTN (7 digits) or CNIC (13 digits)"
-                                    value={form.ntnCnic}
-                                    onChange={(e) => {
-                                        setField('ntnCnic', normalizeNtnCnic(e.target.value))
-                                        setVerifyResult(null)
-                                    }}
-                                    inputMode="numeric"
-                                    maxLength={13}
-                                    className="min-w-0 flex-1 rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted"
+                                    value={form.name}
+                                    onChange={(e) => setField('name', e.target.value)}
+                                    autoFocus
+                                    className={inputCls}
                                 />
-                                <button
-                                    type="button"
-                                    onClick={handleVerify}
-                                    disabled={verifying || !form.ntnCnic}
-                                    className="shrink-0 rounded-xl border border-border bg-surface-subtle px-3 py-2 text-xs font-medium text-ink hover:bg-border-strong disabled:opacity-40"
-                                >
-                                    {verifying ? '…' : 'Verify FBR'}
-                                </button>
-                            </div>
+                            </Field>
+
+                            {/* NTN/CNIC + verify */}
+                            <Field label="NTN (7 digits) or CNIC (13 digits)" className="col-span-2">
+                                <div className="flex gap-1.5">
+                                    <input
+                                        type="text"
+                                        value={form.ntnCnic}
+                                        onChange={(e) => {
+                                            setField('ntnCnic', normalizeNtnCnic(e.target.value))
+                                            setVerifyResult(null)
+                                        }}
+                                        inputMode="numeric"
+                                        maxLength={13}
+                                        className={`${inputCls} flex-1 font-mono`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleVerify}
+                                        disabled={verifying || !form.ntnCnic}
+                                        className="h-8 shrink-0 rounded-lg border border-border bg-surface-subtle px-2.5 text-[11px] font-medium text-ink hover:bg-surface disabled:opacity-40"
+                                    >
+                                        {verifying ? 'Verifying…' : 'Verify FBR'}
+                                    </button>
+                                </div>
+                            </Field>
 
                             {verifyResult && (
-                                <div className={`rounded-lg border p-2.5 text-xs space-y-0.5 ${verifyResult.success
-                                    ? 'border-green-300 bg-green-50 text-green-700'
-                                    : 'border-red-300 bg-red-50 text-red-600'
+                                <div className={`col-span-2 space-y-0.5 rounded-lg border px-2.5 py-1.5 text-[11px] ${verifyResult.success
+                                    ? 'border-success-border bg-success-bg text-success'
+                                    : 'border-error-border bg-error-bg text-error'
                                     }`}>
                                     {verifyResult.success ? (
                                         <>
@@ -313,73 +332,92 @@ export default function CustomerModal({
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-2 gap-2">
+                            <Field label="Phone" className="col-span-2 min-[400px]:col-span-1">
                                 <input
                                     type="text"
-                                    placeholder="Phone"
+                                    placeholder="03XXXXXXXXX"
                                     value={form.phone}
                                     onChange={(e) => setField('phone', normalizeMobile(e.target.value))}
                                     inputMode="numeric"
                                     maxLength={11}
-                                    className="min-w-0 rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted"
+                                    className={inputCls}
                                 />
+                            </Field>
+                            <Field label="Registration Type" className="col-span-2 min-[400px]:col-span-1">
                                 <select
                                     value={form.registrationType}
                                     onChange={(e) => setField('registrationType', e.target.value)}
-                                    className="min-w-0 rounded-xl border border-border bg-card px-3 py-2 text-sm text-ink"
+                                    className={inputCls}
                                 >
-                                    <option value="">Reg. Type</option>
+                                    <option value="">Select</option>
                                     <option value="Registered">Registered</option>
                                     <option value="Unregistered">Unregistered</option>
                                 </select>
-                            </div>
+                            </Field>
 
-                            <select
-                                value={form.province}
-                                onChange={(e) => setField('province', e.target.value)}
-                                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-ink"
-                            >
-                                <option value="">Province</option>
-                                {PROVINCES.map((p) => (
-                                    <option key={p.value} value={p.value}>{p.label}</option>
-                                ))}
-                            </select>
+                            <Field label="Province" className="col-span-2">
+                                <select
+                                    value={form.province}
+                                    onChange={(e) => setField('province', e.target.value)}
+                                    className={inputCls}
+                                >
+                                    <option value="">Select province</option>
+                                    {PROVINCES.map((p) => (
+                                        <option key={p.value} value={p.value}>{p.label}</option>
+                                    ))}
+                                </select>
+                            </Field>
 
-                            <input
-                                type="text"
-                                placeholder="Address"
-                                value={form.address}
-                                onChange={(e) => setField('address', e.target.value)}
-                                className="w-full rounded-input border border-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted"
-                            />
+                            <Field label="Address" className="col-span-2">
+                                <input
+                                    type="text"
+                                    value={form.address}
+                                    onChange={(e) => setField('address', e.target.value)}
+                                    className={inputCls}
+                                />
+                            </Field>
 
                             {error && (
-                                <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+                                <p className="col-span-2 rounded-lg border border-error-border bg-error-bg px-2.5 py-1.5 text-[11px] text-error">
                                     {error}
                                 </p>
                             )}
-
-                            <div className="flex gap-2 pt-1">
-                                <button
-                                    type="button"
-                                    onClick={handleSave}
-                                    disabled={saving}
-                                    className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-dark disabled:opacity-50"
-                                >
-                                    {saving ? 'Saving…' : 'Save & Select'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={onClose}
-                                    className="rounded-lg border border-border px-4 py-2.5 text-sm text-muted hover:bg-surface-subtle"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
                         </div>
                     )}
                 </div>
+
+                {/* Footer actions for the new-customer form, always visible */}
+                {tab === 'new' && (
+                    <div className="flex shrink-0 justify-end gap-2 border-t border-border px-3 py-2.5 sm:px-4">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-surface"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="rounded-lg bg-primary px-4 py-1.5 text-xs font-semibold text-white hover:bg-primary-dark disabled:opacity-50"
+                        >
+                            {saving ? 'Saving…' : 'Save & Select'}
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
+    )
+}
+
+function Field({ label, required, className = '', children }: { label: string; required?: boolean; className?: string; children: React.ReactNode }) {
+    return (
+        <label className={`block min-w-0 ${className}`}>
+            <span className="mb-0.5 block truncate text-[10px] font-medium text-muted">
+                {label}{required && <span className="text-error"> *</span>}
+            </span>
+            {children}
+        </label>
     )
 }
