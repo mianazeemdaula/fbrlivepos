@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { SALE_TYPE_CONFIG, SALE_TYPE_LIST, type SaleTypeConfig } from '@/lib/di/sale-type-config'
 import { calculateItemTax } from '@/lib/di/scenario-tax-calculator'
 
@@ -109,35 +109,7 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
     const [sroLoading, setSroLoading] = useState(false)
     const [srOptions, setSrOptions] = useState<SROOption[]>([])
     const [srLoading, setSrLoading] = useState(false)
-    const [defaultHS, setDefaultHS] = useState<string>('')
-
-    useEffect(() => {
-        let isMounted = true
-        async function fetchDefaultHSCode() {
-            try {
-                const res = await fetch('/api/hs-codes/default')
-                if (res.ok) {
-                    const data = await res.json()
-                    if (data?.code && isMounted) {
-                        setDefaultHS(data.code)
-                        setForm((current) => {
-                            if (current.hsCode.trim()) return current
-                            return {
-                                ...current,
-                                hsCode: data.code,
-                                uom: current.uom || data.unit || '',
-                            }
-                        })
-                        void loadUomForHSCode(data.code)
-                    }
-                }
-            } catch {
-                // Non-blocking
-            }
-        }
-        void fetchDefaultHSCode()
-        return () => { isMounted = false }
-    }, [])
+    const [uomLoading, setUomLoading] = useState(false)
 
     const cfg: SaleTypeConfig | null = form.saleTypeId ? (SALE_TYPE_CONFIG[form.saleTypeId] ?? null) : null
     const today = new Date().toISOString().split('T')[0]
@@ -165,28 +137,36 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
     const totalTax = taxResult.totalTax
     const valueInclTax = taxResult.totalInvoiceValue
 
+    // UOM for an HS code: FBR DI first, otherwise the unit stored in the HS codes table.
     async function loadUomForHSCode(hsCode: string) {
         if (cfg?.uomLocked) {
             setForm((current) => ({ ...current, uom: cfg.uomLocked || '' }))
             return
         }
 
-        // Server tries the FBR DI HS_UOM API first, then falls back to the HS code table unit.
+        setUomLoading(true)
+        let uom = ''
         try {
             const res = await fetch(`/api/tenant/fbr/hs-uom?hs_code=${encodeURIComponent(hsCode)}`)
-            if (!res.ok) return
-            const data = await res.json()
-            const uoms: Array<{ description: string }> = data.uoms || []
-            if (uoms.length === 0) return
-            setForm((current) => {
-                const existing = current.uom.trim().toLowerCase()
-                const keepCurrent = uoms.length > 1 && !!existing
-                    && uoms.some((u) => u.description.trim().toLowerCase() === existing)
-                return { ...current, uom: keepCurrent ? current.uom : uoms[0].description }
-            })
+            const data = res.ok ? await res.json() : null
+            if (data?.source === 'pral') uom = data.uoms?.[0]?.description ?? ''
         } catch {
-            // Non-blocking for POS data entry; the user can still enter the UOM manually.
+            // Fall through to the HS codes table
         }
+
+        if (!uom) {
+            try {
+                const res = await fetch(`/api/hs-codes?q=${encodeURIComponent(hsCode)}&limit=10`)
+                const data = res.ok ? await res.json() : null
+                const row = (data?.data ?? []).find((item: { code: string; unit: string | null }) => item.code === hsCode)
+                uom = row?.unit?.trim() ?? ''
+            } catch {
+                // Non-blocking; the user can still enter the UOM manually.
+            }
+        }
+
+        setUomLoading(false)
+        if (uom) setForm((current) => (current.hsCode.trim() === hsCode ? { ...current, uom } : current))
     }
 
     async function loadRates(nextCfg: SaleTypeConfig) {
@@ -370,14 +350,9 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
         e.preventDefault()
         setError('')
 
-        let effectiveHSCode = form.hsCode.trim()
-        if (!effectiveHSCode && defaultHS) {
-            effectiveHSCode = defaultHS
-            setForm((current) => ({ ...current, hsCode: defaultHS }))
-        }
-
+        const effectiveHSCode = form.hsCode.trim()
         if (!effectiveHSCode) {
-            setError('HS code could not be resolved from database.')
+            setError('HS code is required.')
             return
         }
 
@@ -504,12 +479,12 @@ export default function DirectProductModal({ onCreate, onClose }: DirectProductM
                                     onBlur={() => {
                                         if (form.hsCode.trim()) void loadUomForHSCode(form.hsCode.trim())
                                     }}
-                                    placeholder={defaultHS ? `e.g. ${defaultHS}` : 'e.g. HS Code'}
+                                    placeholder="e.g. 0402.1000"
                                     required
                                 />
                             </Field>
                             <Field label="UOM" className="col-span-1 sm:col-span-2 lg:col-span-2">
-                                <input className={inputCls} value={form.uom} onChange={(e) => setForm((current) => ({ ...current, uom: e.target.value }))} placeholder="PCS" />
+                                <input className={inputCls} value={form.uom} onChange={(e) => setForm((current) => ({ ...current, uom: e.target.value }))} placeholder={uomLoading ? 'Loading…' : 'PCS'} />
                             </Field>
                         </Section>
 
