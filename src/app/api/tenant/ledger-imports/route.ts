@@ -136,6 +136,7 @@ export async function POST(req: NextRequest) {
                 totalQuantity: Math.round(rows.reduce((sum, row) => sum + row.quantity, 0) * 1000) / 1000,
                 totalValueExclST: round2(rows.reduce((sum, row) => sum + row.valueExclST, 0)),
                 totalSalesTax: round2(rows.reduce((sum, row) => sum + row.salesTax, 0)),
+                customers: parsed.customers.map((customer) => ({ name: customer.name, cnic: customer.cnic })),
             },
         })
 

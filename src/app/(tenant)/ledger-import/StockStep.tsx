@@ -85,7 +85,7 @@ export default function StockStep({
             {/* Summary */}
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
                 <Stat label="Ledger rows" value={String(ledger.sourceRowCount)} />
-                <Stat label="Purchase invoices" value={String(ledger.sourceInvoiceCount)} />
+                <Stat label="Customers" value={String(ledger.customers?.length ?? 0)} />
                 <Stat label="Suppliers" value={String(ledger.sellerCount)} />
                 <Stat label="Period" value={`${formatDay(ledger.periodFrom)} – ${formatDay(ledger.periodTo)}`} small />
                 <Stat label="Total quantity" value={formatQty(ledger.totalQuantity)} />

@@ -4,6 +4,7 @@ import { getTenantFromSession } from '@/lib/tenant/context'
 import { isFeatureEnabled } from '@/lib/features/flags'
 import { isThirdScheduleSaleType, round2 } from '@/lib/di/tax'
 import type { LedgerItem } from '@/generated/prisma/client'
+import type { LedgerCustomer } from '@/lib/ledger/parser'
 
 /** Feature flag a super admin enables per tenant (TenantFeatureFlag override). */
 export const LEDGER_IMPORT_FLAG = 'ledger_import'
@@ -119,6 +120,7 @@ export async function loadLedgerImport(tenantId: string, importId: string) {
         totalQuantity: Number(ledger.totalQuantity),
         totalValueExclST: Number(ledger.totalValueExclST),
         totalSalesTax: Number(ledger.totalSalesTax),
+        customers: readLedgerCustomers(ledger.customers),
         items,
         drafts: ledger.drafts.map((draft) => ({
             id: draft.id,
@@ -149,6 +151,16 @@ export async function loadLedgerImport(tenantId: string, importId: string) {
             }),
         })),
     }
+}
+
+/** Reads LedgerImport.customers (JSON), dropping anything malformed. */
+export function readLedgerCustomers(value: unknown): LedgerCustomer[] {
+    if (!Array.isArray(value)) return []
+    return value.flatMap((entry) => {
+        const name = typeof entry?.name === 'string' ? entry.name.trim() : ''
+        const cnic = typeof entry?.cnic === 'string' ? entry.cnic : ''
+        return name && /^\d{13}$/.test(cnic) ? [{ name, cnic }] : []
+    })
 }
 
 export function sumAmounts<T>(rows: T[], pick: (row: T) => number) {

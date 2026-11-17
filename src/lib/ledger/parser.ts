@@ -32,6 +32,9 @@ export interface LedgerRow {
     retailValue: number
     sroScheduleNo: string | null
     sroItemSerialNo: string | null
+    customerName: string | null
+    customerCnic: string | null // 13 digits, when valid
+    customerError: string | null // why the row's customer columns are unusable
     raw: Record<string, string | number | null>
 }
 
@@ -40,10 +43,17 @@ export interface SkippedLedgerRow {
     reason: string
 }
 
+/** Buyer for generated sale invoices, from the optional "Customer Name" / "Customer CNIC" columns. */
+export interface LedgerCustomer {
+    name: string
+    cnic: string // 13 digits, no dashes
+}
+
 export interface ParsedLedger {
     sheetName: string
     rows: LedgerRow[]
     skipped: SkippedLedgerRow[]
+    customers: LedgerCustomer[]
 }
 
 export class LedgerParseError extends Error {}
@@ -55,6 +65,7 @@ const HEADER_MAP: Record<string, string> = {
     invoiceno: 'invoiceNo',
     invoicetype: 'invoiceType',
     invoicedate: 'invoiceDate',
+    date: 'invoiceDate',
     sellerregistrationno: 'sellerNTN',
     sellername: 'sellerName',
     saletype: 'saleType',
@@ -69,9 +80,30 @@ const HEADER_MAP: Record<string, string> = {
     sronoscheduleno: 'sroScheduleNo',
     itemsrno: 'sroItemSerialNo',
     fixednotifiedvalueorretailpricetollcharges: 'retailValue',
+    retailvalue: 'retailValue',
+    // Not IRIS columns ("Buyer Name" in IRIS is the tenant itself): the people to sell to.
+    customername: 'customerName',
+    customercnic: 'customerCnic',
 }
 
-const REQUIRED_FIELDS = ['hsCode', 'quantity', 'saleType', 'rate', 'valueExclST'] as const
+const REQUIRED_FIELDS = ['productDescription', 'hsCode', 'quantity', 'saleType', 'rate', 'valueExclST'] as const
+
+const FIELD_LABELS: Record<string, string> = {
+    productDescription: 'Product Description',
+    hsCode: 'HS Code',
+    quantity: 'Quantity',
+    saleType: 'Sale Type',
+    rate: 'Rate',
+    valueExclST: 'Value of Sales Excluding Sales Tax',
+}
+
+/** "35202-1234567-1" → "3520212345671"; null unless it is exactly 13 digits. */
+export function normalizeCnic(value: unknown): string | null {
+    const text = cleanText(value)
+    if (!text) return null
+    const digits = text.replace(/[\s-]/g, '')
+    return /^\d{13}$/.test(digits) ? digits : null
+}
 
 const MONTHS: Record<string, number> = {
     jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
@@ -203,11 +235,15 @@ export function parseLedgerWorkbook(data: ArrayBuffer | Uint8Array): ParsedLedge
 
         const missing = REQUIRED_FIELDS.filter((field) => !columns.has(field))
         if (missing.length) {
-            throw new LedgerParseError(`Sheet "${sheetName}" is missing required column(s): ${missing.join(', ')}.`)
+            throw new LedgerParseError(`Sheet "${sheetName}" is missing required column(s): ${missing.map((field) => FIELD_LABELS[field] ?? field).join(', ')}.`)
         }
 
         const rows: LedgerRow[] = []
         const skipped: SkippedLedgerRow[] = []
+        const customers = new Map<string, LedgerCustomer>()
+        // Rows without an Invoice Ref No. are keyed by their content; a counter keeps identical
+        // lines in one file apart while re-uploading the same file is still caught as a duplicate.
+        const fallbackKeyCount = new Map<string, number>()
 
         table.slice(headerIndex + 1).forEach((cells, offset) => {
             const rowNumber = headerIndex + offset + 2
@@ -216,9 +252,21 @@ export function parseLedgerWorkbook(data: ArrayBuffer | Uint8Array): ParsedLedge
                 return index === undefined ? null : (cells[index] as unknown)
             }
 
+            // Customer columns are independent of the stock columns: a row may carry either or both.
+            const customerName = cleanText(get('customerName'))?.slice(0, 200) ?? null
+            const rawCnic = cleanText(get('customerCnic'))
+            const customerCnic = normalizeCnic(rawCnic)
+            let customerError: string | null = null
+            if (customerName || rawCnic) {
+                if (!customerName) customerError = 'Customer CNIC given without a Customer Name'
+                else if (!customerCnic) customerError = `Customer "${customerName}" needs a 13-digit CNIC`
+                if (customerError) skipped.push({ rowNumber, reason: customerError })
+                else if (!customers.has(customerCnic!)) customers.set(customerCnic!, { name: customerName!, cnic: customerCnic! })
+            }
+
             const hsCode = cleanText(get('hsCode'))
             const quantity = parseLedgerNumber(get('quantity'))
-            if (!hsCode && quantity === 0) return // trailing/total rows
+            if (!hsCode && quantity === 0) return // trailing/total rows, or customer-only rows
 
             const status = cleanText(get('status'))
             const invoiceType = cleanText(get('invoiceType'))
@@ -256,9 +304,17 @@ export function parseLedgerWorkbook(data: ArrayBuffer | Uint8Array): ParsedLedge
                 raw[header] = cell instanceof Date ? cell.toISOString() : (cell as string | number | null)
             })
 
+            let rowKey = invoiceRefNo
+            if (!rowKey) {
+                const base = `${invoiceNo ?? 'row'}|${productDescription ?? ''}|${hsCode}|${quantity}|${valueExclST}`
+                const seen = fallbackKeyCount.get(base) ?? 0
+                fallbackKeyCount.set(base, seen + 1)
+                rowKey = seen ? `${base}#${seen + 1}` : base
+            }
+
             rows.push({
                 rowNumber,
-                rowKey: invoiceRefNo ?? `${invoiceNo ?? 'row'}|${productDescription ?? ''}|${hsCode}|${quantity}|${valueExclST}`,
+                rowKey,
                 invoiceRefNo,
                 invoiceNo,
                 invoiceType,
@@ -278,14 +334,17 @@ export function parseLedgerWorkbook(data: ArrayBuffer | Uint8Array): ParsedLedge
                 salesTax: round2(parseLedgerNumber(get('salesTax'))),
                 retailValue: round2(parseLedgerNumber(get('retailValue'))),
                 ...withDefaultSro(saleType, rate, cleanText(get('sroScheduleNo')), cleanText(get('sroItemSerialNo'))),
+                customerName,
+                customerCnic,
+                customerError,
                 raw,
             })
         })
 
-        return { sheetName, rows, skipped }
+        return { sheetName, rows, skipped, customers: [...customers.values()] }
     }
 
-    throw new LedgerParseError('No ledger sheet found. The file must contain the IRIS columns "HS Code" and "Quantity".')
+    throw new LedgerParseError('No ledger sheet found. The file must contain the columns "HS Code" and "Quantity".')
 }
 
 // ─── Aggregation ─────────────────────────────────────────────────────────────

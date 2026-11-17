@@ -62,6 +62,7 @@ export interface LedgerImportDetail {
     totalQuantity: number
     totalValueExclST: number
     totalSalesTax: number
+    customers: { name: string; cnic: string }[]
     items: LedgerItem[]
     drafts: LedgerDraft[]
 }
@@ -78,6 +79,11 @@ export interface LedgerImportSummary {
     remainingQuantity: number
     totalValueExclST: number
     createdInvoiceCount: number
+}
+
+/** "3520212345671" → "35202-1234567-1" */
+export function formatCnic(cnic: string) {
+    return cnic.length === 13 ? `${cnic.slice(0, 5)}-${cnic.slice(5, 12)}-${cnic.slice(12)}` : cnic
 }
 
 export function formatAmount(value: number) {

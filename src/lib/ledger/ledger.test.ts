@@ -1,8 +1,8 @@
 import * as XLSX from 'xlsx'
 import { describe, expect, it } from 'vitest'
-import { aggregateLedgerRows, LedgerParseError, withDefaultSro, parseLedgerDate, parseLedgerNumber, parseLedgerWorkbook } from './parser'
+import { aggregateLedgerRows, LedgerParseError, normalizeCnic, withDefaultSro, parseLedgerDate, parseLedgerNumber, parseLedgerWorkbook } from './parser'
 import { computeLedgerLine, generateLedgerDrafts, type GeneratorItem } from './generator'
-import { buildLedgerTemplate } from './template'
+import { buildLedgerTemplate, LEDGER_TEMPLATE_HEADERS } from './template'
 
 // Mirrors the IRIS "Domestic Invoices" export: every cell is text.
 const HEADERS = [
@@ -102,13 +102,58 @@ describe('ledger parser', () => {
 })
 
 describe('ledger template', () => {
-    it('parses cleanly with the importer', () => {
+    it('has only the needed columns and parses cleanly with the importer', () => {
+        expect(LEDGER_TEMPLATE_HEADERS).toEqual([
+            'Invoice No.', 'Invoice Date', 'Product Description', 'HS Code', 'Sale Type', 'Rate', 'UoM', 'Quantity',
+            'Value of Sales Excluding Sales Tax', 'Retail Value', 'Customer Name', 'Customer CNIC',
+        ])
         const parsed = parseLedgerWorkbook(buildLedgerTemplate())
-        expect(parsed.sheetName).toBe('Domestic Invoices')
+        expect(parsed.sheetName).toBe('Ledger')
         expect(parsed.skipped).toEqual([])
         expect(parsed.rows).toHaveLength(3)
         const items = aggregateLedgerRows(parsed.rows)
         expect(items.map((item) => item.productName).sort()).toEqual(['16 kg Tin', 'Jerry Cane', 'Steel Bucket 10L'])
+        const tin = items.find((item) => item.productName === '16 kg Tin')!
+        expect(tin).toMatchObject({ sroScheduleNo: '3rd Schedule goods', sroItemSerialNo: '51', retailUnitPrice: 443.13 })
+        expect(parsed.customers).toEqual([
+            { name: 'Ali Traders', cnic: '3520212345671' },
+            { name: 'Bilal Store', cnic: '4210111223345' },
+            { name: 'Hamza Khan', cnic: '6110199887767' },
+        ])
+    })
+})
+
+describe('ledger customers', () => {
+    function sheet(rows: string[][]) {
+        const wb = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([[...LEDGER_TEMPLATE_HEADERS], ...rows]), 'Ledger')
+        return XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
+    }
+    const stock = ['', '', 'Bucket', '7323.9400', 'Goods at standard rate (default)', '18%', 'Numbers, pieces, units', '5', '500', '']
+
+    it('normalises CNICs, dedupes by CNIC and reports bad ones', () => {
+        expect(normalizeCnic('35202-1234567-1')).toBe('3520212345671')
+        expect(normalizeCnic('1234')).toBeNull()
+        const parsed = parseLedgerWorkbook(sheet([
+            [...stock, 'Ali', '35202-1234567-1'],
+            [...stock, 'Ali again', '3520212345671'],
+            ['', '', '', '', '', '', '', '', '', '', 'Bad CNIC', '12345'],
+            ['', '', '', '', '', '', '', '', '', '', '', '35202-1234567-9'],
+        ]))
+        expect(parsed.customers).toEqual([{ name: 'Ali', cnic: '3520212345671' }])
+        expect(parsed.skipped).toEqual([
+            { rowNumber: 4, reason: 'Customer "Bad CNIC" needs a 13-digit CNIC' },
+            { rowNumber: 5, reason: 'Customer CNIC given without a Customer Name' },
+        ])
+        // Identical stock lines without an Invoice Ref No. are both kept
+        expect(parsed.rows).toHaveLength(2)
+        expect(new Set(parsed.rows.map((row) => row.rowKey)).size).toBe(2)
+    })
+
+    it('requires the Product Description column', () => {
+        const wb = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['HS Code', 'Quantity', 'Sale Type', 'Rate', 'Value of Sales Excluding Sales Tax'], ['1', '1', 'x', '18%', '1']]), 'S')
+        expect(() => parseLedgerWorkbook(XLSX.write(wb, { type: 'array', bookType: 'xlsx' }))).toThrow(/Product Description/)
     })
 })
 

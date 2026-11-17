@@ -689,6 +689,7 @@ model LedgerImport {
   totalQuantity      Decimal           @db.Decimal(14, 3)
   totalValueExclST   Decimal           @db.Decimal(14, 2)
   totalSalesTax      Decimal           @db.Decimal(14, 2)
+  customers          Json              @default("[]") // [{ name, cnic }] from "Customer Name"/"Customer CNIC"; buyers for generated drafts
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
   items              LedgerItem[]
@@ -788,4 +789,21 @@ model LedgerDraftLine {
 
   @@index([draftId])
   @@index([itemId])
+}
+
+// One uploaded "direct invoices" sheet: each row becomes a sale line as written (no pooling).
+// The file hash stops the same sheet creating its invoices twice; re-uploading resumes the batch.
+model DirectInvoiceBatch {
+  id           String   @id @default(cuid())
+  tenantId     String
+  fileName     String
+  fileHash     String
+  createdById  String
+  invoiceIds   String[]
+  invoiceCount Int
+  totalAmount  Decimal  @db.Decimal(14, 2)
+  createdAt    DateTime @default(now())
+
+  @@unique([tenantId, fileHash])
+  @@index([tenantId, createdAt])
 }

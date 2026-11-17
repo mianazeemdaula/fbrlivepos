@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db/prisma'
 import { generateLedgerDrafts, quantityStepFor } from '@/lib/ledger/generator'
-import { getReservedQuantities, ledgerItemIssues, loadLedgerImport, requireLedgerAccess } from '@/lib/ledger/service'
+import { getReservedQuantities, ledgerItemIssues, loadLedgerImport, readLedgerCustomers, requireLedgerAccess } from '@/lib/ledger/service'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -17,6 +17,8 @@ const GenerateSchema = z.object({
     maxItemsPerInvoice: z.number().int().min(1).max(10).default(3),
     itemIds: z.array(z.string()).optional(),
     customerId: z.string().nullish(),
+    // Spread the drafts across the customers listed in the uploaded file (overrides customerId).
+    useLedgerCustomers: z.boolean().default(false),
     replaceExisting: z.boolean().default(true),
 }).refine((value) => value.maxAmount >= value.minAmount, { message: 'Maximum amount must be at least the minimum amount', path: ['maxAmount'] })
     .refine((value) => value.to >= value.from, { message: '"To" date must be on or after the "From" date', path: ['to'] })
@@ -47,8 +49,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     })
     if (!ledger) return NextResponse.json({ error: 'Import not found' }, { status: 404 })
 
-    // Buyer applied to every generated invoice: a saved customer, or an unregistered walk-in buyer.
-    let buyer: {
+    // Buyer per generated invoice: customers from the file (rotated), a saved customer, or a walk-in buyer.
+    type Buyer = {
         customerId: string | null
         buyerName: string
         buyerNTN: string | null
@@ -56,7 +58,24 @@ export async function POST(req: NextRequest, { params }: Params) {
         buyerAddress: string | null
         buyerRegistrationType: string
     }
-    if (body.customerId) {
+    let buyer: Buyer
+    let fileBuyers: Buyer[] = []
+    if (body.useLedgerCustomers) {
+        const customers = readLedgerCustomers(ledger.customers)
+        if (!customers.length) {
+            return NextResponse.json({ error: 'This upload has no customers. Add "Customer Name" and "Customer CNIC" columns to the file.' }, { status: 400 })
+        }
+        const creds = await prisma.dICredentials.findUnique({ where: { tenantId: tenant.id }, select: { sellerProvince: true } })
+        fileBuyers = customers.map((customer) => ({
+            customerId: null,
+            buyerName: customer.name,
+            buyerNTN: customer.cnic,
+            buyerProvince: creds?.sellerProvince ?? null,
+            buyerAddress: null,
+            buyerRegistrationType: 'Unregistered',
+        }))
+        buyer = fileBuyers[0]
+    } else if (body.customerId) {
         const customer = await prisma.customer.findFirst({ where: { id: body.customerId, tenantId: tenant.id, isActive: true } })
         if (!customer) return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
         buyer = {
@@ -121,14 +140,17 @@ export async function POST(req: NextRequest, { params }: Params) {
         _max: { sequence: true },
     })
     const offset = last._max.sequence ?? 0
+    // Random starting customer, then round-robin so each customer gets a fair share.
+    const buyerStart = Math.floor(Math.random() * Math.max(1, fileBuyers.length))
+    const buyerFor = (index: number) => (fileBuyers.length ? fileBuyers[(buyerStart + index) % fileBuyers.length] : buyer)
 
-    await prisma.$transaction(result.drafts.map((draft) => prisma.ledgerDraft.create({
+    await prisma.$transaction(result.drafts.map((draft, index) => prisma.ledgerDraft.create({
         data: {
             importId: id,
             tenantId: tenant.id,
             sequence: offset + draft.sequence,
             invoiceDate: draft.invoiceDate,
-            ...buyer,
+            ...buyerFor(index),
             subtotal: draft.subtotal,
             taxAmount: draft.taxAmount,
             totalAmount: draft.totalAmount,

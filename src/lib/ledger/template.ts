@@ -1,41 +1,54 @@
 import * as XLSX from 'xlsx'
 
 /**
- * Sample ledger in the IRIS "Domestic Invoices" layout. Only the columns the parser
- * reads are included; extra IRIS columns in a real export are ignored on import.
+ * Sample ledger with only the columns the importer needs. A full IRIS "Domestic Invoices"
+ * export also imports unchanged; its extra columns are ignored.
+ *
+ * Stock columns (Product Description … Retail Value) and customer columns are independent:
+ * a row can carry a purchase line, a customer, or both.
  */
 export const LEDGER_TEMPLATE_HEADERS = [
-    'Invoice Ref No.', 'Status', 'Invoice No.', 'Invoice Type', 'Invoice Date',
-    'Seller Registration No.', 'Seller Name', 'Sale Type', 'Quantity', 'Product Description',
-    'HS Code', 'HSCode Description', 'Rate', 'UoM', 'Value of Sales Excluding Sales Tax',
-    'Sales Tax/ FED in ST Mode', 'SRO No. / Schedule No.', 'Item Sr. No.',
-    'Fixed / Notified value or Retail Price / Toll Charges',
+    'Invoice No.', 'Invoice Date', 'Product Description', 'HS Code', 'Sale Type', 'Rate', 'UoM', 'Quantity',
+    'Value of Sales Excluding Sales Tax', 'Retail Value',
+    'Customer Name', 'Customer CNIC',
 ] as const
 
 const SAMPLE_ROWS: string[][] = [
-    ['1000000001', 'Claimed', '1234567DI0000000001-1', 'Purchase Invoice', '04-Aug-2026', '1234567', 'SAMPLE SUPPLIER (PVT) LTD', '3rd Schedule Goods', '928.00', '16 kg Tin', '1518.0000', 'Animal or vegetable fats and oils', '18%', 'KG', '401,012.00', '74,019.60', '3rd Schedule goods', '51', '411,220.00'],
-    ['1000000002', 'Claimed', '1234567DI0000000001-2', 'Purchase Invoice', '04-Aug-2026', '1234567', 'SAMPLE SUPPLIER (PVT) LTD', '3rd Schedule Goods', '10.00', 'Jerry Cane', '1518.0000', 'Animal or vegetable fats and oils', '18%', 'KG', '4,290.00', '792.00', '3rd Schedule goods', '51', '4,400.00'],
-    ['1000000003', 'Claimed', '7654321DI0000000002-1', 'Purchase Invoice', '12-Aug-2026', '7654321', 'SAMPLE TRADERS', 'Goods at standard rate (default)', '200.00', 'Steel Bucket 10L', '7323.9400', 'Table, kitchen or other household articles', '18%', 'Numbers, pieces, units', '90,000.00', '16,200.00', '', '', '0.00'],
+    ['INV-1', '04-Aug-2026', '16 kg Tin', '1518.0000', '3rd Schedule Goods', '18%', 'KG', '928', '401012', '411220', 'Ali Traders', '35202-1234567-1'],
+    ['INV-1', '04-Aug-2026', 'Jerry Cane', '1518.0000', '3rd Schedule Goods', '18%', 'KG', '10', '4290', '4400', 'Ali Traders', '35202-1234567-1'],
+    ['INV-2', '05-Aug-2026', 'Steel Bucket 10L', '7323.9400', 'Goods at standard rate (default)', '18%', 'Numbers, pieces, units', '200', '90000', '', 'Bilal Store', '42101-1122334-5'],
+    ['', '', '', '', '', '', '', '', '', '', 'Hamza Khan', '61101-9988776-7'],
 ]
 
 const INSTRUCTIONS: string[][] = [
     ['How to use this template'],
     [''],
-    ['1. Easiest: download "Domestic Invoices" (purchases) from FBR IRIS and upload it unchanged.'],
-    ['2. Or fill the "Domestic Invoices" sheet of this file, one row per invoice line. Delete the sample rows first.'],
-    ['3. Required columns: HS Code, Quantity, Sale Type, Rate, Value of Sales Excluding Sales Tax.'],
-    ['4. Stock is pooled by Product Description + HS Code (plus sale type, rate, UoM and SRO). Use the same item name for the same item.'],
-    ['5. Invoice Ref No. must be unique per row; it stops the same row being imported twice.'],
-    ['6. Rows with status Cancelled/Rejected/Deleted and Debit/Credit notes are skipped.'],
-    ['7. 3rd Schedule Goods need the retail price column (Fixed / Notified value or Retail Price).'],
-    ['8. Dates: 04-Aug-2026 or 2026-08-04. Numbers may include thousands separators.'],
+    ['Invoice No. / Invoice Date (used by Direct Invoices)'],
+    ['  Rows with the same Invoice No. become one invoice; a row without an Invoice No. is an invoice on its own.'],
+    ['  Invoice Date: 04-Aug-2026 or 2026-08-04; today when blank. Dates in the future are rejected.'],
+    ['  Ledger Import ignores these two columns for stock.'],
+    [''],
+    ['Items (one row per line)'],
+    ['  Required: Product Description, HS Code, Sale Type, Rate, Quantity, Value of Sales Excluding Sales Tax.'],
+    ['  UoM: defaults to "Numbers, pieces, units" when blank.'],
+    ['  Retail Value: required for 3rd Schedule Goods — retail price per unit × quantity for the line.'],
+    ['  Stock is pooled by Product Description + HS Code (plus sale type, rate and UoM). Use the same name for the same item.'],
+    [''],
+    ['Customers (optional)'],
+    ['  Customer Name + Customer CNIC (13 digits, dashes optional). Leave both empty for a walk-in (unregistered) buyer.'],
+    ['  Direct Invoices: the buyer of that row\'s invoice; every row of one Invoice No. must name the same customer.'],
+    ['  Ledger Import: generated invoices are spread across these customers; customer-only rows are allowed.'],
+    [''],
+    ['General'],
+    ['  Delete the sample rows first. Numbers may include thousands separators.'],
+    ['  A full "Domestic Invoices" (purchases) export from FBR IRIS can also be uploaded unchanged.'],
 ]
 
 export function buildLedgerTemplate(): Buffer {
     const wb = XLSX.utils.book_new()
     const sheet = XLSX.utils.aoa_to_sheet([[...LEDGER_TEMPLATE_HEADERS], ...SAMPLE_ROWS])
-    sheet['!cols'] = LEDGER_TEMPLATE_HEADERS.map((header) => ({ wch: Math.max(14, header.length + 2) }))
-    XLSX.utils.book_append_sheet(wb, sheet, 'Domestic Invoices')
+    sheet['!cols'] = LEDGER_TEMPLATE_HEADERS.map((header) => ({ wch: Math.max(16, header.length + 2) }))
+    XLSX.utils.book_append_sheet(wb, sheet, 'Ledger')
 
     const help = XLSX.utils.aoa_to_sheet(INSTRUCTIONS)
     help['!cols'] = [{ wch: 120 }]

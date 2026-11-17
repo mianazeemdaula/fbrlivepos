@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, Wand2 } from 'lucide-react'
 import {
-    formatAmount, formatQty, inputClass, primaryButton, readError, secondaryButton,
+    formatAmount, formatCnic, formatQty, inputClass, primaryButton, readError, secondaryButton,
     type LedgerImportDetail,
 } from './types'
 
@@ -15,6 +15,8 @@ interface CustomerOption {
 
 // Upper bound accepted by the drafts API
 const MAX_INVOICES = 500
+// Buyer select value for "customers listed in the uploaded file"
+const FILE_CUSTOMERS = '__file__'
 
 // PKT calendar day as YYYY-MM-DD
 function todayPKT() {
@@ -39,7 +41,8 @@ export default function GenerateStep({
     const [minAmount, setMinAmount] = useState('')
     const [maxAmount, setMaxAmount] = useState('')
     const [maxItems, setMaxItems] = useState('3')
-    const [customerId, setCustomerId] = useState('')
+    const fileCustomers = ledger.customers ?? []
+    const [customerId, setCustomerId] = useState(fileCustomers.length ? FILE_CUSTOMERS : '')
     const [customers, setCustomers] = useState<CustomerOption[]>([])
     const [selectedItems, setSelectedItems] = useState<Set<string>>(() => new Set(usableItems.map((item) => item.id)))
     const [submitting, setSubmitting] = useState(false)
@@ -121,7 +124,8 @@ export default function GenerateStep({
                     maxAmount: max,
                     maxItemsPerInvoice: Math.max(1, Math.floor(Number(maxItems) || 1)),
                     itemIds: [...selectedItems],
-                    customerId: customerId || null,
+                    customerId: customerId && customerId !== FILE_CUSTOMERS ? customerId : null,
+                    useLedgerCustomers: customerId === FILE_CUSTOMERS,
                     replaceExisting: true,
                 }),
             })
@@ -166,6 +170,9 @@ export default function GenerateStep({
                         </Field>
                         <Field label="Buyer" className="sm:col-span-2">
                             <select className={inputClass} value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
+                                {fileCustomers.length > 0 && (
+                                    <option value={FILE_CUSTOMERS}>Customers from the uploaded file ({fileCustomers.length})</option>
+                                )}
                                 <option value="">Walk-in customer (unregistered)</option>
                                 {customers.map((customer) => (
                                     <option key={customer.id} value={customer.id}>
@@ -173,6 +180,13 @@ export default function GenerateStep({
                                     </option>
                                 ))}
                             </select>
+                            {customerId === FILE_CUSTOMERS && (
+                                <span className="mt-1.5 block text-xs text-muted">
+                                    Invoices are shared out in turn across{' '}
+                                    {fileCustomers.slice(0, 3).map((c) => `${c.name} (${formatCnic(c.cnic)})`).join(', ')}
+                                    {fileCustomers.length > 3 ? ` and ${fileCustomers.length - 3} more` : ''}.
+                                </span>
+                            )}
                         </Field>
                     </div>
 

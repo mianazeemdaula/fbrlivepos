@@ -224,7 +224,7 @@ export default function LedgerImportPage() {
                             <Upload size={20} />
                         </span>
                         <p className="text-sm font-semibold text-ink">Drop the IRIS ledger here</p>
-                        <p className="mt-1 text-xs text-muted">.xls or .xlsx exactly as downloaded from IRIS (Domestic Invoices), up to 10 MB</p>
+                        <p className="mt-1 text-xs text-muted">IRIS Domestic Invoices export or the sample template (.xls/.xlsx), up to 10 MB</p>
                         <input
                             ref={fileInput}
                             type="file"

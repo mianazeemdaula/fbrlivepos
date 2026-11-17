@@ -12,6 +12,7 @@ const navItems: Array<{ href: string; label: string; feature?: 'ledgerImport' }>
     { href: '/invoices', label: 'Invoices' },
     { href: '/invoices/report', label: 'Report' },
     { href: '/ledger-import', label: 'Ledger Import', feature: 'ledgerImport' as const },
+    { href: '/direct-invoices', label: 'Direct Invoices', feature: 'ledgerImport' as const },
     { href: '/customers', label: 'Customers' },
     { href: '/hs-codes', label: 'HS Codes' },
     { href: '/sandbox-scenarios', label: 'Sandbox' },
