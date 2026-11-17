@@ -1,4 +1,6 @@
 import { calculateDILineValues, isThirdScheduleSaleType, round2 } from '@/lib/di/tax'
+import { requiresSroDetails } from '@/lib/di/eligibility'
+import { SALE_TYPE_LIST } from '@/lib/di/sale-type-config'
 import type { LedgerRow } from '@/lib/ledger/parser'
 
 /**
@@ -45,6 +47,12 @@ export function todayPKT(now = Date.now()) {
     return new Date(now + 5 * 60 * 60 * 1000).toISOString().slice(0, 10)
 }
 
+/** Same rule FBR submission enforces, plus sale types the config marks as needing an SRO. */
+function needsSro(row: LedgerRow) {
+    const configured = SALE_TYPE_LIST.some((config) => config.label.toLowerCase() === row.saleType.toLowerCase() && config.requiresSRO)
+    return configured || requiresSroDetails(row.saleType, row.sroScheduleNo, row.sroItemSerialNo)
+}
+
 function buildLine(row: LedgerRow): { line: DirectLine; issues: string[] } {
     const issues: string[] = []
     const where = `Row ${row.rowNumber}`
@@ -52,6 +60,9 @@ function buildLine(row: LedgerRow): { line: DirectLine; issues: string[] } {
     if (!(row.valueExclST > 0)) issues.push(`${where}: Value of Sales Excluding Sales Tax must be greater than zero`)
     const retailValue = row.retailValue > 0 ? row.retailValue : null
     if (isThirdScheduleSaleType(row.saleType) && !retailValue) issues.push(`${where}: 3rd Schedule Goods need a Retail Value`)
+    if (needsSro(row) && (!row.sroScheduleNo || !row.sroItemSerialNo)) {
+        issues.push(`${where}: ${row.saleType} @ ${row.rate} needs both "SRO No. / Schedule No." and "Item Sr. No."`)
+    }
     if (row.customerError) issues.push(`${where}: ${row.customerError}`)
 
     const { salesTaxApplicable } = calculateDILineValues({

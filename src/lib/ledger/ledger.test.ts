@@ -105,7 +105,8 @@ describe('ledger template', () => {
     it('has only the needed columns and parses cleanly with the importer', () => {
         expect(LEDGER_TEMPLATE_HEADERS).toEqual([
             'Invoice No.', 'Invoice Date', 'Product Description', 'HS Code', 'Sale Type', 'Rate', 'UoM', 'Quantity',
-            'Value of Sales Excluding Sales Tax', 'Retail Value', 'Customer Name', 'Customer CNIC',
+            'Value of Sales Excluding Sales Tax', 'Retail Value',
+            'SRO No. / Schedule No.', 'Item Sr. No.', 'Customer Name', 'Customer CNIC',
         ])
         const parsed = parseLedgerWorkbook(buildLedgerTemplate())
         expect(parsed.sheetName).toBe('Ledger')
@@ -129,7 +130,7 @@ describe('ledger customers', () => {
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([[...LEDGER_TEMPLATE_HEADERS], ...rows]), 'Ledger')
         return XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
     }
-    const stock = ['', '', 'Bucket', '7323.9400', 'Goods at standard rate (default)', '18%', 'Numbers, pieces, units', '5', '500', '']
+    const stock = ['', '', 'Bucket', '7323.9400', 'Goods at standard rate (default)', '18%', 'Numbers, pieces, units', '5', '500', '', '', '']
 
     it('normalises CNICs, dedupes by CNIC and reports bad ones', () => {
         expect(normalizeCnic('35202-1234567-1')).toBe('3520212345671')
@@ -137,8 +138,8 @@ describe('ledger customers', () => {
         const parsed = parseLedgerWorkbook(sheet([
             [...stock, 'Ali', '35202-1234567-1'],
             [...stock, 'Ali again', '3520212345671'],
-            ['', '', '', '', '', '', '', '', '', '', 'Bad CNIC', '12345'],
-            ['', '', '', '', '', '', '', '', '', '', '', '35202-1234567-9'],
+            ['', '', '', '', '', '', '', '', '', '', '', '', 'Bad CNIC', '12345'],
+            ['', '', '', '', '', '', '', '', '', '', '', '', '', '35202-1234567-9'],
         ]))
         expect(parsed.customers).toEqual([{ name: 'Ali', cnic: '3520212345671' }])
         expect(parsed.skipped).toEqual([

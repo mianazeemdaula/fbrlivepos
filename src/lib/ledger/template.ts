@@ -4,20 +4,21 @@ import * as XLSX from 'xlsx'
  * Sample ledger with only the columns the importer needs. A full IRIS "Domestic Invoices"
  * export also imports unchanged; its extra columns are ignored.
  *
- * Stock columns (Product Description … Retail Value) and customer columns are independent:
+ * Stock columns (Product Description … Item Sr. No.) and customer columns are independent:
  * a row can carry a purchase line, a customer, or both.
  */
 export const LEDGER_TEMPLATE_HEADERS = [
     'Invoice No.', 'Invoice Date', 'Product Description', 'HS Code', 'Sale Type', 'Rate', 'UoM', 'Quantity',
     'Value of Sales Excluding Sales Tax', 'Retail Value',
+    'SRO No. / Schedule No.', 'Item Sr. No.',
     'Customer Name', 'Customer CNIC',
 ] as const
 
 const SAMPLE_ROWS: string[][] = [
-    ['INV-1', '04-Aug-2026', '16 kg Tin', '1518.0000', '3rd Schedule Goods', '18%', 'KG', '928', '401012', '411220', 'Ali Traders', '35202-1234567-1'],
-    ['INV-1', '04-Aug-2026', 'Jerry Cane', '1518.0000', '3rd Schedule Goods', '18%', 'KG', '10', '4290', '4400', 'Ali Traders', '35202-1234567-1'],
-    ['INV-2', '05-Aug-2026', 'Steel Bucket 10L', '7323.9400', 'Goods at standard rate (default)', '18%', 'Numbers, pieces, units', '200', '90000', '', 'Bilal Store', '42101-1122334-5'],
-    ['', '', '', '', '', '', '', '', '', '', 'Hamza Khan', '61101-9988776-7'],
+    ['INV-1', '04-Aug-2026', '16 kg Tin', '1518.0000', '3rd Schedule Goods', '18%', 'KG', '928', '401012', '411220', '', '', 'Ali Traders', '35202-1234567-1'],
+    ['INV-1', '04-Aug-2026', 'Jerry Cane', '1518.0000', '3rd Schedule Goods', '18%', 'KG', '10', '4290', '4400', '', '', 'Ali Traders', '35202-1234567-1'],
+    ['INV-2', '05-Aug-2026', 'Steel Bucket 10L', '7323.9400', 'Goods at standard rate (default)', '18%', 'Numbers, pieces, units', '200', '90000', '', '', '', 'Bilal Store', '42101-1122334-5'],
+    ['', '', '', '', '', '', '', '', '', '', '', '', 'Hamza Khan', '61101-9988776-7'],
 ]
 
 const INSTRUCTIONS: string[][] = [
@@ -32,6 +33,8 @@ const INSTRUCTIONS: string[][] = [
     ['  Required: Product Description, HS Code, Sale Type, Rate, Quantity, Value of Sales Excluding Sales Tax.'],
     ['  UoM: defaults to "Numbers, pieces, units" when blank.'],
     ['  Retail Value: required for 3rd Schedule Goods — retail price per unit × quantity for the line.'],
+    ['  SRO No. / Schedule No. + Item Sr. No.: needed for exempt, reduced-rate and other SRO sale types. Leave blank'],
+    ['    when the sale type + rate allow only one (e.g. 3rd Schedule Goods @ 18% → "3rd Schedule goods" / 51); it is filled in.'],
     ['  Stock is pooled by Product Description + HS Code (plus sale type, rate and UoM). Use the same name for the same item.'],
     [''],
     ['Customers (optional)'],

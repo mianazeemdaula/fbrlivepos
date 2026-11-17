@@ -45,7 +45,7 @@ function requiresFixedValue(rate: string | null | undefined) {
     return normalized.includes('rupees') || normalized.includes('rs.') || normalized.includes('/unit') || normalized.includes('/kg')
 }
 
-function requiresSroDetails(saleType: string | null | undefined, sroScheduleNo: string | null | undefined, sroItemSerialNo: string | null | undefined) {
+export function requiresSroDetails(saleType: string | null | undefined, sroScheduleNo: string | null | undefined, sroItemSerialNo: string | null | undefined) {
     const normalizedSaleType = normalize(saleType)
     return normalizedSaleType.includes('sro') || Boolean(sroScheduleNo?.trim()) || Boolean(sroItemSerialNo?.trim())
 }
