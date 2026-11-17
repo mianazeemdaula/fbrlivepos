@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx'
 import { describe, expect, it } from 'vitest'
 import { aggregateLedgerRows, LedgerParseError, withDefaultSro, parseLedgerDate, parseLedgerNumber, parseLedgerWorkbook } from './parser'
 import { computeLedgerLine, generateLedgerDrafts, type GeneratorItem } from './generator'
+import { buildLedgerTemplate } from './template'
 
 // Mirrors the IRIS "Domestic Invoices" export: every cell is text.
 const HEADERS = [
@@ -75,20 +76,39 @@ describe('ledger parser', () => {
         expect(() => parseLedgerWorkbook(XLSX.write(wb, { type: 'array', bookType: 'xlsx' }))).toThrow(LedgerParseError)
     })
 
-    it('pools by HS code but keeps different tax treatments apart', () => {
+    it('pools by item name + HS code, summing quantity, and keeps different tax treatments apart', () => {
         const parsed = parseLedgerWorkbook(workbook([
             irisRow({}),
-            irisRow({ 'Invoice Ref No.': '2', Quantity: '10.00', 'Product Description': 'Jerry Cane', 'Value of Sales Excluding Sales Tax': '4,290.00', 'Fixed / Notified value or Retail Price / Toll Charges': '4,400.00' }),
-            irisRow({ 'Invoice Ref No.': '3', Rate: '5%' }),
+            irisRow({ 'Invoice Ref No.': '2', Quantity: '72.00', 'Product Description': ' 16 KG  tin', 'Value of Sales Excluding Sales Tax': '31,104.00', 'Fixed / Notified value or Retail Price / Toll Charges': '31,680.00' }),
+            irisRow({ 'Invoice Ref No.': '3', Quantity: '10.00', 'Product Description': 'Jerry Cane', 'Value of Sales Excluding Sales Tax': '4,290.00', 'Fixed / Notified value or Retail Price / Toll Charges': '4,400.00' }),
+            irisRow({ 'Invoice Ref No.': '4', Rate: '5%' }),
         ]))
         const items = aggregateLedgerRows(parsed.rows)
-        expect(items).toHaveLength(2)
-        const pooled = items.find((item) => item.rate === '18%')!
-        expect(pooled.totalQuantity).toBe(938)
-        expect(pooled.purchaseValueExclST).toBe(405302)
-        expect(pooled.purchaseRetailValue).toBe(415620)
-        expect(pooled.productName).toBe('16 kg Tin')
-        expect(pooled.sourceDescriptions).toEqual(['16 kg Tin', 'Jerry Cane'])
+        expect(items).toHaveLength(3)
+
+        const tin = items.find((item) => item.rate === '18%' && item.productName === '16 kg Tin')!
+        expect(tin.hsCode).toBe('1518.0000')
+        expect(tin.totalQuantity).toBe(1000)
+        expect(tin.purchaseValueExclST).toBe(432116)
+        expect(tin.purchaseRetailValue).toBe(442900)
+        expect(tin.sourceRowCount).toBe(2)
+        expect(tin.sourceDescriptions).toEqual(['16 kg Tin', '16 KG tin'])
+
+        const cane = items.find((item) => item.productName === 'Jerry Cane')!
+        expect(cane.hsCode).toBe('1518.0000')
+        expect(cane.totalQuantity).toBe(10)
+        expect(cane.saleUnitPrice).toBe(429)
+    })
+})
+
+describe('ledger template', () => {
+    it('parses cleanly with the importer', () => {
+        const parsed = parseLedgerWorkbook(buildLedgerTemplate())
+        expect(parsed.sheetName).toBe('Domestic Invoices')
+        expect(parsed.skipped).toEqual([])
+        expect(parsed.rows).toHaveLength(3)
+        const items = aggregateLedgerRows(parsed.rows)
+        expect(items.map((item) => item.productName).sort()).toEqual(['16 kg Tin', 'Jerry Cane', 'Steel Bucket 10L'])
     })
 })
 

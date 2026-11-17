@@ -247,6 +247,7 @@ export function parseLedgerWorkbook(data: ArrayBuffer | Uint8Array): ParsedLedge
             const valueExclST = round2(parseLedgerNumber(get('valueExclST')))
             const invoiceRefNo = cleanText(get('invoiceRefNo'))
             const invoiceNo = cleanText(get('invoiceNo'))
+            const productDescription = cleanText(get('productDescription'))
 
             const raw: Record<string, string | number | null> = {}
             headers.forEach((header, index) => {
@@ -257,7 +258,7 @@ export function parseLedgerWorkbook(data: ArrayBuffer | Uint8Array): ParsedLedge
 
             rows.push({
                 rowNumber,
-                rowKey: invoiceRefNo ?? `${invoiceNo ?? 'row'}|${hsCode}|${quantity}|${valueExclST}`,
+                rowKey: invoiceRefNo ?? `${invoiceNo ?? 'row'}|${productDescription ?? ''}|${hsCode}|${quantity}|${valueExclST}`,
                 invoiceRefNo,
                 invoiceNo,
                 invoiceType,
@@ -267,7 +268,7 @@ export function parseLedgerWorkbook(data: ArrayBuffer | Uint8Array): ParsedLedge
                 sellerName: cleanText(get('sellerName')),
                 saleType,
                 quantity,
-                productDescription: cleanText(get('productDescription')),
+                productDescription,
                 hsCode,
                 hsDescription: cleanText(get('hsDescription')),
                 rate,
@@ -314,16 +315,22 @@ function round3(value: number) {
     return Math.round(value * 1000) / 1000
 }
 
+/** Item-name key: case/whitespace-insensitive so "16 KG Tin" and "16 kg  tin" pool together. */
+function itemNameKey(name: string | null): string {
+    return (name ?? '').replace(/\s+/g, ' ').trim().toLowerCase()
+}
+
 /**
- * Pools rows by HS code plus every field that decides how the line is taxed
- * (sale type, rate, UoM, SRO schedule, SRO item no). Rows that differ in any of
- * those stay in separate pools so generated sale lines never mix tax treatments.
+ * Pools rows by item name (Product Description) + HS code, plus every field that decides
+ * how the line is taxed (sale type, rate, UoM, SRO schedule, SRO item no). Quantities and
+ * values are summed per pool, so each distinct item under an HS code keeps its own stock
+ * and price, and generated sale lines never mix items or tax treatments.
  */
 export function aggregateLedgerRows(rows: LedgerRow[]): LedgerItemDraft[] {
     const groups = new Map<string, { item: LedgerItemDraft; descriptionQty: Map<string, number> }>()
 
     for (const row of rows) {
-        const key = [row.hsCode, row.saleType, row.rate, row.uom, row.sroScheduleNo ?? '', row.sroItemSerialNo ?? '']
+        const key = [itemNameKey(row.productDescription), row.hsCode, row.saleType, row.rate, row.uom, row.sroScheduleNo ?? '', row.sroItemSerialNo ?? '']
             .map((part) => part.toLowerCase())
             .join('|')
 
@@ -371,7 +378,7 @@ export function aggregateLedgerRows(rows: LedgerRow[]): LedgerItemDraft[] {
         return {
             ...item,
             sourceDescriptions: descriptions,
-            // The highest-volume description is the most representative default; editable in the wizard.
+            // Spellings of the same item differ only in case/spacing; use the highest-volume one. Editable in the wizard.
             productName: descriptions[0] ?? item.hsDescription?.slice(0, 120) ?? item.hsCode,
             saleUnitPrice: round2(item.purchaseValueExclST / item.totalQuantity),
             retailUnitPrice: item.purchaseRetailValue > 0 ? round2(item.purchaseRetailValue / item.totalQuantity) : null,

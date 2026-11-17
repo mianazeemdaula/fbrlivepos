@@ -96,7 +96,7 @@ export default function StockStep({
             <div className="rounded-2xl border border-border bg-white shadow-xs">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3.5">
                     <div>
-                        <h2 className="text-sm font-semibold text-ink">Stock by HS code</h2>
+                        <h2 className="text-sm font-semibold text-ink">Stock by item &amp; HS code</h2>
                         <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
                             <Lock size={12} />
                             HS code, sale type, rate, UoM, SRO and item no. are locked to the IRIS ledger. Description and prices are editable.

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Check, FileSpreadsheet, Lock, Trash2, Upload, X } from 'lucide-react'
+import { ArrowLeft, Check, Download, FileSpreadsheet, Lock, Trash2, Upload, X } from 'lucide-react'
 import StockStep from './StockStep'
 import GenerateStep from './GenerateStep'
 import DraftsStep from './DraftsStep'
@@ -235,6 +235,13 @@ export default function LedgerImportPage() {
                         <button type="button" className={`${primaryButton} mt-4`} disabled={uploading} onClick={() => fileInput.current?.click()}>
                             {uploading ? 'Reading ledger…' : 'Choose file'}
                         </button>
+                        <p className="mt-3 text-xs text-muted">
+                            No IRIS file?{' '}
+                            <a href="/api/tenant/ledger-imports/template" download className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+                                <Download size={12} />
+                                Download sample template
+                            </a>
+                        </p>
                     </div>
 
                     {/* Previous imports */}
