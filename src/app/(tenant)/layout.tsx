@@ -6,13 +6,15 @@ import { signOut, useSession } from 'next-auth/react'
 import { useState, useEffect, useRef } from 'react'
 import { ChevronDown, LogOut, Menu, ReceiptText, User, X } from 'lucide-react'
 
-const navItems: Array<{ href: string; label: string; feature?: 'ledgerImport' }> = [
+type FeatureKey = 'ledgerImport' | 'directInvoices'
+
+const navItems: Array<{ href: string; label: string; feature?: FeatureKey }> = [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/pos', label: 'POS Terminal' },
     { href: '/invoices', label: 'Invoices' },
     { href: '/invoices/report', label: 'Report' },
     { href: '/ledger-import', label: 'Ledger Import', feature: 'ledgerImport' as const },
-    { href: '/direct-invoices', label: 'Direct Invoices', feature: 'ledgerImport' as const },
+    { href: '/direct-invoices', label: 'Direct Invoices', feature: 'directInvoices' as const },
     { href: '/customers', label: 'Customers' },
     { href: '/hs-codes', label: 'HS Codes' },
     { href: '/sandbox-scenarios', label: 'Sandbox' },
@@ -28,7 +30,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
     const userMenuRef = useRef<HTMLDivElement>(null)
     const [config, setConfig] = useState<{ configured: boolean; environment: 'SANDBOX' | 'PRODUCTION' | null; hasProductionToken: boolean; sandboxCompleted: boolean } | null>(null)
     const [switchingEnv, setSwitchingEnv] = useState(false)
-    const [features, setFeatures] = useState<{ ledgerImport: boolean }>({ ledgerImport: false })
+    const [features, setFeatures] = useState<Record<FeatureKey, boolean>>({ ledgerImport: false, directInvoices: false })
     const [notification, setNotification] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
     const [subscription, setSubscription] = useState<{
         allowed: boolean
@@ -59,7 +61,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
         loadConfig()
         fetch('/api/tenant/features')
             .then(r => r.ok ? r.json() : null)
-            .then(data => { if (data) setFeatures({ ledgerImport: Boolean(data.ledgerImport) }) })
+            .then(data => { if (data) setFeatures({ ledgerImport: Boolean(data.ledgerImport), directInvoices: Boolean(data.directInvoices) }) })
             .catch(() => {})
         fetch('/api/tenant/subscription')
             .then(r => r.ok ? r.json() : null)

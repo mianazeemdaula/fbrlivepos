@@ -4,11 +4,14 @@ import { assertSuperAdmin } from '@/lib/admin/guard'
 import { prisma } from '@/lib/db/prisma'
 import { writeAuditLog } from '@/lib/admin/audit'
 import { isFeatureEnabled } from '@/lib/features/flags'
-import { LEDGER_IMPORT_FLAG, LEDGER_IMPORT_FLAG_DESCRIPTION } from '@/lib/ledger/service'
+import {
+    DIRECT_INVOICES_FLAG, DIRECT_INVOICES_FLAG_DESCRIPTION, LEDGER_IMPORT_FLAG, LEDGER_IMPORT_FLAG_DESCRIPTION,
+} from '@/lib/ledger/service'
 
 // Per-tenant features a super admin switches on individually (stored as TenantFeatureFlag overrides).
 const MANAGED_FEATURES = [
     { key: LEDGER_IMPORT_FLAG, label: 'Sales Ledger Import', description: LEDGER_IMPORT_FLAG_DESCRIPTION },
+    { key: DIRECT_INVOICES_FLAG, label: 'Direct Bulk Invoices', description: DIRECT_INVOICES_FLAG_DESCRIPTION },
 ]
 
 type Params = { params: Promise<{ tenantId: string }> }

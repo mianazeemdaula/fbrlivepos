@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { requireLedgerAccess } from '@/lib/ledger/service'
+import { requireTemplateAccess } from '@/lib/ledger/service'
 import { buildLedgerTemplate } from '@/lib/ledger/template'
 
 export async function GET() {
-    const access = await requireLedgerAccess()
+    const access = await requireTemplateAccess()
     if (!access.ok) return access.response
 
     return new NextResponse(new Uint8Array(buildLedgerTemplate()), {

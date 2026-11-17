@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Download, FileSpreadsheet, Play, Square, Upload } from 'lucide-react'
+import { ArrowLeft, Download, FileSpreadsheet, Play, Square, Trash2, Upload } from 'lucide-react'
 import {
     formatAmount, formatCnic, formatDay, primaryButton, readError, secondaryButton,
 } from '../ledger-import/types'
@@ -60,6 +60,9 @@ interface BatchSummary {
 type Mode = 'confirm' | 'validate'
 type RowState = { phase: 'waiting' | 'working' | 'done' | 'failed'; message?: string }
 
+// Not reported to FBR yet, so they can be deleted (matches the API).
+const DELETABLE = new Set(['DRAFT', 'FAILED', 'VALIDATED'])
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 /** Pulls a readable message out of /api/invoices/[id]/action responses. */
@@ -86,13 +89,16 @@ export default function DirectInvoicesPage() {
     const [mode, setMode] = useState<Mode>('confirm')
     const [running, setRunning] = useState(false)
     const [rowState, setRowState] = useState<Record<string, RowState>>({})
+    const [selected, setSelected] = useState<Set<string>>(new Set())
+    const [confirmDelete, setConfirmDelete] = useState(false)
+    const [deleting, setDeleting] = useState(false)
     const stopRef = useRef(false)
     const fileInput = useRef<HTMLInputElement>(null)
 
     const loadBatches = useCallback(async () => {
         const res = await fetch('/api/tenant/direct-invoices').catch(() => null)
         if (!res) return
-        if (res.status === 403) return setDisabled(await readError(res, 'Direct invoices are not enabled for your account.'))
+        if (res.status === 403) return setDisabled(await readError(res, 'Direct bulk invoice upload is not enabled for your account.'))
         if (res.ok) setBatches((await res.json()).batches ?? [])
     }, [])
 
@@ -105,6 +111,8 @@ export default function DirectInvoicesPage() {
         setBatch((await res.json()).batch)
         setPreview(null)
         setRowState({})
+        setSelected(new Set())
+        setConfirmDelete(false)
     }
 
     async function choose(file: File) {
@@ -141,6 +149,7 @@ export default function DirectInvoicesPage() {
             setBatch(data.batch)
             setPreview(null)
             setRowState({})
+            setSelected(new Set())
             setNotice(data.resumed
                 ? { type: 'info', text: 'This file was uploaded before; its invoices are shown instead of creating them again.' }
                 : { type: 'success', text: `${data.batch.invoices.length} draft invoice(s) created. Start submission below.` })
@@ -149,6 +158,54 @@ export default function DirectInvoicesPage() {
             setNotice({ type: 'error', text: 'Network error. Please try again.' })
         } finally {
             setBusy(false)
+        }
+    }
+
+    const deletableIds = batch?.invoices.filter((invoice) => DELETABLE.has(invoice.status)).map((invoice) => invoice.id) ?? []
+    const allSelected = deletableIds.length > 0 && deletableIds.every((id) => selected.has(id))
+
+    function toggle(id: string) {
+        setConfirmDelete(false)
+        setSelected((current) => {
+            const next = new Set(current)
+            if (next.has(id)) next.delete(id)
+            else next.add(id)
+            return next
+        })
+    }
+
+    async function deleteSelected() {
+        if (!batch || !selected.size) return
+        if (!confirmDelete) return setConfirmDelete(true)
+        setDeleting(true)
+        setNotice(null)
+        try {
+            const res = await fetch(`/api/tenant/direct-invoices/${batch.id}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ invoiceIds: [...selected] }),
+            })
+            const data = await res.json().catch(() => null)
+            if (!res.ok) {
+                setNotice({ type: 'error', text: data?.error || `Delete failed (${res.status}).` })
+                return
+            }
+            const text = `Deleted ${data.deleted} invoice(s)${data.skipped ? `; ${data.skipped} already submitted to FBR were kept` : ''}.`
+            setSelected(new Set())
+            setRowState({})
+            if (data.batch) {
+                setBatch(data.batch)
+                setNotice({ type: 'success', text })
+            } else {
+                setBatch(null)
+                setNotice({ type: 'success', text: `${text} The upload is now empty and was removed.` })
+            }
+            loadBatches()
+        } catch {
+            setNotice({ type: 'error', text: 'Network error. Please try again.' })
+        } finally {
+            setDeleting(false)
+            setConfirmDelete(false)
         }
     }
 
@@ -338,6 +395,20 @@ export default function DirectInvoicesPage() {
                                 <option value="confirm">Validate &amp; submit to FBR</option>
                                 <option value="validate">Validate only</option>
                             </select>
+                            {selected.size > 0 && !running && (
+                                <button
+                                    type="button"
+                                    className={confirmDelete
+                                        ? 'inline-flex items-center justify-center gap-2 rounded-lg bg-error px-4 py-2 text-sm font-medium text-white disabled:opacity-60'
+                                        : secondaryButton}
+                                    disabled={deleting}
+                                    onClick={deleteSelected}
+                                    onBlur={() => setConfirmDelete(false)}
+                                >
+                                    <Trash2 size={15} />
+                                    {deleting ? 'Deleting…' : confirmDelete ? `Confirm delete ${selected.size}` : `Delete ${selected.size} selected`}
+                                </button>
+                            )}
                             {running ? (
                                 <button type="button" className={secondaryButton} onClick={() => { stopRef.current = true }}><Square size={15} />Stop</button>
                             ) : (
@@ -348,6 +419,9 @@ export default function DirectInvoicesPage() {
                             )}
                         </div>
                     </div>
+                    {deletableIds.length > 0 && !running && (
+                        <p className="text-xs text-muted">Tick invoices to delete them. Only invoices not yet submitted to FBR can be deleted; submitted ones are locked.</p>
+                    )}
                     {mode === 'confirm' && pending.length > 0 && !running && (
                         <p className="text-xs text-muted">Submitting reports each invoice to FBR and locks it; it cannot be undone. Each invoice is validated by FBR first and only posted if valid.</p>
                     )}
@@ -355,14 +429,34 @@ export default function DirectInvoicesPage() {
                     <div className="overflow-x-auto rounded-2xl border border-border bg-white shadow-xs">
                         <table className="w-full min-w-[760px] text-sm">
                             <thead className="bg-surface-subtle text-left text-xs text-muted">
-                                <tr><th className="px-5 py-2">Invoice</th><th className="px-3 py-2">Date</th><th className="px-3 py-2">Buyer</th><th className="px-3 py-2 text-right">Lines</th><th className="px-3 py-2 text-right">Total</th><th className="px-5 py-2">FBR</th></tr>
+                                <tr>
+                                    <th className="w-10 py-2 pl-5">
+                                        <input
+                                            type="checkbox"
+                                            aria-label="Select all unsubmitted invoices"
+                                            disabled={running || deletableIds.length === 0}
+                                            checked={allSelected}
+                                            onChange={() => { setConfirmDelete(false); setSelected(allSelected ? new Set() : new Set(deletableIds)) }}
+                                        />
+                                    </th>
+                                    <th className="px-3 py-2">Invoice</th><th className="px-3 py-2">Date</th><th className="px-3 py-2">Buyer</th><th className="px-3 py-2 text-right">Lines</th><th className="px-3 py-2 text-right">Total</th><th className="px-5 py-2">FBR</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 {batch.invoices.map((invoice) => {
                                     const state = rowState[invoice.id]
                                     return (
-                                        <tr key={invoice.id} className="border-t border-border align-top">
-                                            <td className="px-5 py-2.5 font-medium"><a href={`/invoices/${invoice.id}`} className="text-primary hover:underline">{invoice.invoiceNumber}</a></td>
+                                        <tr key={invoice.id} className={`border-t border-border align-top ${selected.has(invoice.id) ? 'bg-surface-subtle' : ''}`}>
+                                            <td className="py-2.5 pl-5">
+                                                <input
+                                                    type="checkbox"
+                                                    aria-label={`Select ${invoice.invoiceNumber}`}
+                                                    disabled={running || !DELETABLE.has(invoice.status)}
+                                                    checked={selected.has(invoice.id)}
+                                                    onChange={() => toggle(invoice.id)}
+                                                />
+                                            </td>
+                                            <td className="px-3 py-2.5 font-medium"><a href={`/invoices/${invoice.id}`} className="text-primary hover:underline">{invoice.invoiceNumber}</a></td>
                                             <td className="px-3 py-2.5 text-muted">{formatDay(invoice.invoiceDate)}</td>
                                             <td className="px-3 py-2.5">
                                                 {invoice.buyerName}
@@ -390,7 +484,7 @@ export default function DirectInvoicesPage() {
                         </table>
                     </div>
 
-                    <button type="button" className={secondaryButton} disabled={running} onClick={() => { setBatch(null); setRowState({}); setNotice(null) }}>
+                    <button type="button" className={secondaryButton} disabled={running} onClick={() => { setBatch(null); setRowState({}); setNotice(null); setSelected(new Set()) }}>
                         <ArrowLeft size={15} />All uploads
                     </button>
                 </div>

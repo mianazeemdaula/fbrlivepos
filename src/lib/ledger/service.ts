@@ -10,27 +10,39 @@ import type { LedgerCustomer } from '@/lib/ledger/parser'
 export const LEDGER_IMPORT_FLAG = 'ledger_import'
 export const LEDGER_IMPORT_FLAG_DESCRIPTION = 'Import the FBR IRIS purchase ledger and auto-generate draft sale invoices from it'
 
+/** Separate flag: bulk-upload a filled sheet as invoices and submit them to FBR directly. */
+export const DIRECT_INVOICES_FLAG = 'direct_invoices'
+export const DIRECT_INVOICES_FLAG_DESCRIPTION = 'Upload a filled sheet as sale invoices (exactly as written) and validate/submit them to FBR in bulk'
+
 type LedgerAccess =
     | { ok: true; tenant: Awaited<ReturnType<typeof getTenantFromSession>>['tenant']; userId: string; role: string }
     | { ok: false; response: NextResponse }
 
-export async function requireLedgerAccess(): Promise<LedgerAccess> {
+/** Signed-in tenant with at least one of `flags` enabled (super admin sets them per tenant). */
+async function requireAnyFeature(flags: string[], disabledMessage: string): Promise<LedgerAccess> {
     let session: Awaited<ReturnType<typeof getTenantFromSession>>
     try {
         session = await getTenantFromSession()
     } catch {
         return { ok: false, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
     }
-    if (!(await isFeatureEnabled(session.tenant.id, LEDGER_IMPORT_FLAG))) {
-        return {
-            ok: false,
-            response: NextResponse.json(
-                { error: 'Sales ledger import is not enabled for your account. Contact support to enable it.' },
-                { status: 403 },
-            ),
-        }
+    for (const flag of flags) {
+        if (await isFeatureEnabled(session.tenant.id, flag)) return { ok: true, ...session }
     }
-    return { ok: true, ...session }
+    return { ok: false, response: NextResponse.json({ error: disabledMessage }, { status: 403 }) }
+}
+
+export function requireLedgerAccess() {
+    return requireAnyFeature([LEDGER_IMPORT_FLAG], 'Sales ledger import is not enabled for your account. Contact support to enable it.')
+}
+
+export function requireDirectInvoicesAccess() {
+    return requireAnyFeature([DIRECT_INVOICES_FLAG], 'Direct bulk invoice upload is not enabled for your account. Contact support to enable it.')
+}
+
+/** The sample template serves both features. */
+export function requireTemplateAccess() {
+    return requireAnyFeature([LEDGER_IMPORT_FLAG, DIRECT_INVOICES_FLAG], 'Bulk upload is not enabled for your account. Contact support to enable it.')
 }
 
 /** Quantity of each item held by drafts that are still pending or already turned into invoices. */

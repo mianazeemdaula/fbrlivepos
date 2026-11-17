@@ -3,14 +3,14 @@ import { prisma } from '@/lib/db/prisma'
 import { Prisma } from '@/generated/prisma/client'
 import { checkPlanLimit } from '@/lib/features/flags'
 import { getSubscriptionBlockReason } from '@/lib/billing/subscription'
-import { requireLedgerAccess } from '@/lib/ledger/service'
+import { requireDirectInvoicesAccess } from '@/lib/ledger/service'
 import { createDirectInvoices, loadDirectBatch } from '@/lib/direct/service'
 import { readDirectUpload } from './shared'
 
 const MAX_INVOICES_PER_FILE = 500
 
 export async function GET() {
-    const access = await requireLedgerAccess()
+    const access = await requireDirectInvoicesAccess()
     if (!access.ok) return access.response
 
     const batches = await prisma.directInvoiceBatch.findMany({
@@ -42,7 +42,7 @@ export async function GET() {
 // Creates one DRAFT invoice per sheet invoice, exactly as written. The browser then
 // validates/submits them one by one through /api/invoices/[id]/action.
 export async function POST(req: NextRequest) {
-    const access = await requireLedgerAccess()
+    const access = await requireDirectInvoicesAccess()
     if (!access.ok) return access.response
     const { tenant, userId } = access
 
